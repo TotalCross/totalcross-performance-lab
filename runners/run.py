@@ -243,6 +243,12 @@ def expand_cell_value(value: str, profile: str, workload: str, package: str = ""
         raise RunnerError("unknown command placeholder: " + str(error)) from error
 
 
+def ensure_scroll_window_arguments(command: list[str], family: str, width: int, height: int) -> list[str]:
+    if family not in ("scroll", "preparation") or any(item.lower() == "/scr" for item in command):
+        return command
+    return command + ["/scr", "-2,-2,%d,%d" % (width, height)]
+
+
 def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, index: int,
                dataset: dict[str, Any] | None, runtime_commit: str, benchmark_commit: str,
                runtime_files: list[dict[str, str]], runtime_hash: str, environment: dict[str, Any],
@@ -484,6 +490,8 @@ def execute(arguments) -> int:
                 if candidate.is_file():
                     files.append(candidate)
             arguments.command = expanded_command
+        arguments.command = ensure_scroll_window_arguments(
+            arguments.command, arguments.family, arguments.width, arguments.height)
         runtime_files, runtime_hash = runtime_hashes(files)
         if not runtime_files:
             raise RunnerError("pass at least one launcher/application path with --runtime-file for hash provenance")

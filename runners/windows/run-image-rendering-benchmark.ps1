@@ -153,6 +153,9 @@ function Invoke-BenchmarkChild($ProfilePackage, $Config, [string]$WorkingDirecto
   $stderrPath = Join-Path $ProcessDirectory 'stderr.log'
   $processInfo = New-Object Diagnostics.ProcessStartInfo
   $processInfo.FileName = Join-Path (Split-Path -Parent $PackageManifest) $ProfilePackage.executable
+  if ($script:activeFamily -in @('scroll', 'preparation')) {
+    $processInfo.Arguments = "/scr -2,-2,$Width,$Height"
+  }
   $processInfo.WorkingDirectory = $WorkingDirectory
   $processInfo.UseShellExecute = $false
   $processInfo.RedirectStandardOutput = $true

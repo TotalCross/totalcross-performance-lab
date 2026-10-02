@@ -16,6 +16,10 @@ python3 runners/run.py image-rendering scroll --profile default --rounds 3 \
   --runtime-file /path/to/launcher
 ```
 
+When using a package manifest, scroll and preparation runs pass the requested
+logical size to the launcher with `/scr`; the default is `540x960`. The Windows
+PowerShell runner applies the same launch size from `-Width` and `-Height`.
+
 Decode uses the full filesystem/TCZ × full/half scale × sequential/seeded-random
 matrix by default. `--sources`, `--scales`, and `--orders` narrow that matrix;
 `--profile` selects named production configurations. Scroll and preparation

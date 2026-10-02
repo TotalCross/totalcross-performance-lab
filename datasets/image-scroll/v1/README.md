@@ -14,6 +14,9 @@ Files:
 - `manifest.json` — per-file metadata and SHA-256 digests.
 - `SHA256SUMS` — integrity hashes for the published ZIP and manifest.
 
+The checked-in `dataset.json` pins the published archive and manifest SHA-256
+identities. The verifier checks those values before it extracts any payload.
+
 ## Expected shape
 
 The v1 workload contains 663 files. Historical validation identified 660 JPEG payloads and 3 PNG payloads.

@@ -85,6 +85,8 @@ class ImageRenderingSourceContractTests(unittest.TestCase):
         self.assertIn("scrollMaximum <= scrollMinimum", scroll)
         self.assertIn("holdForVisualValidation", scroll)
         self.assertIn("new Flick(target)", pacing)
+        self.assertNotIn("setScrollDistance", pacing)
+        self.assertIn("production Flick completed without callback interval samples", pacing)
         self.assertIn("randomState ^= randomState << 13", decode)
         self.assertIn("new Image(file)", support)
         self.assertIn("BenchSupport.loadFilesystemImage", scroll)

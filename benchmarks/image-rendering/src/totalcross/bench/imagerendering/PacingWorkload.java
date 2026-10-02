@@ -58,7 +58,6 @@ final class PacingWorkload implements TimerListener {
       flick.frameRate = requestedFps;
       flick.longestFlick = 400;
       flick.shortestFlick = 1;
-      flick.setScrollDistance(100);
       target.setFlick(flick);
       triggerFlick();
     } else if ("synthetic-16ms".equals(workload)) {
@@ -176,6 +175,9 @@ final class PacingWorkload implements TimerListener {
         timer = null;
       }
       app.removeTimerListener(this);
+      if (workload.startsWith("flick-") && intervals.size() == 0) {
+        throw new IllegalStateException("production Flick completed without callback interval samples");
+      }
       long wall = System.nanoTime() - startedNs;
       Object diagnostics = diagnosticsAfter();
       JSONObject measurements = BenchSupport.object(

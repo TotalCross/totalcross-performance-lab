@@ -56,6 +56,8 @@ public final class ImageRenderingBenchmarkApp {
     } else if ("scroll".equals(family) || "preparation".equals(family)) {
       scrollWorkload = new ScrollWorkload(this, config);
       scrollWorkload.start();
+    } else if ("pacing".equals(family)) {
+      new PacingWorkload(this, config).start();
     } else {
       throw new IllegalArgumentException("workload family is not in this app slice: " + family);
     }

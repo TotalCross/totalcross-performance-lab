@@ -12,9 +12,11 @@ import totalcross.ui.gfx.Graphics;
 
 /** Shared controller used by the direct MainWindow entry classes for each profile. */
 public final class ImageRenderingBenchmarkApp {
+  private static ImageRenderingBenchmarkApp active;
   private final MainWindow window;
   private final String profile;
   private JSONObject config;
+  private ScrollWorkload scrollWorkload;
 
   private ImageRenderingBenchmarkApp(MainWindow window, String profile) {
     this.window = window;
@@ -23,6 +25,7 @@ public final class ImageRenderingBenchmarkApp {
 
   public static ImageRenderingBenchmarkApp start(MainWindow window, String profile) {
     ImageRenderingBenchmarkApp app = new ImageRenderingBenchmarkApp(window, profile);
+    active = app;
     try {
       app.initialize();
     } catch (Throwable failure) {
@@ -32,6 +35,9 @@ public final class ImageRenderingBenchmarkApp {
   }
 
   public static void capturePaint() {
+    if (active != null && active.scrollWorkload != null) {
+      active.scrollWorkload.capturePaint();
+    }
   }
 
   private void initialize() throws Exception {
@@ -47,6 +53,9 @@ public final class ImageRenderingBenchmarkApp {
     String family = config.getString("family");
     if ("decode".equals(family)) {
       DecodeWorkload.run(this, config);
+    } else if ("scroll".equals(family) || "preparation".equals(family)) {
+      scrollWorkload = new ScrollWorkload(this, config);
+      scrollWorkload.start();
     } else {
       throw new IllegalArgumentException("workload family is not in this app slice: " + family);
     }
@@ -56,6 +65,7 @@ public final class ImageRenderingBenchmarkApp {
       String workload) throws Exception {
     RuntimeEnvironment runtime = RuntimeEnvironment.current();
     Graphics graphics = window.getGraphics();
+    Object diagnosticValues = measurements.opt("diagnostics");
     Object logical = JSONObject.NULL;
     Object drawable = JSONObject.NULL;
     if ("scroll".equals(config.getString("family"))
@@ -88,7 +98,7 @@ public final class ImageRenderingBenchmarkApp {
         "phase", config.getString("phase"),
         "durationsNs", durations,
         "measurements", measurements,
-        "diagnostics", JSONObject.NULL);
+        "diagnostics", diagnosticValues == null ? JSONObject.NULL : diagnosticValues);
   }
 
   void emit(JSONObject record) throws Exception {

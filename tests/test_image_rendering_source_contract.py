@@ -55,6 +55,7 @@ class ImageRenderingSourceContractTests(unittest.TestCase):
                 elif class_name == "CombinedCompact":
                     profile = "combined-compact"
                 self.assertIn("public final class " + class_name + " extends MainWindow", text)
+                self.assertIn("setUIStyle(Settings.ANDROID_UI)", text)
                 self.assertIn('ImageRenderingBenchmarkApp.start(this, "' + profile + '")', text)
                 if rules:
                     self.assertIn("@RuntimeConfiguration", text)
@@ -74,8 +75,15 @@ class ImageRenderingSourceContractTests(unittest.TestCase):
             self.assertIn('"' + family + '".equals(family)', app)
         self.assertIn("import totalcross.ui.ScrollContainer;", scroll)
         self.assertIn("scroll.prepareForDisplay(", scroll)
-        self.assertIn('"first-workload"', scroll)
-        self.assertIn('"warm"', scroll)
+        self.assertIn('"cold-forward"', scroll)
+        self.assertIn('"warm-reverse"', scroll)
+        self.assertIn('"warm-forward"', scroll)
+        self.assertIn("SCROLL_STEP = 120", scroll)
+        self.assertIn("new Container[entries.length / COLUMNS]", scroll)
+        self.assertIn("Color.darker(Color.GREEN)", scroll)
+        self.assertIn("getSmoothScaledInstance(tileWidth, tileWidth)", scroll)
+        self.assertIn("scrollMaximum <= scrollMinimum", scroll)
+        self.assertIn("holdForVisualValidation", scroll)
         self.assertIn("new Flick(target)", pacing)
         self.assertIn("randomState ^= randomState << 13", decode)
         self.assertIn("new Image(file)", support)

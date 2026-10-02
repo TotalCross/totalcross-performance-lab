@@ -10,18 +10,20 @@ entry classes. The corpus stays outside Git.
 - **decode** — filesystem or generated TCZ input, full or half scale, and
   sequential or seeded-random order. Seeded order uses Fisher-Yates with
   xorshift32 and seed `12012026`. Each measured cell starts a fresh process.
-- **scroll** — 663 controls in 221 rows, three images per row, top-to-bottom
-  and bottom-to-top passes, with first-workload and warm-pass results kept
-  separate.
+- **scroll** — the pinned corpus is displayed as 663 square `ImageControl`s in
+  221 green rows of three inside the blue two-container scroll hierarchy.
+  Directional results are kept separate for `cold-forward`, `warm-reverse`, and
+  `warm-forward` passes.
 - **preparation** — default/no-preparation reference and explicit
   `ScrollContainer.prepareForDisplay(...)` using either production worker.
 - **pacing** — current production flick timer and synthetic work cadences. The
   update-listener/flick selector is package-private in the pinned runtime, so
   the suite does not depend on it. No runtime scheduling switches are exposed.
 
-The default logical scroll viewport is 540x960. The host drawable size and
-display scale are recorded separately. A fresh process is not described as a
-cold filesystem cache; scroll phases are named first-workload and warm.
+The default logical window size is 540x960, with 179px square tiles and a
+vertical scroll pane inset into the window. The host drawable size and display
+scale are recorded separately. A fresh process is not described as a cold
+filesystem cache; `cold-forward` names the first traversal workload phase.
 
 ## Named image profiles
 

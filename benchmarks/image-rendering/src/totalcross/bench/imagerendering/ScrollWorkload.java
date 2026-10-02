@@ -7,28 +7,35 @@ import totalcross.json.JSONObject;
 import totalcross.sys.RuntimeDiagnosticSnapshot;
 import totalcross.sys.RuntimeDiagnostics;
 import totalcross.sys.Settings;
+import totalcross.ui.Container;
+import totalcross.ui.Control;
 import totalcross.ui.ImageControl;
 import totalcross.ui.ScrollContainer;
 import totalcross.ui.event.DragEvent;
 import totalcross.ui.event.TimerEvent;
 import totalcross.ui.event.TimerListener;
+import totalcross.ui.gfx.Color;
 import totalcross.ui.gfx.Graphics;
 import totalcross.ui.image.Image;
 
 /** Real-corpus scroll and explicit visible-image preparation workloads. */
 final class ScrollWorkload implements TimerListener {
   private static final int COLUMNS = 3;
-  private static final int CELL_HEIGHT = 128;
-  private static final int ROW_GAP = 12;
-  private static final int STEP_PIXELS = 72;
+  private static final int EXPECTED_WIDTH = 540;
+  private static final int EXPECTED_HEIGHT = 960;
+  private static final int START_STABILIZE_MILLIS = 50;
+  private static final int SCROLL_STEP = 120;
+  private static final int PASS_COUNT = 3;
   private static final int TIMER_MILLIS = 16;
 
   private final ImageRenderingBenchmarkApp app;
   private final JSONObject config;
   private final boolean preparation;
+  private final ScrollContainer mainContainer;
   private final ScrollContainer scroll;
   private final BenchSupport.DatasetEntry[] entries;
   private final ImageControl[] controls;
+  private final Container[] rows;
   private final boolean[] requested;
   private final SampleSeries paintIntervals = new SampleSeries();
   private final SampleSeries passPaintIntervals = new SampleSeries();
@@ -39,7 +46,6 @@ final class ScrollWorkload implements TimerListener {
   private TimerEvent timer;
   private int passNumber;
   private int direction = 1;
-  private int currentPassFrames;
   private long passStartedNs;
   private long lastStepNs;
   private long lastPaintNs;
@@ -53,6 +59,10 @@ final class ScrollWorkload implements TimerListener {
   private int lastPreparedY = -1;
   private int viewportWidth;
   private int viewportHeight;
+  private int tileWidth;
+  private int scrollMinimum;
+  private int scrollMaximum;
+  private boolean passPreparationReady;
 
   ScrollWorkload(ImageRenderingBenchmarkApp app, JSONObject config) throws Exception {
     this.app = app;
@@ -60,53 +70,94 @@ final class ScrollWorkload implements TimerListener {
     String profile = config.getString("profile");
     preparation = profile.startsWith("prepared-") || profile.startsWith("combined-");
     entries = BenchSupport.readDataset(config);
+    if (entries.length != BenchSupport.EXPECTED_FILE_COUNT || entries.length % COLUMNS != 0) {
+      throw new IllegalStateException("scroll workload requires 663 images arranged in complete rows");
+    }
     controls = new ImageControl[entries.length];
+    rows = new Container[entries.length / COLUMNS];
     requested = new boolean[entries.length];
-    scroll = new ScrollContainer(false, true);
     int requestedWidth = Math.max(1, config.getInt("width"));
     int requestedHeight = Math.max(1, config.getInt("height"));
+    if (requestedWidth != EXPECTED_WIDTH || requestedHeight != EXPECTED_HEIGHT
+        || Settings.screenWidth != EXPECTED_WIDTH || Settings.screenHeight != EXPECTED_HEIGHT) {
+      throw new IllegalStateException("scroll workload requires logical resolution 540x960; config="
+          + requestedWidth + "x" + requestedHeight + ", runtime=" + Settings.screenWidth + "x"
+          + Settings.screenHeight);
+    }
     viewportWidth = requestedWidth;
     viewportHeight = requestedHeight;
-    if (viewportWidth > Settings.screenWidth || viewportHeight > Settings.screenHeight) {
-      viewportWidth = Math.min(viewportWidth, Math.max(1, Settings.screenWidth));
-      viewportHeight = Math.min(viewportHeight, Math.max(1, Settings.screenHeight));
-    }
     BenchSupport.put(config, "requestedLogicalWidth", requestedWidth);
     BenchSupport.put(config, "requestedLogicalHeight", requestedHeight);
     BenchSupport.put(config, "width", viewportWidth);
     BenchSupport.put(config, "height", viewportHeight);
-    app.add(scroll);
-    scroll.setRect(0, 0, viewportWidth, viewportHeight);
-    int cellWidth = Math.max(1, (viewportWidth - 24) / COLUMNS);
-    int strideY = CELL_HEIGHT + ROW_GAP;
+    mainContainer = new ScrollContainer();
+    scroll = new ScrollContainer();
+    app.add(mainContainer);
+    mainContainer.setBackColor(Color.brighter(Color.BLUE));
+    mainContainer.setRect(Control.LEFT, Control.TOP, Control.FILL, Control.FILL);
+    scroll.setBackColor(Color.brighter(Color.BLUE));
+    mainContainer.add(scroll, Control.LEFT, Control.TOP + 40, Control.FILL, Control.FILL - 60);
+    tileWidth = (viewportWidth - 3) / COLUMNS;
+    if (tileWidth < 1) {
+      throw new IllegalStateException("screen is too narrow for three square image tiles");
+    }
     String root = config.getString("datasetRoot");
+    Container row = null;
+    int controlsInRow = 0;
     for (int i = 0; i < entries.length; i++) {
       try {
+        if (i % COLUMNS == 0) {
+          int rowIndex = i / COLUMNS;
+          if (rowIndex > 0 && controlsInRow != COLUMNS) {
+            throw new IllegalStateException("each scroll row must contain exactly three ImageControls");
+          }
+          row = new Container();
+          row.setBackColor(Color.darker(Color.GREEN));
+          scroll.add(row, Control.LEFT, Control.AFTER + 2, viewportWidth, tileWidth);
+          rows[rowIndex] = row;
+          controlsInRow = 0;
+        }
         Image image = BenchSupport.loadFilesystemImage(root + "/" + entries[i].path);
-        Image thumbnail = image.getScaledInstance(cellWidth, CELL_HEIGHT);
+        Image thumbnail = image.getSmoothScaledInstance(tileWidth, tileWidth);
         image = null;
         ImageControl control = new ImageControl(thumbnail);
-        int column = i % COLUMNS;
-        int row = i / COLUMNS;
-        control.setRect(8 + column * (cellWidth + 4), 8 + row * strideY, cellWidth, CELL_HEIGHT);
+        row.add(control, Control.AFTER + 1, Control.TOP, tileWidth, tileWidth);
         controls[i] = control;
-        scroll.add(control);
+        controlsInRow++;
       } catch (Throwable failure) {
         loadFailures++;
         throw new IllegalStateException("cannot create image control for " + entries[i].path, failure);
       }
     }
+    if (controlsInRow != COLUMNS || rows.length != 221 || controls.length != 663) {
+      throw new IllegalStateException("scroll hierarchy must contain 221 rows and 663 image controls");
+    }
+    mainContainer.resize();
     scroll.resize();
+    if (scroll.sbV == null) {
+      throw new IllegalStateException("real workload vertical scrollbar is missing");
+    }
+    scrollMinimum = scroll.sbV.getMinimum();
+    scrollMaximum = Math.max(scrollMinimum,
+        scroll.sbV.getMaximum() - scroll.sbV.getVisibleItems());
+    if (scrollMaximum <= scrollMinimum) {
+      throw new IllegalStateException("real workload content does not extend beyond its viewport");
+    }
+    scroll.sbV.setValue(scrollMinimum);
     diagnosticsBefore = configureDiagnostics(true);
+    JSONObject dataset = config.getJSONObject("dataset");
+    System.out.println("P12_SCROLL_START fixture=ImageScrollRealWorkloadBenchmarkApp"
+        + " imageControls=" + controls.length + " rows=" + rows.length + " columns=" + COLUMNS
+        + " logicalSize=" + viewportWidth + "x" + viewportHeight + " tileWidth=" + tileWidth
+        + " scrollMin=" + scrollMinimum + " scrollMax=" + scrollMaximum
+        + " dataset=" + dataset.getString("id") + "/" + dataset.getString("version")
+        + " runtimeSha=" + config.getString("runtimeSourceCommit") + " runtimeProfile=" + profile);
   }
 
   void start() {
     app.addTimerListener(this);
-    scroll.scrollToOrigin();
-    schedule(TIMER_MILLIS);
-    if (preparation) {
-      requestVisiblePreparation();
-    }
+    scroll.sbV.setValue(scrollMinimum);
+    schedule(START_STABILIZE_MILLIS);
   }
 
   void capturePaint() {
@@ -145,13 +196,19 @@ final class ScrollWorkload implements TimerListener {
   }
 
   private void beginPass() {
-    if (passNumber >= 2) {
+    if (passNumber >= PASS_COUNT) {
       finish();
       return;
     }
-    scroll.scrollToOrigin();
-    direction = 1;
-    currentPassFrames = 0;
+    if (preparation && !passPreparationReady) {
+      passPreparationReady = true;
+      lastPreparedY = scroll.sbV.getValue();
+      requestVisiblePreparation();
+      return;
+    }
+    direction = passNumber == 1 ? -1 : 1;
+    int startPosition = direction > 0 ? scrollMinimum : scrollMaximum;
+    scroll.sbV.setValue(startPosition);
     lastStepNs = 0L;
     lastPaintNs = 0L;
     stepIntervals.clear();
@@ -159,8 +216,7 @@ final class ScrollWorkload implements TimerListener {
     collectPaints = true;
     passStartedNs = System.nanoTime();
     if (preparation) {
-      lastPreparedY = -1;
-      requestVisiblePreparation();
+      lastPreparedY = startPosition;
     }
   }
 
@@ -172,35 +228,27 @@ final class ScrollWorkload implements TimerListener {
       allStepIntervals.add(interval);
     }
     lastStepNs = now;
-    currentPassFrames++;
-    int position = scroll.getScrollPosition(DragEvent.DOWN);
-    int maxPosition = Math.max(0, scroll.getPreferredHeight() - viewportHeight);
-    if (direction > 0) {
-      int distance = Math.min(STEP_PIXELS, Math.max(0, maxPosition - position));
-      if (distance > 0) {
-        scroll.scrollContent(0, distance, true);
-      }
-      if (position + distance >= maxPosition) {
-        direction = -1;
-      }
-    } else {
-      int distance = Math.min(STEP_PIXELS, Math.max(0, position));
-      if (distance > 0) {
-        scroll.scrollContent(0, -distance, true);
-      }
-      if (position - distance <= 0) {
-        endPass();
-        return;
-      }
+    int position = scroll.sbV.getValue();
+    int endpoint = direction > 0 ? scrollMaximum : scrollMinimum;
+    if (position == endpoint) {
+      endPass();
+      return;
+    }
+    int distance = Math.min(SCROLL_STEP, Math.abs(endpoint - position));
+    if (!scroll.scrollContent(0, direction * distance, true)) {
+      throw new IllegalStateException("scroll pass stopped before reaching its scrollbar endpoint");
     }
     if (preparation && shouldPrepare()) {
       requestVisiblePreparation();
+    }
+    if (scroll.sbV.getValue() == endpoint && !preparationPending) {
+      endPass();
     }
   }
 
   private boolean shouldPrepare() {
     int position = scroll.getScrollPosition(DragEvent.DOWN);
-    int interval = Math.max(1, viewportHeight - CELL_HEIGHT);
+    int interval = Math.max(1, scroll.getRect().height - tileWidth);
     if (lastPreparedY < 0 || Math.abs(position - lastPreparedY) >= interval) {
       lastPreparedY = position;
       return true;
@@ -230,11 +278,11 @@ final class ScrollWorkload implements TimerListener {
 
   private void countVisibleEntries() {
     int top = scroll.getScrollPosition(DragEvent.DOWN);
-    int bottom = top + Math.max(1, viewportHeight - 16);
-    int strideY = CELL_HEIGHT + ROW_GAP;
+    int bottom = top + Math.max(1, scroll.getRect().height);
+    int strideY = tileWidth + 2;
     for (int i = 0; i < entries.length; i++) {
-      int itemTop = 8 + (i / COLUMNS) * strideY;
-      if (!requested[i] && itemTop < bottom && itemTop + CELL_HEIGHT > top) {
+      int itemTop = 2 + (i / COLUMNS) * strideY;
+      if (!requested[i] && itemTop < bottom && itemTop + tileWidth > top) {
         requested[i] = true;
         requestedCount++;
       }
@@ -244,10 +292,11 @@ final class ScrollWorkload implements TimerListener {
   private void endPass() {
     collectPaints = false;
     long wall = System.nanoTime() - passStartedNs;
-    String name = passNumber == 0 ? "first-workload" : "warm";
+    String name = passName(passNumber);
+    String passDirection = direction > 0 ? "top-to-bottom" : "bottom-to-top";
     JSONObject pass = BenchSupport.object(
         "name", name,
-        "direction", "top-to-bottom-then-bottom-to-top",
+        "direction", passDirection,
         "wallTimeNs", wall,
         "stepSampleCount", stepIntervals.size(),
         "stepIntervalNs", stepIntervals.toJsonArray(),
@@ -257,12 +306,23 @@ final class ScrollWorkload implements TimerListener {
         "scrollPositionEnd", scroll.getScrollPosition(DragEvent.DOWN));
     passes.put(pass);
     passNumber++;
+    passPreparationReady = false;
     passStartedNs = 0L;
-    if (passNumber < 2) {
+    if (passNumber < PASS_COUNT) {
       schedule(1);
     } else {
       finish();
     }
+  }
+
+  private static String passName(int index) {
+    if (index == 0) {
+      return "cold-forward";
+    }
+    if (index == 1) {
+      return "warm-reverse";
+    }
+    return "warm-forward";
   }
 
   private void finish() {
@@ -276,11 +336,17 @@ final class ScrollWorkload implements TimerListener {
       JSONObject measurements = BenchSupport.object(
           "axes", BenchSupport.object("requestedLogicalViewportWidth", config.getInt("requestedLogicalWidth"),
               "requestedLogicalViewportHeight", config.getInt("requestedLogicalHeight"),
-              "logicalViewportWidth", viewportWidth, "logicalViewportHeight", viewportHeight,
+              "logicalViewportWidth", scroll.getRect().width,
+              "logicalViewportHeight", scroll.getRect().height,
               "displayScale", getDisplayScale()),
+          "logicalWindowWidth", viewportWidth,
+          "logicalWindowHeight", viewportHeight,
           "imageControls", controls.length,
-          "rows", (controls.length + COLUMNS - 1) / COLUMNS,
+          "rows", rows.length,
           "columns", COLUMNS,
+          "tileWidth", tileWidth,
+          "scrollMinimum", scrollMinimum,
+          "scrollMaximum", scrollMaximum,
           "passes", passes,
           "frameSampleCount", paintIntervals.size(),
           "paintIntervalNs", paintIntervals.toJsonArray(),
@@ -300,6 +366,11 @@ final class ScrollWorkload implements TimerListener {
           config.getString("phase"), config.getString("family")));
       if (controls.length != BenchSupport.EXPECTED_FILE_COUNT || loadFailures != 0) {
         app.fail(new IllegalStateException("scroll workload did not create the complete image corpus"));
+      } else if (Boolean.TRUE.equals(config.opt("holdForVisualValidation"))) {
+        scroll.sbV.setValue(scrollMinimum);
+        scroll.repaintNow();
+        System.out.println("P12_SCROLL_VALIDATION_READY; window is positioned at the first row for visual review");
+        System.out.flush();
       } else {
         app.exit(0);
       }

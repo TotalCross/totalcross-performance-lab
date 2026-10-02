@@ -12,5 +12,9 @@
     "archive": "https://totalcross-benchmark-data.s3.us-west-2.amazonaws.com/image-scroll/v1/totalcross-image-scroll-v1.zip",
     "manifest": "https://totalcross-benchmark-data.s3.us-west-2.amazonaws.com/image-scroll/v1/manifest.json",
     "sha256sums": "https://totalcross-benchmark-data.s3.us-west-2.amazonaws.com/image-scroll/v1/SHA256SUMS"
+  },
+  "integrity": {
+    "archiveSha256": "a7e5545ca6565033d0c5b31bfa81cf89c972d5ba21566dc711df282de3b97b42",
+    "manifestSha256": "4dac75139e4e7095f5843a696f5fcd84055bf798e90b49614d6e4243120f5dbe"
   }
 }

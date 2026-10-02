@@ -122,6 +122,20 @@ class RunnerContractTests(unittest.TestCase):
                 run.launch_one(args, {"profile": "default", "workload": "scroll"}, 1, "measured", 1,
                                None, "0123456789abcdef", "89abcdef01234567", [], "abc", ENVIRONMENT, root)
 
+    def test_scroll_preflight_config_contains_requested_dimensions(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            args = SimpleNamespace(
+                family="scroll", dataset_cache=root / "dataset", width=540, height=960,
+                diagnostics=False,
+                command=[sys.executable, "-c",
+                         "import json; c=json.load(open('tcbench-run.json')); "
+                         "assert c['width']==540 and c['height']==960"],
+                timeout_seconds=3, launch_cwd=None,
+            )
+            run.launch_preflight(args, {"profile": "default", "workload": "scroll"}, 1, None,
+                                 "0123456789abcdef", "89abcdef01234567", [], "abc", ENVIRONMENT, root)
+
     def test_percentile_math(self):
         self.assertEqual(25, run.percentile([10, 20, 30, 40], 0.5))
         self.assertEqual(38.5, run.percentile([10, 20, 30, 40], 0.95))
@@ -239,36 +253,20 @@ class RunnerContractTests(unittest.TestCase):
             shared = root / "classes/totalcross/bench/imagerendering/BenchSupport.class"
             shared.parent.mkdir(parents=True, exist_ok=True)
             shared.write_bytes(b"shared")
+            dataset_files = root / "dataset"
+            dataset_files.mkdir()
+            (dataset_files / "photo.jpg").write_bytes(b"image payload")
             jar_path = root / "Default.jar"
-            build_windows.write_profile_jar(root / "classes", "Default", jar_path)
+            build_windows.write_profile_jar(root / "classes", "Default", jar_path, dataset_files)
             with zipfile.ZipFile(jar_path) as archive:
                 self.assertEqual(
-                    ["totalcross/bench/imagerendering/BenchSupport.class",
+                    ["image-scroll/photo.jpg",
+                     "totalcross/bench/imagerendering/BenchSupport.class",
                      "totalcross/bench/imagerendering/profiles/Default.class"],
                     sorted(archive.namelist()),
                 )
                 self.assertEqual((1980, 1, 1, 0, 0, 0), archive.getinfo(archive.namelist()[0]).date_time)
-
-    def test_profile_jar_contains_only_selected_entry_and_has_reproducible_metadata(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            classes = root / "classes/totalcross/bench/imagerendering/profiles"
-            classes.mkdir(parents=True)
-            (classes / "Default.class").write_bytes(b"default")
-            (classes / "Compact.class").write_bytes(b"compact")
-            shared = root / "classes/totalcross/bench/imagerendering/BenchSupport.class"
-            shared.parent.mkdir(parents=True, exist_ok=True)
-            shared.write_bytes(b"shared")
-            jar_path = root / "Default.jar"
-            build_windows.write_profile_jar(root / "classes", "Default", jar_path)
-            import zipfile
-            with zipfile.ZipFile(jar_path) as archive:
-                self.assertEqual(
-                    ["totalcross/bench/imagerendering/BenchSupport.class",
-                     "totalcross/bench/imagerendering/profiles/Default.class"],
-                    sorted(archive.namelist()),
-                )
-                self.assertEqual((1980, 1, 1, 0, 0, 0), archive.getinfo(archive.namelist()[0]).date_time)
+                self.assertEqual(b"image payload", archive.read("image-scroll/photo.jpg"))
 
 
 if __name__ == "__main__":

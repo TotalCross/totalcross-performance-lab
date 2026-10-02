@@ -100,7 +100,7 @@ manifests, build logs, and raw results are in the ignored local bundle
 artifacts/p12-checkpoint/. Its file checksums are in
 artifacts/p12-checkpoint/SHA256SUMS. The archive is
 artifacts/p12-checkpoint.tar.gz; SHA-256:
-e28a85e15f32d66d5b2f08765c4da5e4bd11de0809e6bd4b84cc9de404b0bc6a.
+2a2bde179c807175e37a94a0b229aea2513fe2ab83b17af0b050ea8d65787a2a.
 The 47.5 MB source dataset, generated packages, and build outputs remain in
 ignored .local-data/ paths and are not committed.
 
@@ -423,3 +423,69 @@ The full scroll/preparation/pacing profile matrices, Windows package, and
 final P12 analysis are deferred until the performance/runtime questions above
 are investigated. Do not mark P12 complete or resume benchmarks without
 explicit user instruction.
+
+## Additional stop before official-package run (2026-10-02)
+
+The later instruction to stop arrived while preparing a provenance-controlled
+run against the official TotalCross package. A fresh process scan found no
+image-rendering runner, TotalCross launcher, or benchmark child active. No
+process was terminated for this stop, no command was running, and no additional
+benchmark cell or process was started. The earlier `scroll / target-color /
+round 2` interruption above remains the last interrupted benchmark cell.
+Accepted completed measurement counts and times are unchanged: 54 completed
+children in the corrected chain, about 26m33s measured wall time; the separate
+interrupted child is not counted as a completed measurement.
+
+The official GitHub package was downloaded and its outer artifact digest
+matched the GitHub artifact metadata. Workflow `37076804175` (Packages
+`totalcross`), source SHA
+`5a44f503bf6fa1bec350f1218f4d501a70fc4812`, published artifact
+`11256633898` (`TotalCross-7.2.2`) with digest
+`sha256:4eed292bc20af56ef55cbb7397ffc090c3690b1b1d8f41d75cfbb70ebe6cec41`.
+The contained package ZIP SHA-256 is
+`dddbc50ffae0ce3a1b6f3b315d99cf971190238524c960cd06035066cab337dd`. The
+official SDK JAR, macOS Launcher, and macOS `libtcvm.dylib` hashes are
+`389204c26d4377a5964d529ed6aaac0b751dd39c5546c6310918d085bb9baf49`,
+`3439082ff2b6e7bab37d7049b5860b6d4743297536bb7c9ba6806a2b45445884`, and
+`421f957d551a75022a92db21638620732614e6d033a6f417ada09c6867cb8f24`.
+These files remain in ignored `.local-data/official-totalcross-7.2.2/`.
+The package was not used to build, deploy, or launch a benchmark application;
+there is no new official-package run or result record.
+
+At this stop, the performance-lab branch was
+`perf/image-rendering-benchmarks` at
+`139e05649e28f9fdd551bb3bc53ada4854e04650`, matching its remote tracking
+branch before this addendum. The local uncommitted paths were
+`schemas/benchmark-package-v1.schema.json`,
+`schemas/benchmark-run-v1.schema.json`,
+`schemas/environment-v1.schema.json`,
+`schemas/official-runtime-provenance-v1.schema.json`, and
+`tools/packaging/build_macos.py`. These edits were an unfinished optional
+official-package provenance mode for the now-paused run; the CLI/profile
+selection path was not complete. They were not committed as completed P12
+implementation. Their exact tracked diff, new schema, status, and related
+artifact metadata are preserved in
+`artifacts/p12-checkpoint/current-stop-20261002T234841Z/`.
+
+The benchmark source checkout used by earlier completed runs remains
+`/Users/flsobral/repos/totalcross-runtime-p12` at
+`5a44f503bf6fa1bec350f1218f4d501a70fc4812`, clean. The separate development
+checkout `/Users/flsobral/repos/totalcross-image-scroll-raster-fast-path`
+was at `1c6306b0861c589b8c6abe5f494c5c623db346f9` on
+`feat/frame-pacing-scheduling-diagnostics` and dirty; its status and tracked
+diff were captured in the current-stop evidence snapshot.
+
+After capturing the state, the lightweight checks were run: `git diff
+--check`, `python3 -m py_compile tools/packaging/build_macos.py runners/run.py`,
+and `python3 -m unittest discover -s tests` (34 tests passed in 1.151 seconds).
+No performance workload, app build/deploy, or benchmark-launch command was
+run after the stop. The official-package implementation remains incomplete;
+these checks do not validate its end-to-end behavior.
+
+The updated ignored evidence archive is
+`artifacts/p12-checkpoint.tar.gz`, SHA-256
+`2a2bde179c807175e37a94a0b229aea2513fe2ab83b17af0b050ea8d65787a2a`. The
+earlier archive with SHA-256
+`e28a85e15f32d66d5b2f08765c4da5e4bd11de0809e6bd4b84cc9de404b0bc6a` is
+preserved as `artifacts/p12-checkpoint-before-latest-stop.tar.gz`. Both are
+ignored by Git. No diagnosis or performance conclusion has been added.

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "image-scroll",
+  "version": "v1",
+  "immutable": true,
+  "expectedFileCount": 663,
+  "historicalFormatCounts": {
+    "jpeg": 660,
+    "png": 3
+  },
+  "artifacts": {
+    "archive": "https://totalcross-benchmark-data.s3.us-west-2.amazonaws.com/image-scroll/v1/totalcross-image-scroll-v1.zip",
+    "manifest": "https://totalcross-benchmark-data.s3.us-west-2.amazonaws.com/image-scroll/v1/manifest.json",
+    "sha256sums": "https://totalcross-benchmark-data.s3.us-west-2.amazonaws.com/image-scroll/v1/SHA256SUMS"
+  }
+}

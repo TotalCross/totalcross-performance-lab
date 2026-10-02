@@ -15,8 +15,9 @@ entry classes. The corpus stays outside Git.
   separate.
 - **preparation** — default/no-preparation reference and explicit
   `ScrollContainer.prepareForDisplay(...)` using either production worker.
-- **pacing** — current production flick timer, update-listener, and synthetic
-  work cadences. This suite exposes no scheduling switches.
+- **pacing** — current production flick timer and synthetic work cadences. The
+  update-listener/flick selector is package-private in the pinned runtime, so
+  the suite does not depend on it. No runtime scheduling switches are exposed.
 
 The default logical scroll viewport is 540x960. The host drawable size and
 display scale are recorded separately. A fresh process is not described as a

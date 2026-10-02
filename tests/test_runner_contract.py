@@ -169,6 +169,20 @@ class RunnerContractTests(unittest.TestCase):
         with self.assertRaisesRegex(run.RunnerError, "unknown command placeholder"):
             run.expand_cell_value("/bench/{unknown}", "default", "flick-60")
 
+    def test_scroll_families_pass_requested_logical_window_to_launcher(self):
+        self.assertEqual(["launcher", "/scr", "-2,-2,540,960"],
+                         run.ensure_scroll_window_arguments(["launcher"], "scroll", 540, 960))
+        self.assertEqual(["launcher", "/scr", "-2,-2,800,1200"],
+                         run.ensure_scroll_window_arguments(["launcher"], "preparation", 800, 1200))
+        self.assertEqual(["launcher"], run.ensure_scroll_window_arguments(["launcher"], "pacing", 540, 960))
+        self.assertEqual(["launcher", "/scr", "custom"],
+                         run.ensure_scroll_window_arguments(["launcher", "/scr", "custom"], "scroll", 540, 960))
+
+    def test_windows_runner_passes_requested_logical_window_to_launcher(self):
+        runner = (Path(__file__).parents[1] / "runners/windows/run-image-rendering-benchmark.ps1").read_text(
+            encoding="utf-8")
+        self.assertIn("$processInfo.Arguments = \"/scr -2,-2,$Width,$Height\"", runner)
+
     def test_macos_package_builder_targets_matching_release_arm64_runtime(self):
         self.assertEqual(list(run.PROFILES), list(build_macos.PROFILE_CLASSES))
         source = (Path(__file__).parents[1] / "tools/packaging/build_macos.py").read_text(encoding="utf-8")

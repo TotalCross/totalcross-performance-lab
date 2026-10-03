@@ -28,8 +28,9 @@ and existing draw/admission counters are unchanged.
 ## Progress
 - [x] Starting lab clean at published 49fb0c5; historical/current call paths inspected.
 - [x] Restored narrow historical RGBA helper/switch and passed native eligibility/parity tests.
-- [ ] Exact runtime committed/built, 105 lab/58 SDK tests pass; commit tooling then package/hash audit.
-- [ ] One process, offline analysis, report/checkpoint, final validation and push.
+- [x] Exact runtime/tooling committed; package and all prelaunch hashes validated.
+- [x] Sole process succeeded; 18 viewport native hits every event, reports/index written.
+- [x] Final offline audit passed; report/checkpoint/provenance publication checkpoint.
 
 ## Current Architecture and Scope
 Historical f5dad132 passed bit-2 optimizationMask to NativeImageBacking drawing.
@@ -81,5 +82,7 @@ output. No replacement after valid samples; setup failure needs offline correcti
 and explicit decision, never silent retry. Keep old worktrees/artifacts intact.
 
 ## Outcomes & Retrospective
-Pending. Production admission and unrelated behavior stay unchanged. Preserve
-checkpoint open policy section verbatim; record all causal cases honestly.
+Case A: median1.156250 ms and18 cached-final writePixels hits per sample recover
+94.708283% of residual gap. Remaining0.139375 ms is unexplained. Production
+admission/architecture remain unresolved. Exact native geometry and first-process
+evidence are indexed; see dedicated report for confidence and limitations.

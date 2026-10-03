@@ -1631,3 +1631,87 @@ these were resolved without source changes. All normal build artifacts and logs
 remain local. No measured native application process has run at this checkpoint.
 The source/tooling checkpoint is committed before packaging/sole launch. The
 cache-admission follow-up section remains unchanged and explicitly unresolved.
+
+
+## copyRect causal probe: final-raster reuse demonstrated (2026-10-03)
+
+The single authorized causal process succeeded from lab implementation
+`e9cb47bbe2750ec3a19341514283b9f19002d8b4` and custom TotalCross source
+`fc08c39499dead73b327ad259a992ab34ec42870` (base current reference `5a44f503`).
+**Runner count 1 / exit 0; measured native application count 1 / exit 0.**
+One complete valid run/summary and inline preflight were emitted. No replacement,
+warmup, separate preflight, preparation, movement, alternate profile/policy,
+historical run, Windows run or P12 matrix ran. The single focused native unit-test
+executable ran before measurement and is counted separately from application
+processes. Raw runtime output and normal build artifacts remain local.
+
+The dedicated [causal report](p12-copyrect-causal-probe.md) contains all five
+timings, per-event counters/classifications, comparison, confidence and limits.
+The canonical [provenance/hash index](../experiments/p12-copyrect-causal/provenance.json)
+records exact SDK/Launcher/libtcvm artifacts, source/benchmark commits, build and
+runner commands, exits, and hashes of the preserved sole-process evidence under
+`.local-data/results/image-rendering-copyrect-causal-probe/run-20261003T062742Z-26394/`.
+The initialization read-only-filesystem resource warning was nonfatal; the native
+exit was explicitly captured in `exit-status.json` and stderr was empty.
+
+Actual geometry stayed application 540×960, viewport 540×910, drawable 1080×1920,
+scale 2, top 0, six rows/eighteen ImageControls out of 663 ordered dataset images.
+Retained control/Image/row references and identical before/after production
+configuration reports passed. The switch was off during normal startup, then
+on only for the explicit stabilization and five measured paints.
+
+| Paint event | paintTree ms | ImageControl total ms | Cached-final probes/hits/misses | Variant observations/admissions | Native geometry materializations |
+| --- | --- | --- | --- | --- | --- |
+| Stabilization (untimed tree) | — | 348.214998 | 18/0/18 | 18/0 | 18 |
+| Sample 1 | 349.357000 | 348.897248 | 18/0/18 | 18/18 | 18 |
+| Sample 2 | 3.588625 | 3.275458 | 18/18/0 | 0/0 | 0 |
+| Sample 3 | 3.576917 | 3.277625 | 18/18/0 | 0/0 | 0 |
+| Sample 4 | 3.570500 | 3.264083 | 18/18/0 | 0/0 | 0 |
+| Sample 5 | 3.570541 | 3.271419 | 18/18/0 | 0/0 | 0 |
+
+Stabilization and sample 1 each had 18 physical-copy attempts, zero hits,
+18 fallbacks; 18 identity attempts/fallbacks; 18 copyRect draw-plan attempts,
+zero handled, 18 fallbacks (last status 20490 / `0x500a`). They reached existing
+resolveForDrawing and materialized all eighteen destination-scale variants.
+Stabilization admitted none, and sample 1 admitted all eighteen at observation
+two. Samples 2–5 each hit all eighteen cached-final rasters with zero draw-plan
+attempts, physical/identity activity, variant observations/admissions or native
+geometry materializations. Direct generic/smooth draw counters were zero in all
+six events because the experimental route returns unhandled before those paths.
+Offscreen geometry/smooth materialization occurred only during stabilization and
+sample 1, then ceased after admission. Disabled variant-path counters stayed zero.
+
+Resolve calls were 20/20/2/2/2/2 over the six events, with zero hits inside resolve.
+Counter conservation plus the unchanged resolver shows two non-deferred (`pipeline
+== null`) resolves per paint; their call sites were not identified. They do not
+represent final-raster cache failures: cached-final probing is earlier, and the
+visible controls bypassed resolve on samples 2–5. Every event still painted 6/18.
+
+**The detailed predicted protocol occurred:** expensive stabilization/first
+observation, expensive measured sample 1/second observation/admission, then fast
+cached-final samples 2–5. Their median 3.573729 ms is close to current prepared
+3.532 ms and far below current recurring unprepared 278.192 ms. It remains above
+historical stabilized unprepared 1.016875 ms. The experiment ends the repeated
+expensive path without changing current second-observation admission; it does
+not restore historical absolute timing or decide immediate admission policy.
+
+**High-confidence causal conclusion for this workload/configuration:** current
+copyRect generic smooth HANDLED prevents the existing final-raster fallback from
+being exercised. Letting physical rejection fall through exposes the expected
+observation/admission/cache-hit sequence and eliminates recurring geometry work.
+This matches the prior all-eighteen generic-geometry/smooth-resample evidence.
+Absolute cross-runtime ratios remain limited by separate reference processes,
+custom Release build/test accounting and one measured process. The colder
+349 ms paint may include full-variant work for the heavily clipped bottom row;
+that explanation was not separately tested. No further experiment or production
+fix is authorized by this finding.
+
+Validation passed: all 90 Python tests, focused native routing assertions,
+header checks, SDK/native builds, normal-official and custom-causal Java compilation,
+custom deployment, offline valid/truncated/duplicate parser fixtures and original
+artifact/hash/one-process revalidation. `git diff --check` passed. No broad
+platform/sanitizer/benchmark validation was performed. Production admission,
+physical eligibility, JPEG decode, preparation, renderer/runtime defaults and
+unrelated behavior remain unchanged outside the isolated enabled routing test.
+The **Open follow-up: materialized cache admission policy** section is preserved
+verbatim, remains unresolved and is explicitly out of scope.

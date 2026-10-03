@@ -108,6 +108,12 @@ admission remains unresolved; this experiment does not explain the residual gap.
 
 ## Validation
 
+The first SDK validation failed one new failure-path test because the PNG
+fixture did not consume the existing allocation-failure hook. The fixture was
+changed to the established BMP path; the subsequent 58-test run passed. The
+original failing validation log is indexed. This correction preceded the
+implementation commit, package build and sole measurement.
+
 Before launch: 97 lab Python tests; 58 focused SDK tests (nine admission cases,
 plus destination scale, backing, decode requirement and policy); native physical
 identity/surface copy assertions; focused headers; normal official Java compile

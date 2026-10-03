@@ -71,7 +71,8 @@
     "customBenchmarkCompile": "passed (10 sources)",
     "headers": "passed",
     "offlineProtocolParser": "valid immediate run/summary accepted; truncated and duplicate summaries rejected",
-    "postRunAudit": "passed: schema/protocol/preflight; six exact events; one runner/process exit 0; hashes; unchanged original runtime and open policy section"
+    "postRunAudit": "passed: schema/protocol/preflight; six exact events; one runner/process exit 0; hashes; unchanged original runtime and open policy section",
+    "initialSdkFixtureFailure": "one PNG failure-path fixture did not consume allocation hook; corrected to BMP before final 58-test pass and implementation commit"
   },
   "runtimePatchSha256": "1658523230bb6aed0866985680ea9adb5c3f24ac2019dce38bccb4155b619e6b",
   "admissionPatchSha256": "b7c9d03ad60be50c12b3af7d97cd67a5b34cf7bd65dcc30f934958e0a6caf1a5",
@@ -206,6 +207,10 @@
     {
       "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/lab-tests-final.log",
       "sha256": "b4ec0126f8f841e11e130c04ee51d838e291a5c438831239e5cc48f92ff5bafc"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-immediate-admission/TotalCrossSDK/agent-logs/20261003-035609-dist-full.log",
+      "sha256": "f9c7adaf586892029b688f6f2eb38c63570612c3b78192c66d545c825499c9cc"
     }
   ],
   "samples": [

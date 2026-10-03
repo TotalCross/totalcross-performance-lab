@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TotalCross/totalcross-performance-lab/schemas/official-runtime-provenance-v1.schema.json",
+  "title": "Official TotalCross package runtime provenance v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "mode",
+    "repository",
+    "workflowRunId",
+    "workflowName",
+    "workflowHeadBranch",
+    "workflowHeadSha",
+    "workflowConclusion",
+    "artifactId",
+    "artifactName",
+    "githubArtifactDigest",
+    "outerArtifactSha256",
+    "artifactSizeBytes",
+    "packageZipPath",
+    "packageZipSha256",
+    "packageRoot",
+    "sourcePackageHome",
+    "artifactMetadata",
+    "workflowRunMetadata",
+    "sourceFiles",
+    "sdkLibraries",
+    "deployedArtifactsByProfile"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "mode": { "const": "github-actions-package" },
+    "repository": { "type": "string", "minLength": 1 },
+    "workflowRunId": { "type": "integer", "minimum": 1 },
+    "workflowName": { "type": "string", "minLength": 1 },
+    "workflowHeadBranch": { "type": "string", "minLength": 1 },
+    "workflowHeadSha": { "$ref": "#/$defs/sha1" },
+    "workflowConclusion": { "const": "success" },
+    "artifactId": { "type": "integer", "minimum": 1 },
+    "artifactName": { "type": "string", "minLength": 1 },
+    "githubArtifactDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "outerArtifactSha256": { "$ref": "#/$defs/sha256" },
+    "artifactSizeBytes": { "type": "integer", "minimum": 1 },
+    "packageZipPath": { "type": "string", "minLength": 1 },
+    "packageZipSha256": { "$ref": "#/$defs/sha256" },
+    "packageRoot": { "type": "string", "minLength": 1 },
+    "sourcePackageHome": { "type": "string", "minLength": 1 },
+    "artifactMetadata": { "$ref": "#/$defs/fileHash" },
+    "workflowRunMetadata": { "$ref": "#/$defs/fileHash" },
+    "sourceFiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sdkJar", "launcher", "libtcvm"],
+      "properties": {
+        "sdkJar": { "$ref": "#/$defs/sourceFile" },
+        "launcher": { "$ref": "#/$defs/sourceFile" },
+        "libtcvm": { "$ref": "#/$defs/sourceFile" }
+      }
+    },
+    "sdkLibraries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["officialPackagePath", "sha256"],
+        "properties": {
+          "officialPackagePath": { "type": "string", "minLength": 1 },
+          "sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    "deployedArtifactsByProfile": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/deployedArtifacts" }
+    }
+  },
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "fileHash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "sourceFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "officialPackagePath", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "officialPackagePath": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "deployedArtifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profileJar", "executable", "applicationTcz", "libtcvm"],
+      "properties": {
+        "profileJar": { "$ref": "#/$defs/fileHash" },
+        "executable": { "$ref": "#/$defs/fileHash" },
+        "applicationTcz": { "$ref": "#/$defs/fileHash" },
+        "libtcvm": { "$ref": "#/$defs/fileHash" }
+      }
+    }
+  }
+}

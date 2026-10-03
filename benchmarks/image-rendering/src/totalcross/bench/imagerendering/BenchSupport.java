@@ -11,6 +11,7 @@ final class BenchSupport {
   static final int EXPECTED_FILE_COUNT = 663;
   static final long RANDOM_SEED = 12012026L;
   static final String RESULT_PREFIX = "TCBENCH_JSON ";
+  static final String PREFLIGHT_PREFIX = "TCBENCH_PREFLIGHT_JSON ";
 
   private BenchSupport() { }
 

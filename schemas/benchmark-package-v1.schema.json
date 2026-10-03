@@ -37,6 +37,7 @@
         "manifestSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
       }
     },
+    "runtimeProvenance": { "$ref": "official-runtime-provenance-v1.schema.json" },
     "buildConfiguration": {
       "type": "object",
       "additionalProperties": false,
@@ -47,6 +48,7 @@
         "nativeRuntimeDirectory": { "type": "string", "minLength": 1 },
         "deployTarget": { "enum": ["win32", "macos"] },
         "architecture": { "type": "string", "minLength": 1 },
+        "runtimeArtifactMode": { "enum": ["local-release-build", "github-actions-package"] },
         "sdkBuildCommand": { "type": "array", "items": { "type": "string" } },
         "javaCompileRelease": { "const": 8 }
       }

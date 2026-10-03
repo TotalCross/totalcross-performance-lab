@@ -31,6 +31,19 @@
     },
     "environment": { "$ref": "environment-v1.schema.json" },
     "runtimeIdentity": { "type": "string", "minLength": 1 },
+    "runtimeProvenance": { "$ref": "official-runtime-provenance-v1.schema.json" },
+    "runnerRuntimeFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
     "logicalDimensions": { "$ref": "#/$defs/dimensionsOrNull" },
     "drawableDimensions": { "$ref": "#/$defs/dimensionsOrNull" },
     "renderer": { "type": "string", "minLength": 1 },

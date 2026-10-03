@@ -17,10 +17,13 @@ import time
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIR = ROOT / "schemas"
+sys.path.insert(0, str(ROOT))
+from tools.packaging.official_runtime import validate_packaged_provenance
+
 PREFIX = "TCBENCH_JSON "
+PREFLIGHT_PREFIX = "TCBENCH_PREFLIGHT_JSON "
 PROFILES = (
     "default", "target-color", "physical-variant", "raster-variants", "compact",
     "scroll-reuse", "prepared-legacy", "prepared-semaphore", "combined-standard", "combined-compact",
@@ -227,6 +230,82 @@ def runtime_hashes(paths: list[Path]) -> tuple[list[dict[str, str]], str]:
     return hashes, hashlib.sha256(encoded).hexdigest()
 
 
+def parse_preflight(stdout: str, family: str, workload: str, profile: str) -> dict[str, Any]:
+    records = []
+    for line_number, line in enumerate(stdout.splitlines(), 1):
+        if line.startswith(PREFLIGHT_PREFIX):
+            try:
+                value = json.loads(line[len(PREFLIGHT_PREFIX):])
+            except json.JSONDecodeError as error:
+                raise RunnerError("malformed TCBENCH_PREFLIGHT_JSON at stdout line " + str(line_number)) from error
+            if not isinstance(value, dict):
+                raise RunnerError("TCBENCH_PREFLIGHT_JSON must be an object")
+            records.append(value)
+    if len(records) != 1:
+        raise RunnerError("scroll preflight must emit exactly one TCBENCH_PREFLIGHT_JSON record")
+    record = records[0]
+    expected = {"recordType": "preflight", "family": family, "workload": workload, "profile": profile}
+    if any(record.get(key) != value for key, value in expected.items()):
+        raise RunnerError("preflight identity does not match the requested cell")
+    return record
+
+
+def validate_scroll_preflight(record: dict[str, Any], dataset: dict[str, Any] | None,
+                              width: int, height: int, require_default: bool = False) -> None:
+    fixture = record.get("fixture")
+    if not isinstance(fixture, dict):
+        raise RunnerError("scroll preflight is missing its fixture configuration")
+    if record.get("renderer") in (None, "", "unavailable"):
+        raise RunnerError("scroll preflight did not identify its renderer")
+    if not isinstance(record.get("diagnosticsRequested"), bool) or not isinstance(record.get("diagnosticsEnabled"), bool):
+        raise RunnerError("scroll preflight did not report diagnostics state")
+    if require_default and (record["diagnosticsRequested"] or record["diagnosticsEnabled"]):
+        raise RunnerError("default scroll preflight diagnostics must be disabled")
+    if fixture.get("dataset") != dataset:
+        raise RunnerError("scroll preflight dataset identity does not match the verified cache")
+    expected_dimensions = {"width": width, "height": height}
+    if fixture.get("logicalDimensions") != expected_dimensions or fixture.get("runtimeLogicalDimensions") != expected_dimensions:
+        raise RunnerError("scroll preflight logical resolution does not match the request")
+    expected = {
+        "imageControls": 663,
+        "rows": 221,
+        "columns": 3,
+        "tileWidth": (width - 3) // 3,
+    }
+    if any(fixture.get(key) != value for key, value in expected.items()):
+        raise RunnerError("scroll preflight fixture geometry does not match the historical workload")
+    report = record.get("runtimeConfigurationReport")
+    if not isinstance(report, str) or not report:
+        raise RunnerError("scroll preflight did not report the effective runtime configuration")
+    if not isinstance(fixture.get("explicitPreparationRequested"), bool):
+        raise RunnerError("scroll preflight did not report explicit image preparation state")
+    if require_default:
+        if fixture["explicitPreparationRequested"]:
+            raise RunnerError("default scroll preflight must not request explicit image preparation")
+        if record.get("profile") != "default" or record.get("renderer") != "RASTER":
+            raise RunnerError("default scroll preflight requires the RASTER renderer and default profile")
+        required_report_lines = (
+            "effective: STANDARD",
+            "targetColorConversion: disabled",
+            "physicalVariantCache: disabled",
+            "scrollRasterReuse: disabled",
+            "automaticPreparation: disabled",
+            "prefetchWorker: LEGACY_PER_ENTRY_THREAD",
+        )
+        if any(line not in report for line in required_report_lines):
+            raise RunnerError("effective runtime configuration differs from production defaults")
+
+
+def child_environment(arguments) -> dict[str, str]:
+    env = os.environ.copy()
+    official_home = getattr(arguments, "official_runtime_home", None)
+    if official_home:
+        env["TOTALCROSS3_HOME"] = str(official_home)
+        for name in ("TOTALCROSS_SOURCE", "TOTALCROSS_HOME", "DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH"):
+            env.pop(name, None)
+    return env
+
+
 def package_path(root: Path, relative: str) -> Path:
     candidate = (root / relative).resolve()
     try:
@@ -268,8 +347,10 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
         "datasetTczPrefix": "image-scroll/" if dataset else None,
         "runtimeSourceCommit": runtime_commit,
         "benchmarkSourceCommit": benchmark_commit,
-        "runtimeIdentity": "source:" + runtime_commit + ";artifact-sha256:" + runtime_hash,
+        "runtimeIdentity": getattr(arguments, "runtime_identity",
+                                   "source:" + runtime_commit + ";artifact-sha256:" + runtime_hash),
         "runtimeFiles": runtime_files,
+        "runtimeProvenance": getattr(arguments, "runtime_provenance", None),
         "environment": environment,
         "width": arguments.width,
         "height": arguments.height,
@@ -295,7 +376,8 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
         debug_console.unlink()
     started = time.monotonic_ns()
     try:
-        child = subprocess.run(arguments.command, cwd=launch_cwd, text=True, capture_output=True,
+        child = subprocess.run(arguments.command, cwd=launch_cwd, env=child_environment(arguments),
+                               text=True, capture_output=True,
                                timeout=arguments.timeout_seconds, check=False)
     except subprocess.TimeoutExpired as error:
         stdout = error.stdout.decode(errors="replace") if isinstance(error.stdout, bytes) else error.stdout or ""
@@ -315,6 +397,9 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
     run, _ = parse_protocol(child.stdout, arguments.family, cell["workload"], cell["profile"], round_number, phase)
     if run.get("runtimeSourceCommit") != runtime_commit or run.get("benchmarkSourceCommit") != benchmark_commit:
         raise RunnerError("run provenance commit does not match runner preflight")
+    expected_identity = getattr(arguments, "runtime_identity", None)
+    if expected_identity is not None and run.get("runtimeIdentity") != expected_identity:
+        raise RunnerError("run runtime identity does not match the package provenance")
     if run.get("dataset") != dataset:
         raise RunnerError("run dataset identity does not match runner preflight")
     axes = run.get("measurements", {}).get("axes", {})
@@ -323,6 +408,32 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
             raise RunnerError("run record axis does not match the requested decode cell: " + key)
     run["runnerWallTimeNs"] = wall_time_ns
     run["runnerRuntimeFiles"] = runtime_files
+    if getattr(arguments, "runtime_provenance", None) is not None:
+        run["runtimeProvenance"] = arguments.runtime_provenance
+    if getattr(arguments, "require_default_scroll_preflight", False):
+        measurements = run.get("measurements", {})
+        logical = run.get("logicalDimensions")
+        measured_fixture = {
+            "dataset": run.get("dataset"),
+            "logicalDimensions": logical,
+            "runtimeLogicalDimensions": {
+                "width": measurements.get("logicalWindowWidth"),
+                "height": measurements.get("logicalWindowHeight"),
+            },
+            "imageControls": measurements.get("imageControls"),
+            "rows": measurements.get("rows"),
+            "columns": measurements.get("columns"),
+            "tileWidth": measurements.get("tileWidth"),
+            "explicitPreparationRequested": measurements.get("preparation"),
+        }
+        validate_scroll_preflight({
+            "profile": run.get("profile"),
+            "renderer": run.get("renderer"),
+            "diagnosticsRequested": False,
+            "diagnosticsEnabled": run.get("diagnosticsEnabled"),
+            "runtimeConfigurationReport": run.get("runtimeConfigurationReport"),
+            "fixture": measured_fixture,
+        }, dataset, arguments.width, arguments.height, require_default=True)
     return run
 
 
@@ -337,8 +448,11 @@ def launch_preflight(arguments, cell: dict[str, Any], index: int, dataset, runti
         "datasetManifestPath": str(arguments.dataset_cache.resolve() / "objects" / "manifest.json") if dataset else None,
         "datasetTczPrefix": "image-scroll/" if dataset else None,
         "runtimeSourceCommit": runtime_commit, "benchmarkSourceCommit": benchmark_commit,
-        "runtimeIdentity": "source:" + runtime_commit + ";artifact-sha256:" + runtime_hash,
-        "runtimeFiles": runtime_files, "environment": environment,
+        "runtimeIdentity": getattr(arguments, "runtime_identity",
+                                   "source:" + runtime_commit + ";artifact-sha256:" + runtime_hash),
+        "runtimeFiles": runtime_files,
+        "runtimeProvenance": getattr(arguments, "runtime_provenance", None),
+        "environment": environment,
         "width": arguments.width, "height": arguments.height,
         "logicalDimensions": {"width": arguments.width, "height": arguments.height}
             if arguments.family in ("scroll", "preparation") else None,
@@ -357,7 +471,8 @@ def launch_preflight(arguments, cell: dict[str, Any], index: int, dataset, runti
     if debug_console.exists():
         debug_console.unlink()
     try:
-        child = subprocess.run(arguments.command, cwd=launch_cwd, text=True, capture_output=True,
+        child = subprocess.run(arguments.command, cwd=launch_cwd, env=child_environment(arguments),
+                               text=True, capture_output=True,
                                timeout=arguments.timeout_seconds, check=False)
     except subprocess.TimeoutExpired as error:
         stdout = error.stdout.decode(errors="replace") if isinstance(error.stdout, bytes) else error.stdout or ""
@@ -373,6 +488,16 @@ def launch_preflight(arguments, cell: dict[str, Any], index: int, dataset, runti
         shutil.copy2(debug_console, run_dir / "DebugConsole.txt")
     if child.returncode:
         raise RunnerError("preflight child exited with status %d" % child.returncode)
+    if arguments.family == "scroll":
+        record = parse_preflight(child.stdout, arguments.family, cell["workload"], cell["profile"])
+        if record.get("runtimeSourceCommit") != runtime_commit or record.get("benchmarkSourceCommit") != benchmark_commit:
+            raise RunnerError("scroll preflight provenance does not match the runner identity")
+        if record.get("runtimeIdentity") != config["runtimeIdentity"]:
+            raise RunnerError("scroll preflight runtime identity does not match the package provenance")
+        validate_scroll_preflight(record, dataset, arguments.width, arguments.height,
+                                  require_default=getattr(arguments, "require_default_scroll_preflight", False))
+        (run_dir / "preflight.json").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n",
+                                                  encoding="utf-8")
 
 
 def execute(arguments) -> int:
@@ -390,12 +515,48 @@ def execute(arguments) -> int:
         raise RunnerError("rounds and timeout must be positive; warmups must be non-negative")
     if arguments.width < 1 or arguments.height < 1:
         raise RunnerError("logical dimensions must be positive")
-    runtime_source = arguments.runtime_source.resolve()
-    runtime_commit = git_value(runtime_source, "rev-parse", "HEAD")
-    if git_value(runtime_source, "status", "--porcelain"):
-        raise RunnerError("TotalCross source checkout is dirty; use a clean read-only checkout")
     benchmark_commit = git_value(ROOT, "rev-parse", "HEAD")
     dirty = bool(git_value(ROOT, "status", "--porcelain"))
+    manifest_path = arguments.package_manifest.resolve() if arguments.package_manifest else None
+    package_manifest = read_json(manifest_path) if manifest_path else None
+    official_provenance = None
+    official_provenance_files: list[Path] = []
+    if package_manifest:
+        if getattr(arguments, "working_directory", None):
+            raise RunnerError("--working-directory cannot be combined with --package-manifest")
+        validate_schema(package_manifest, read_json(SCHEMA_DIR / "benchmark-package-v1.schema.json"), SCHEMA_DIR)
+        platform_names = {"macos": "darwin", "windows": "win32", "linux": "linux"}
+        if platform_names.get(package_manifest.get("platform")) != sys.platform:
+            raise RunnerError("package manifest platform does not match this host")
+        official_provenance = package_manifest.get("runtimeProvenance")
+
+    if official_provenance is not None:
+        if arguments.runtime_source is not None:
+            raise RunnerError("official package mode cannot select a TotalCross source checkout")
+        try:
+            from tools.packaging.official_runtime import validate_official_identity
+            validate_official_identity(official_provenance)
+            official_provenance_files = validate_packaged_provenance(
+                official_provenance, manifest_path.parent, package_manifest.get("profileInventory"))
+        except (ValueError, KeyError, OSError) as error:
+            raise RunnerError("official package provenance validation failed: " + str(error)) from error
+        runtime_commit = official_provenance["workflowHeadSha"]
+        runtime_home = Path(official_provenance["sourcePackageHome"]).resolve()
+        runtime_mode = package_manifest.get("buildConfiguration", {}).get("runtimeArtifactMode")
+        if runtime_mode != "github-actions-package":
+            raise RunnerError("official provenance requires github-actions-package build mode")
+    else:
+        source_arg = arguments.runtime_source or (
+            Path(os.environ["TOTALCROSS_SOURCE"]) if os.environ.get("TOTALCROSS_SOURCE") else None)
+        if source_arg is None:
+            raise RunnerError("set TOTALCROSS_SOURCE or pass --runtime-source")
+        runtime_source = source_arg.resolve()
+        runtime_commit = git_value(runtime_source, "rev-parse", "HEAD")
+        if git_value(runtime_source, "status", "--porcelain"):
+            raise RunnerError("TotalCross source checkout is dirty; use a clean read-only checkout")
+        runtime_home = None
+        runtime_mode = None
+
     env = {
         "hostOs": platform.platform(),
         "hostArchitecture": platform.machine(),
@@ -405,30 +566,39 @@ def execute(arguments) -> int:
         "sessionType": "ssh" if os.environ.get("SSH_CONNECTION") else None,
         "benchmarkWorkingTreeDirty": dirty,
     }
+    if official_provenance is not None:
+        env["totalcrossBuild"] = "github-artifact:%s;sha256:%s" % (
+            official_provenance["artifactName"], official_provenance["outerArtifactSha256"])
+        env["totalcross3Home"] = str(runtime_home)
     dataset = None
     if arguments.family != "pacing":
         dataset = dataset_info(arguments.dataset_cache.resolve(), "image-scroll/v1")
-    manifest_path = arguments.package_manifest.resolve() if arguments.package_manifest else None
-    package_manifest = read_json(manifest_path) if manifest_path else None
     if package_manifest:
-        if getattr(arguments, "working_directory", None):
-            raise RunnerError("--working-directory cannot be combined with --package-manifest")
-        validate_schema(package_manifest, read_json(SCHEMA_DIR / "benchmark-package-v1.schema.json"), SCHEMA_DIR)
-        platform_names = {"macos": "darwin", "windows": "win32", "linux": "linux"}
-        if platform_names.get(package_manifest.get("platform")) != sys.platform:
-            raise RunnerError("package manifest platform does not match this host")
         if package_manifest.get("runtimeArtifactSourceCommit") != runtime_commit:
-            raise RunnerError("Windows runtime artifacts were built from a different TotalCross source commit")
+            raise RunnerError("package runtime artifacts were built from a different TotalCross source commit")
         if package_manifest.get("totalcrossSourceCommit") != runtime_commit:
             raise RunnerError("package and selected TotalCross source commits differ")
         if package_manifest.get("benchmarkSourceCommit") != benchmark_commit:
             raise RunnerError("package was built from a different benchmark source commit")
         if package_manifest.get("benchmarkWorkingTreeDirty"):
             raise RunnerError("package was built from a dirty benchmark working tree")
-        if package_manifest.get("profileInventory") != list(PROFILES):
-            raise RunnerError("package profile inventory does not match the runner contract")
-        if set(package_manifest.get("profiles", {})) != set(PROFILES):
-            raise RunnerError("package manifest is missing named profile launchers")
+        inventory = package_manifest.get("profileInventory")
+        package_profiles = package_manifest.get("profiles", {})
+        if (not isinstance(inventory, list) or not inventory or len(inventory) != len(set(inventory))
+                or any(profile not in PROFILES for profile in inventory)
+                or set(package_profiles) != set(inventory)):
+            raise RunnerError("package profile inventory is invalid or inconsistent")
+        selected_profiles = comma_values(arguments.profiles, DEFAULT_PROFILES[arguments.family], PROFILES, "profile")
+        if not set(selected_profiles).issubset(inventory):
+            raise RunnerError("package manifest does not contain every requested profile")
+        if arguments.require_default_scroll_preflight:
+            if (official_provenance is None or arguments.family != "scroll" or selected_profiles != ("default",)
+                    or arguments.rounds != 1 or arguments.warmups != 0 or arguments.width != 540
+                    or arguments.height != 960 or arguments.diagnostics):
+                raise RunnerError("production-default gate requires one official default 540x960 scroll with no warmup or diagnostics")
+            if inventory != ["default"]:
+                raise RunnerError("production-default gate requires a default-only official package")
+            arguments.fail_fast = True
         if dataset and package_manifest.get("dataset", {}).get("manifestSha256") != dataset["manifestSha256"]:
             raise RunnerError("package and verified dataset manifest identities differ")
     output_base = arguments.results_dir.resolve()
@@ -449,6 +619,8 @@ def execute(arguments) -> int:
                 raise RunnerError("working directory does not exist: " + str(working_directory))
         arguments.launch_cwd = working_directory
         arguments.app_package = None
+        arguments.runtime_provenance = official_provenance
+        arguments.official_runtime_home = runtime_home
         files = []
         for path in arguments.runtime_file:
             expanded = expand_cell_value(str(path), **replacements)
@@ -492,9 +664,16 @@ def execute(arguments) -> int:
             arguments.command = expanded_command
         arguments.command = ensure_scroll_window_arguments(
             arguments.command, arguments.family, arguments.width, arguments.height)
+        if official_provenance is not None:
+            files.extend(official_provenance_files)
         runtime_files, runtime_hash = runtime_hashes(files)
         if not runtime_files:
             raise RunnerError("pass at least one launcher/application path with --runtime-file for hash provenance")
+        if official_provenance is None:
+            arguments.runtime_identity = "source:" + runtime_commit + ";artifact-sha256:" + runtime_hash
+        else:
+            arguments.runtime_identity = "github-artifact:%s;sha256:%s;runtime-files-sha256:%s" % (
+                official_provenance["artifactName"], official_provenance["outerArtifactSha256"], runtime_hash)
         process_index += 1
         try:
             launch_preflight(arguments, cell, process_index, dataset, runtime_commit, benchmark_commit,
@@ -571,14 +750,16 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--height", type=int, default=960)
     render.add_argument("--diagnostics", action="store_true")
     render.add_argument("--fail-fast", action="store_true")
-    runtime_default = os.environ.get("TOTALCROSS_SOURCE")
-    render.add_argument("--runtime-source", type=Path, default=Path(runtime_default) if runtime_default else None)
+    render.add_argument("--runtime-source", type=Path,
+                        help="clean TotalCross checkout for locally built runtimes; not used with attested packages")
     render.add_argument("--dataset-cache", type=Path, default=ROOT / ".local-data/datasets/image-scroll/v1")
     render.add_argument("--runtime-file", action="append", default=[])
     render.add_argument("--working-directory", type=Path,
                         help="working directory for direct launcher commands; supports {profile} and {workload}")
     render.add_argument("--package-manifest", type=Path, help="generated package-manifest.json with profile launchers")
     render.add_argument("--sigbus-stress", action="store_true", help="run 10 fresh processes for each preparation worker")
+    render.add_argument("--require-default-scroll-preflight", action="store_true",
+                        help="require production-default config and historical 540x960 geometry before measuring")
     render.add_argument("--results-dir", type=Path, default=ROOT / "results/image-rendering/latest")
     render.add_argument("--command", nargs=argparse.REMAINDER,
                         help="launcher/app command; supports {package}, {profile}, and {workload}; place last")
@@ -596,8 +777,6 @@ def main(argv: list[str] | None = None) -> int:
             if arguments.force:
                 forwarded.append("--force")
             return image_scroll.main(forwarded)
-        if arguments.runtime_source is None:
-            raise RunnerError("set TOTALCROSS_SOURCE or pass --runtime-source")
         return execute(arguments)
     except (RunnerError, OSError, ValueError, KeyError) as error:
         print("runner error: " + str(error), file=sys.stderr)

@@ -1514,3 +1514,80 @@ python3 runners/run.py image-rendering scroll --profile default \
   --results-dir .local-data/results/image-rendering-physical-mapping-readonly-probe \
   --require-default-scroll-preflight --fail-fast
 ```
+
+
+## Physical mapping probe: successful read-only capture (2026-10-03)
+
+A new explicit authorization permitted exactly one corrected native application
+process from published benchmark HEAD
+`564ce7c1bbda2b4995108683696d954631be04ca`. Before launch, the benchmark
+working tree was clean, the default-only official 7.2.2 package matched this
+commit, package/runtime provenance and hashes passed, and the verified
+`image-scroll/v1` manifest matched the package. The new result directory did not
+exist; an exclusive authorization guard recorded the prelaunch checks. No other
+benchmark, warmup, separate preflight, replacement, historical runtime, platform
+build, cache experiment or P12 matrix ran. TotalCross source remains unchanged.
+
+The exact requested runner command produced one native child exit **0**, runner
+exit **0**, one complete valid metadata record for all eighteen controls, and
+zero failures. The inline preflight was part of the same child process. There
+were zero timed paint samples and zero preparation requests. Initialization
+logged a read-only-filesystem UI-resource warning, but both required records
+were complete and valid; no recovery/relaunch occurred.
+
+Detailed per-control metadata, rectangles, both gate evaluations, the eighteen-
+control gate table and true/false/unknown distributions are in
+[p12-physical-mapping-probe-2026-10-03.md](p12-physical-mapping-probe-2026-10-03.md).
+The complete validated record and evidence index (original paths and hashes,
+including package and previous draw-path evidence) are durably preserved in
+[evidence/p12-physical-mapping-probe-2026-10-03.json](evidence/p12-physical-mapping-probe-2026-10-03.json).
+The sole process directory is
+`.local-data/results/image-rendering-physical-mapping-readonly-probe/run-20261003T054657Z-90240/processes/0001-default-measured-1/`.
+
+Actual application dimensions are 540×960, viewport 540×910, drawable 1080×1920,
+and Graphics content scale 2. Every plan has a single smooth-scale operation
+`[1]`, parameters `[179,179,0,0]`, dimensions/output 179×179, root content scale
+0.5, and unit root/presentation hardware scales. Seventeen intrinsic/logical
+roots are 1000×1000 with physical roots/backings 500×500; index 9 is 1024×1024
+with 512×512 physical root/backing. All native backings are valid and stable with
+mutation generation **1**; raw Image generation is unavailable (`null`,
+availability false). No unavailable value was inferred or synchronized.
+
+Both source-derived scale-equality predicates are false for **every** control:
+`a=d=500/179≈2.793296089385475` for seventeen, `512/179≈2.8603351955307263`
+for index 9, against canvas scales `(2,2)`. This is a **demonstrated sufficient
+rejection condition for every control**, not an assertion of the earliest native
+failure. No control refutes the scale-equality hypothesis. Generation equality
+is unknown 18/18. In both modes `firstFailingGate=null` and
+`unresolvedEarlierGates=[2]`; smooth's `earliestKnownFailingGate=9`
+(`aEqualsCanvasScaleX`), strict's is 5 (`smoothEligible`). Later independent
+predicates are available: bounds/device integrality pass 18/18; source
+integrality passes 15 and fails 3; width/height extent equality fail 18/18.
+The other stable/compile/no-fill/positive-axis/integer-translation predicates
+pass 18/18; smooth eligibility passes 18/18 for allowSmooth=true and fails 18/18
+for strict identity. This is consistent with the prior draw-path record that
+all eighteen reached generic geometry plus smooth resampling, without new timing
+or native counters.
+
+The previously fast paths `-1096038007.jpg`, `-111131558.jpg`,
+`-1111384947.jpg` occupy row 5 (indices 15–17). Root/backing size, transform scale,
+operation and physical source/device resampling ratios match fourteen slower
+controls, so they do not separate the groups. **Captured clipping and visible
+area do separate them:** bottom-row Y=947 clips the source/destination height
+to 3, versus height 179 at Y=42,223,404,585,766 for the fifteen slower controls.
+Visible logical areas are 537 versus 32,041 and device areas 2,148 versus
+128,164, a 59.666667× ratio. Physical mapped source height is
+8.379888268156424 versus 500 for the shared 500-root geometry. The source/device
+ratio remains 1.3966480446927374 in both axes, including the clipped controls.
+Prior ImageControl medians are 0.397250 ms versus 18.890167 ms (47.552339×).
+This correlation is consistent with reduced visible smooth-resampling work;
+it does not establish causal attribution or exact proportional scaling from
+separate probes. No production change or additional experiment follows here.
+
+Cheap offline validation: `python3 -m unittest discover -s tests` passed all
+82 tests; `git diff --check` passed. Revalidation of the durable record reproduced
+both gate evaluations for all eighteen controls, checked exactly one process and
+one successful record, and verified preserved artifact hashes. No SDK compilation,
+deployment, platform build, sanitizer or further runtime validation was needed.
+The **Open follow-up: materialized cache admission policy** section is preserved
+verbatim and remains explicitly unresolved and out of scope.

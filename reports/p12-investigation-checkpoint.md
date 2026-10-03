@@ -628,3 +628,82 @@ Git under
 `.local-data/results/image-rendering-p12-official-default/run-20261003T002224Z-44831/`.
 No P12 matrix, preparation, SIGBUS, Windows, or additional benchmark work was
 resumed. P12 remains incomplete and paused pending further explicit direction.
+
+## Historical-driver explicit repaint probe (2026-10-02, America/Sao_Paulo)
+
+This separate investigation kept the corrected 663-control, 221-row by 3-column
+`image-scroll/v1` layout at 540x960 with 179-pixel tiles and production default
+runtime policy. It executed one top-to-bottom pass using the historical
+time-based target, 3000 ms duration, 16 ms cadence, bounded sleeps of at most
+4 ms, separate `scrollContent()` and explicit `repaintNow()` timers, and
+per-frame records. The pass reached the valid scrollbar endpoint 39091.
+
+The SDK, deployer, Launcher, and `libtcvm.dylib` came only from workflow run
+`37076804175`, artifact `11256633898` (`TotalCross-7.2.2`), source SHA
+`5a44f503bf6fa1bec350f1218f4d501a70fc4812`, with the previously recorded
+official artifact and runtime hashes. The default-only package was built from
+benchmark source commit `b3b6b6501fa89cf86d4a796721643bc9de447c17`; the compiler
+used the official `dist/totalcross-sdk-7.2.2.jar` and `dist/libs/*`, and only
+`Default.java` was compiled from the profile directory. No SDK or runtime build
+was run. The profile input JAR SHA-256 is
+`4e9b920f9af162e1741b199c9b29a59b45c2f949bf404bf3b780fe3db7d27b53`, deployed
+executable SHA-256 is
+`3439082ff2b6e7bab37d7049b5860b6d4743297536bb7c9ba6806a2b45445884`, deployed
+TCZ SHA-256 is
+`9611414b090b7d016cb6652f956c768b346855bc5bc95f5c403596fdb5a33d88`, and
+deployed `libtcvm.dylib` SHA-256 is
+`421f957d551a75022a92db21638620732614e6d033a6f417ada09c6867cb8f24`. The
+package manifest SHA-256 is
+`0ea341937e2710f441f06ce56720e3f360c22e5e21b223567b5cd7152dbec201`.
+
+The default preflight passed before measurement: RASTER renderer, STANDARD
+storage, target-color conversion, physical-variant cache, scroll raster reuse,
+automatic and explicit preparation, and diagnostics disabled; legacy
+per-entry-thread worker; 663 controls, 221 rows by 3 columns, logical 540x960,
+179-pixel tiles, and the verified 663-file `image-scroll/v1` dataset. There
+were zero warmups and one measured child.
+
+| Measurement | Result | Samples |
+|---|---:|---:|
+| Total pass wall time | 3.542595 s | 1 pass |
+| Frame count | 11 | 11 frames |
+| Frame-start interval p50 / p95 / p99 / max | 324.827 / 333.519 / 333.752 / 333.811 ms | 10 intervals |
+| `scrollContent()` p50 / p95 / p99 / max | 0.016 / 0.083 / 0.122 / 0.132 ms | 11 frames |
+| Explicit `repaintNow()` p50 / p95 / p99 / max | 322.644 / 333.346 / 333.681 / 333.764 ms | 11 frames |
+| Total active work p50 / p95 / p99 / max | 322.659 / 333.421 / 333.709 / 333.781 ms | 11 frames |
+| Final position / endpoint | 39091 / 39091 | reached |
+
+The time-based trajectory reached its final target at elapsed 3.222 s; total
+pass wall time was 3.543 s including the final repaint. This is near the
+intended 3-second trajectory, with about 0.543 s of additional wall time. The
+explicit repaint itself is very slow in this workload: its p50 was 322.644 ms,
+while `scrollContent()` p50 was 0.016 ms. The 324.827 ms median frame-start
+interval closely tracks the explicit repaint time, so this result points
+primarily to synchronous rendering/repaint cost rather than fixed-step driver
+overshoot. This is not a regression comparison: the prior default result's
+284.4 ms p50 is a paint-callback interval, not an explicit repaint timer, and
+no older runtime build was measured here.
+
+For context, the current fixed-step P12 default cell took about 278.9 s for
+three directions and recorded 972 paint-callback intervals (p50 284.406 ms).
+This historical probe took 3.543 s for one top-to-bottom pass and recorded 11
+explicit repaint durations (p50 322.644 ms). The pass counts and p50
+definitions differ, so these wall times and p50 values are not like-for-like.
+
+The measured child exited successfully and emitted one run record and one
+summary. The runner command returned status 1 after its post-run default gate
+tried to read generic viewport fields that this dedicated result shape does
+not emit; the official preflight had already verified those dimensions before
+timing. The saved preflight and child records passed offline protocol and
+historical-result validation after runner fix commit `13cfd0d`. No second
+measured child was launched. A nonfatal read-only filesystem warning from
+`Resources.uiStyleChanged` appeared during startup.
+
+The exact invocation was:
+
+    python3 runners/run.py image-rendering scroll --profile default --scroll-driver historical-driver --rounds 1 --warmups 0 --timeout-seconds 600 --width 540 --height 960 --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 --package-manifest .local-data/packages/image-rendering-macos-official-historical-driver-b3b6b65/package-manifest.json --results-dir .local-data/results/image-rendering-historical-driver-official --require-default-scroll-preflight
+
+The raw result, preflight, and logs remain ignored under
+`.local-data/results/image-rendering-historical-driver-official/run-20261003T005925Z-76353/`.
+The probe and runner fixes are commits `b3b6b6501fa89cf86d4a796721643bc9de447c17`
+and `13cfd0d`; no other P12 workload was resumed.

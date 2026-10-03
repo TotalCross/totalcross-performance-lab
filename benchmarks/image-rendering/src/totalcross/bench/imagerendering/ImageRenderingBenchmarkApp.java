@@ -52,6 +52,10 @@ public final class ImageRenderingBenchmarkApp {
       exit(0);
       return;
     }
+    if ("paint-split-probe".equals(config.getString("scrollDriver"))) {
+      validatePaintSplitPreconditions();
+      emitPreflight();
+    }
     String family = config.getString("family");
     if ("decode".equals(family)) {
       DecodeWorkload.run(this, config);
@@ -62,6 +66,38 @@ public final class ImageRenderingBenchmarkApp {
       new PacingWorkload(this, config).start();
     } else {
       throw new IllegalArgumentException("workload family is not in this app slice: " + family);
+    }
+  }
+
+  private void validatePaintSplitPreconditions() throws Exception {
+    if (!"scroll".equals(config.getString("family")) || !"scroll".equals(config.getString("workload"))
+        || !"default".equals(profile) || config.getBoolean("diagnosticsEnabled")
+        || config.getInt("width") != 540 || config.getInt("height") != 960
+        || Settings.screenWidth != 540 || Settings.screenHeight != 960) {
+      throw new IllegalStateException("paint-split-probe requires default scroll at 540x960 with diagnostics disabled");
+    }
+    RuntimeEnvironment runtime = RuntimeEnvironment.current();
+    if (runtime.graphicsBackend() == null || !"RASTER".equals(runtime.graphicsBackend().name())) {
+      throw new IllegalStateException("paint-split-probe requires the RASTER renderer");
+    }
+    BenchSupport.DatasetEntry[] entries = BenchSupport.readDataset(config);
+    if (entries.length != 663 || (540 - 3) / 3 != 179) {
+      throw new IllegalStateException("paint-split-probe requires image-scroll/v1 with 663 images and 179px tiles");
+    }
+    String report = RuntimeConfigurationReport.describe();
+    String[] required = {
+        "effective: STANDARD",
+        "targetColorConversion: disabled",
+        "physicalVariantCache: disabled",
+        "scrollRasterReuse: disabled",
+        "automaticPreparation: disabled",
+        "prefetchWorker: LEGACY_PER_ENTRY_THREAD",
+    };
+    for (int i = 0; i < required.length; i++) {
+      if (report.indexOf(required[i]) < 0) {
+        throw new IllegalStateException("paint-split-probe runtime configuration is not the production default: "
+            + required[i]);
+      }
     }
   }
 

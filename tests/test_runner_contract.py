@@ -218,6 +218,40 @@ class RunnerContractTests(unittest.TestCase):
             rounds=3, warmups=1, diagnostics=False, width=540, height=960,
         ))
 
+    def test_historical_result_validator_checks_fields_schedule_and_endpoint(self):
+        stats = lambda count: {"sampleCount": count, "p50Ns": 10, "p95Ns": 10,
+                               "p99Ns": 10, "maxNs": 10}
+        frames = [
+            {"frameIndex": 0, "elapsedNs": 0, "targetScroll": 0, "actualScroll": 0,
+             "requestedDelta": 0, "frameIntervalNs": 0, "scrollWorkNs": 0,
+             "paintWorkNs": 10, "workTimeNs": 10},
+            {"frameIndex": 1, "elapsedNs": 20000000, "targetScroll": 100, "actualScroll": 100,
+             "requestedDelta": 100, "frameIntervalNs": 20000000, "scrollWorkNs": 1,
+             "paintWorkNs": 10, "workTimeNs": 11},
+        ]
+        record = {
+            "family": "scroll", "profile": "default", "logicalDimensions": {"width": 540, "height": 960},
+            "renderer": "RASTER", "diagnosticsEnabled": False,
+            "durationsNs": {"wallTime": 30000000},
+            "measurements": {
+                "scrollDriver": "historical-driver", "passDirection": "top-to-bottom", "passCount": 1,
+                "targetDurationNs": 3000000000, "targetCadenceNs": 16000000,
+                "frameCount": 2, "totalPassWallTimeNs": 30000000,
+                "frameSamples": frames,
+                "frameIntervalStatistics": stats(1), "scrollWorkStatistics": stats(2),
+                "paintWorkStatistics": stats(2), "workTimeStatistics": stats(2),
+                "finalScrollPosition": 100, "scrollEndpoint": 100,
+            },
+        }
+        run.validate_historical_scroll_result(record, 540, 960)
+        record["measurements"]["finalScrollPosition"] = 99
+        with self.assertRaisesRegex(run.RunnerError, "did not reach"):
+            run.validate_historical_scroll_result(record, 540, 960)
+        record["measurements"]["finalScrollPosition"] = 100
+        record["measurements"]["paintWorkStatistics"]["sampleCount"] = 1
+        with self.assertRaisesRegex(run.RunnerError, "paintWorkStatistics"):
+            run.validate_historical_scroll_result(record, 540, 960)
+
     def test_direct_launcher_templates_expand_profile_and_workload(self):
         self.assertEqual("/bench/profiles/default/image-rendering-default-flick-60",
                          run.expand_cell_value("/bench/profiles/{profile}/image-rendering-{profile}-{workload}",

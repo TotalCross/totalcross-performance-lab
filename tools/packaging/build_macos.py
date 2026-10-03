@@ -180,11 +180,19 @@ def parse_profiles(raw: str | None) -> tuple[str, ...]:
     return values
 
 
-def selected_java_sources(source_root: Path, profiles: tuple[str, ...], causal_experiment: bool = False) -> list[Path]:
+def selected_java_sources(source_root: Path, profiles: tuple[str, ...], causal_experiment: bool = False,
+                          immediate_experiment: bool = False) -> list[Path]:
     profile_root = source_root / "profiles"
     shared = sorted(path for path in source_root.rglob("*.java") if profile_root not in path.parents)
     # Package-private SDK accounting is accessed only by this benchmark source.
     shared += sorted((source_root.parents[1] / "ui/image").glob("ImageDrawPathProbeAccess.java"))
+    if causal_experiment and immediate_experiment:
+        raise PackageError("choose only one isolated experiment")
+    if immediate_experiment:
+        if profiles != ("default",):
+            raise PackageError("immediate admission requires only default")
+        hooks = ROOT / "experiments/p12-copyrect-causal/src/totalcross/ui/image/ImageCausalProbeHooks.java"
+        return shared + [hooks] + sorted((ROOT / "experiments/p12-immediate-admission/src").rglob("*.java"))
     if causal_experiment:
         if profiles != ("default",):
             raise PackageError("causal experiment requires only default")
@@ -270,12 +278,14 @@ def build(arguments) -> Path:
         raise PackageError("a JDK with java and javac is required")
     selected_profiles = parse_profiles(arguments.profiles)
     causal_experiment = getattr(arguments, "copyrect_causal_experiment", False)
-    if causal_experiment:
-        from tools.copyrect_causal import EXPERIMENT_RUNTIME
-        if official_mode or source_commit != EXPERIMENT_RUNTIME:
+    immediate_experiment = getattr(arguments, "immediate_admission_experiment", False)
+    if causal_experiment or immediate_experiment:
+        from tools.copyrect_causal import EXPERIMENT_RUNTIME, IMMEDIATE_RUNTIME
+        expected = IMMEDIATE_RUNTIME if immediate_experiment else EXPERIMENT_RUNTIME
+        if official_mode or source_commit != expected:
             raise PackageError("causal experiment requires its pinned custom SDK/native source")
     sources = selected_java_sources(ROOT / "benchmarks/image-rendering/src/totalcross/bench/imagerendering",
-                                    selected_profiles, causal_experiment)
+                                    selected_profiles, causal_experiment, immediate_experiment)
     output.parent.mkdir(parents=True, exist_ok=True)
     log_path = output.with_name(output.name + ".build.log")
     if log_path.exists():
@@ -375,7 +385,8 @@ def build(arguments) -> Path:
             else:
                 official_runtime_provenance = None
             for profile in selected_profiles:
-                entry = "CausalDefault" if causal_experiment else PROFILE_CLASSES[profile]
+                entry = ("ImmediateAdmissionDefault" if immediate_experiment else
+                         "CausalDefault" if causal_experiment else PROFILE_CLASSES[profile])
                 prefix = "image-rendering-" + profile
                 jar_path = stage / "inputs" / profile / (entry + ".jar")
                 jar_path.parent.mkdir(parents=True)
@@ -502,6 +513,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="raw GitHub workflow run JSON")
     parser.add_argument("--copyrect-causal-experiment", action="store_true",
                         help="include only the pinned P12 experimental hooks/default entry")
+    parser.add_argument("--immediate-admission-experiment", action="store_true",
+                        help="include only the pinned P12 immediate-admission hooks/default entry")
     parser.add_argument("--profiles", help="comma-separated profile names; defaults to all")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--build-sdk", action="store_true", help="run the SDK dist build before deploying apps")

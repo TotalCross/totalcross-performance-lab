@@ -489,3 +489,73 @@ earlier archive with SHA-256
 `e28a85e15f32d66d5b2f08765c4da5e4bd11de0809e6bd4b84cc9de404b0bc6a` is
 preserved as `artifacts/p12-checkpoint-before-latest-stop.tar.gz`. Both are
 ignored by Git. No diagnosis or performance conclusion has been added.
+
+## Latest pause during official runtime provenance work (2026-10-03)
+
+On the latest explicit pause request, a fresh process scan found no benchmark
+runner, launcher, or TotalCross child active. No child was terminated, no
+benchmark command was running at this latest stop, and no additional P12 cell,
+preflight, package build, or benchmark process was started. The prior
+`scroll / target-color / round 2` interruption above is still the only
+interrupted measured cell. The corrected P12 count remains 54 completed
+measured children, totaling approximately 26m33s of measured child wall-time;
+preflight, warmups, runner gaps, and the interrupted child are excluded.
+
+The exact command from the earlier interruption is recorded under “Stop
+event”. No new command replaced it at this pause. It was the seven-profile
+scroll matrix with one warmup and three requested measured rounds per profile.
+
+This continuation started from performance-lab HEAD
+`3ae6ec23ac298a397cabcc5d5c087da3c46f5bc2` on
+`perf/image-rendering-benchmarks`, matching `origin/perf/image-rendering-benchmarks`
+at that point. The TotalCross source checkout used by earlier measured runs is
+still clean at `5a44f503bf6fa1bec350f1218f4d501a70fc4812`. The separate
+TotalCross development checkout remains at
+`1c6306b0861c589b8c6abe5f494c5c623db346f9` with its unrelated local changes;
+no files there were changed by this continuation. The current host remains
+macOS 26.5.2 arm64 with Zulu Java 17.0.12+7. Dataset identity remains
+`image-scroll/v1`, manifest SHA-256
+`4dac75139e4e7095f5843a696f5fcd84055bf798e90b49614d6e4243120f5dbe`, archive
+SHA-256 `a7e5545ca6565033d0c5b31bfa81cf89c972d5ba21566dc711df282de3b97b42`.
+
+During the resumed work, the optional official GitHub package provenance path
+was extended across `tools/packaging/build_macos.py`,
+`tools/packaging/official_runtime.py`, `runners/run.py`, the benchmark
+preflight record, schemas, and focused unit tests. It pins the previously
+recorded official workflow/artifact/package identity, checks copied and
+extracted package files and deployed Launcher, TCZ, and native-library hashes,
+and lets the runner consume a source-less package manifest. A guarded default
+scroll preflight can report and verify renderer, diagnostics, runtime policy,
+dataset, and historical geometry before a measured child. These changes were
+not used to build or launch an application after the pause. The official
+artifact, SDK, Launcher, and `libtcvm.dylib` hashes remain those listed in the
+previous stop section and in the ignored evidence bundle.
+
+The latest source diff and the untracked provenance schema/helper are captured
+under `artifacts/p12-checkpoint/current-stop-latest/`. This snapshot includes
+the pre-commit status, diff stat, binary patch, runtime checkout status, process
+scan, and the three new source files. `python3 -m unittest discover -s tests`
+passed (38 tests, 1.146 seconds). Python byte-compilation of
+`tools/packaging/official_runtime.py`, `tools/packaging/build_macos.py`, and
+`runners/run.py` passed, and `git diff --check` passed. An initial byte-compile
+command mistakenly included a Java source file and failed with Python's
+`SyntaxError`; the corrected Python-only command passed. No Java/SDK/native
+build, package deployment, package preflight, or benchmark validation was run
+for this provenance path. Its package-level integration remains unverified.
+
+The source edits were committed as
+`472dd24773077530752d6743477ec61ec94713ac` (`feat(bench): attest official
+runtime package inputs`). This feature commit follows the two pause/checkpoint
+commits `139e056` and `3ae6ec2`. The final checkpoint document is committed
+separately. They provide provenance and preflight controls only; no performance
+problem was diagnosed or fixed. Existing timing data and the investigation
+candidates above are unchanged. P12 remains paused and incomplete.
+
+The ordered branch commits after `main` are listed in the final response and
+preserved in `artifacts/p12-checkpoint/current-stop-latest/commits-before-implementation-commit.txt`;
+the latest snapshot also records the feature commit and post-commit repository
+state.
+
+Latest ignored evidence bundle: `artifacts/p12-checkpoint.tar.gz`, SHA-256
+`cc40f97294bf42d73fd848756ba8ac5727cf958e5fa47f625c2de77618882903`.
+`artifacts/p12-checkpoint/SHA256SUMS` covers the preserved bundle contents.

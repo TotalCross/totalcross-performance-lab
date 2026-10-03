@@ -32,11 +32,19 @@ cache-owned, all live derived and source storage independently.
 - [x] Implement isolated policy/ownership/source-derived accounting and focused tests.
   SDK 63 focused tests pass; native category/release and original writePixels/physical
   assertions pass. Java compilation passes for normal official SDK and isolated SDK.
-  Lab 115 tests pass. No measured application has launched.
+  Lab 116 tests pass. Four native processes completed with exit0.
   Texture release retains the slot; only actual clear/replacement is a detach.
-- [ ] Deterministic routes, parser/schema/runner/package/tests and committed artifacts.
-- [ ] Four processes in ordered cases, offline analysis and architectural recommendation.
-- [ ] Reports/index/checkpoint, cheap validation, commit/push and completion audit.
+- [x] Deterministic routes, parser/schema/runner/package/tests and committed artifacts.
+  Benchmark implementation b82701c; isolated source1944f203; same package for all cases.
+- [x] Four processes in ordered cases, offline analysis and architectural recommendation.
+  All four native exits0, complete records; first runner schema failure recovered
+  offline without replacement. Initial CLI parse failure launched zero applications.
+  Repeated route admits all663 under both policies; immediate saves663 materializations
+  with zero retained-cache-byte delta. One-shot saves531 pending admissions under
+  second-use at a272,220,336-byte retention advantage.
+- [x] Reports/index/checkpoint and cheap validation; four original records and
+  preflights, indexed hashes and clean source worktrees verified. Reports are
+  ready for final commit/push; verify remote equality and open PR before completion.
 
 ## Current Architecture and Scope
 One cachedVariant Image and pending exact key per ImagePipeline. Generation/key
@@ -95,6 +103,10 @@ failure must be corrected offline before any explicit replacement decision.
 Never reexecute due to surprising results. Previous packages/evidence unchanged.
 
 ## Outcomes & Retrospective
-Pending. Production final admission and native TARGET_COLOR/PHYSICAL second-use
-policies unchanged. Final report must document d273518 P3 one-slot/second-use
-bounded-state rationale and missing representative workload tradeoff evidence.
+Recommend immediate final-raster admission for persistent visible controls; an
+explicit one-shot context may retain second observation. Production code and
+native TARGET_COLOR/PHYSICAL second-use remain unchanged. The report documents
+d273518 bounded-state rationale and its missing representative workload evidence.
+Implementation and reports satisfy the offline completion audit. Final publication
+requires committing these report/index updates, pushing, and checking remote HEAD
+and open/unmerged PR; do not execute any more measured applications.

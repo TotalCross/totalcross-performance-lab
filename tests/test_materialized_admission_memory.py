@@ -48,6 +48,10 @@ def fixture(policy='SECOND_OBSERVATION',workload='one-shot'):
 
 class AdmissionMemoryTest(unittest.TestCase):
     def validate(self,record):memory.validate_result(record,[{}]*663)
+    def test_fixed_tile_width_and_timer_constants(self):
+        schema=run.read_json(run.SCHEMA_DIR/'materialized-admission-memory-probe-v1.schema.json')
+        self.assertEqual(179,schema['properties']['tileWidth']['const'])
+        self.assertEqual(16,schema['properties']['nominalStepMillis']['const'])
     def test_four_policy_workload_contracts(self):
         for policy in ('SECOND_OBSERVATION','IMMEDIATE'):
             for workload in ('one-shot','repeated-scroll'):self.validate(fixture(policy,workload))

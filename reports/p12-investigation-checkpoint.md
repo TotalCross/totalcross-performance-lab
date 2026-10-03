@@ -1845,3 +1845,65 @@ are indexed in [experiment provenance](../experiments/p12-admission-memory/prove
 Implementation is committed before any of the four ordered measured processes.
 This checkpoint introduces no new performance evidence or production policy
 recommendation; the architectural decision remains pending the comparison.
+
+## Final-raster admission memory comparison: results (2026-10-03)
+
+All four authorized measured native processes completed, each exit **0**, using
+one exact package/runtime and the prescribed order. The first runner exited 1
+because the schema mistakenly required `tileWidth=169`; its complete 179-tile record
+was recovered offline. The next three runner exits were 0 using an analysis-only
+schema correction. An earlier CLI parse failure exited 2 before launching any
+native application. All failures/corrections and original evidence are preserved;
+no measured process was replaced. No warmup, separate preflight, alternative
+policy/dataset/platform or matrix ran. The durable schema now requires 179.
+
+The [full report](p12-materialized-admission-memory-probe.md) and
+[analysis/evidence index](evidence/p12-materialized-admission-memory-probe.json)
+record all lifecycles, actual native storage, natural and post-GC memory, frame
+statistics, paired deltas, source/build/package/process hashes and limitations.
+The repeated route reused 120-unit steps and 16 ms nominal cadence, down from 0
+to 39091 and back to 0: 653 paints, 11,778 ImageControl paints. One-shot used 44
+monotonic910-unit pages: 531 images painted once, 132 twice. All 663 images were
+encountered in every case. Paired routes/per-image paint counts match exactly;
+there were zero extra paints, replacements, slot detaches or invalidations.
+
+Second-observation versus immediate one-shot: 795 versus 663 materializations,
+132 versus 663 admissions, 0 versus 132 hits, 531 versus 0 pending keys never admitted.
+Cache-owned peak/end bytes were 67,670,592 versus339,890,928. Immediate's measured
+retention cost was **272,220,336 bytes (+402.2727%)**, while saving 132
+materializations, 2.369541 s final-resolve time and 2.358522 s workload time.
+
+Repeated scroll: 1,326 versus 663 materializations, 663 admissions under both,
+10,452 versus11,115 hits, zero pending candidates. Both retained exactly
+**339,890,928 cache-owned bytes** at peak/end. Immediate saved 663
+materializations, 12.542092 s final-resolve time and **11.364743 s workload time**
+(33.657%); >100 ms paint stalls fell from 107 to 1. Repeated scrolling completely
+removed second-use's intended cache-retention benefit in this controlled workload.
+
+Natural native-derived storage includes temporaries awaiting GC. Its peak/end
+bytes were 407,561,520 versus339,890,928 one-shot and 679,781,856 versus339,890,928
+repeated. Second-use's duplicate allocations therefore raised natural native
+peaks despite the one-shot slot-retention benefit. After separately labeled
+post-run GC, derived live bytes exactly matched slot-owned bytes in all cases.
+Decoded/source storage was identical: 663 records / 679,314,768 bytes; other native
+storage 143 records / 408,256 bytes. All finals were actual 358×358 RGBA8888,
+rowBytes 1,432 / backingBytes 512,656. The 663×358×358×4 theoretical bound is an estimate
+separate from the measured footprint.
+
+Architectural recommendation: **immediate admission for the one-slot final raster
+of persistent visible controls**, preserving exact key/generation contracts.
+Explicitly declared transient/one-shot consumers could use second observation;
+no timing/size/scroll-speed heuristic is proposed. No production implementation,
+capacity change, global cache or native speculative-admission change follows here.
+The original **Open follow-up: materialized cache admission policy** section is
+retained as the historical checkpoint; this subsequent comparison now supplies
+the missing evidence and recommendation. Production design/implementation remains
+separate. The report documents P3 commit d273518's two-slot first-use to one-slot
+second-use transition, bounded-state purpose, and lack of representative workload
+tradeoff evidence in that original decision.
+
+Confidence is high for exact lifecycle/retention conclusions on these routes;
+timing has only one process per condition, one host/dataset and fixed order.
+The retained 663-control list and lack of native-pressure-triggered collection
+limit generalization to recycled controls or other devices. Cheap post-run tests,
+diff checks and evidence verification complete this experiment; PR #1 stays open.

@@ -86,3 +86,9 @@ family through the package manifest:
 python3 runners/run.py image-rendering pacing --workload flick-60 --rounds 3 \
   --package-manifest .local-data/packages/image-rendering-macos/package-manifest.json
 ```
+
+For a one-round default scroll candidate built from a clean local Release
+checkout, `--require-default-scroll-preflight` accepts the package when both
+manifest source commits match `--runtime-source` and the package contains only
+the default profile. It still requires 540x960, zero warmups and diagnostics
+disabled; the app emits its inline preflight in the measured process.

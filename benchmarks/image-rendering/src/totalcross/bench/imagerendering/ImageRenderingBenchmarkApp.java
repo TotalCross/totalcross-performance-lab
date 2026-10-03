@@ -2,6 +2,7 @@ package totalcross.bench.imagerendering;
 
 import totalcross.json.JSONObject;
 import totalcross.sys.RuntimeDiagnostics;
+import totalcross.sys.Settings;
 import totalcross.sys.runtime.RuntimeConfigurationReport;
 import totalcross.sys.runtime.RuntimeEnvironment;
 import totalcross.ui.Control;
@@ -47,6 +48,7 @@ public final class ImageRenderingBenchmarkApp {
           + " does not match requested profile " + config.getString("profile"));
     }
     if (config.getBoolean("preflight")) {
+      emitPreflight();
       exit(0);
       return;
     }
@@ -61,6 +63,44 @@ public final class ImageRenderingBenchmarkApp {
     } else {
       throw new IllegalArgumentException("workload family is not in this app slice: " + family);
     }
+  }
+
+  private void emitPreflight() throws Exception {
+    String family = config.getString("family");
+    RuntimeEnvironment runtime = RuntimeEnvironment.current();
+    Object fixture = JSONObject.NULL;
+    if ("scroll".equals(family)) {
+      BenchSupport.DatasetEntry[] entries = BenchSupport.readDataset(config);
+      int columns = 3;
+      int width = config.getInt("width");
+      int height = config.getInt("height");
+      boolean preparationRequested = profile.startsWith("prepared-") || profile.startsWith("combined-");
+      fixture = BenchSupport.object(
+          "dataset", config.getJSONObject("dataset"),
+          "imageControls", entries.length,
+          "rows", entries.length / columns,
+          "columns", columns,
+          "logicalDimensions", BenchSupport.object("width", width, "height", height),
+          "runtimeLogicalDimensions", BenchSupport.object("width", Settings.screenWidth,
+              "height", Settings.screenHeight),
+          "tileWidth", (width - 3) / columns,
+          "explicitPreparationRequested", preparationRequested);
+    }
+    JSONObject record = BenchSupport.object(
+        "recordType", "preflight",
+        "family", family,
+        "workload", config.getString("workload"),
+        "profile", profile,
+        "runtimeSourceCommit", config.getString("runtimeSourceCommit"),
+        "benchmarkSourceCommit", config.getString("benchmarkSourceCommit"),
+        "runtimeIdentity", config.getString("runtimeIdentity"),
+        "renderer", runtime.graphicsBackend() == null ? "unavailable" : runtime.graphicsBackend().name(),
+        "diagnosticsRequested", config.getBoolean("diagnosticsEnabled"),
+        "diagnosticsEnabled", config.getBoolean("diagnosticsEnabled") && RuntimeDiagnostics.isSupported(),
+        "runtimeConfigurationReport", RuntimeConfigurationReport.describe(),
+        "fixture", fixture);
+    System.out.println(BenchSupport.PREFLIGHT_PREFIX + record.toString());
+    System.out.flush();
   }
 
   JSONObject runRecord(JSONObject measurements, JSONObject durations, int round, String phase,

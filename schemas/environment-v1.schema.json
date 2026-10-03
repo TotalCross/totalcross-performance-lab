@@ -11,6 +11,7 @@
     "javaVersion": { "type": "string", "minLength": 1 },
     "totalcrossBuild": { "type": "string", "minLength": 1 },
     "benchmarkWorkingTreeDirty": { "type": "boolean" },
+    "totalcross3Home": { "type": ["string", "null"] },
     "hostName": { "type": "string", "minLength": 1 },
     "sessionType": { "type": ["string", "null"] },
     "displayRefreshHz": { "type": ["number", "null"], "exclusiveMinimum": 0 }

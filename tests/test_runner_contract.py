@@ -130,11 +130,45 @@ class RunnerContractTests(unittest.TestCase):
                 diagnostics=False,
                 command=[sys.executable, "-c",
                          "import json; c=json.load(open('tcbench-run.json')); "
-                         "assert c['width']==540 and c['height']==960"],
+                         "assert c['width']==540 and c['height']==960; "
+                         "r={'recordType':'preflight','family':c['family'],'workload':c['workload'],"
+                         "'profile':c['profile'],'runtimeSourceCommit':c['runtimeSourceCommit'],"
+                         "'benchmarkSourceCommit':c['benchmarkSourceCommit'],"
+                         "'runtimeIdentity':c['runtimeIdentity'],'renderer':'RASTER',"
+                         "'diagnosticsRequested':False,'diagnosticsEnabled':False,"
+                         "'runtimeConfigurationReport':'Runtime configuration test',"
+                         "'fixture':{'dataset':None,'logicalDimensions':{'width':540,'height':960},"
+                         "'runtimeLogicalDimensions':{'width':540,'height':960},'imageControls':663,"
+                         "'rows':221,'columns':3,'tileWidth':179,'explicitPreparationRequested':False}}; "
+                         "print('TCBENCH_PREFLIGHT_JSON '+json.dumps(r))"],
                 timeout_seconds=3, launch_cwd=None,
             )
             run.launch_preflight(args, {"profile": "default", "workload": "scroll"}, 1, None,
                                  "0123456789abcdef", "89abcdef01234567", [], "abc", ENVIRONMENT, root)
+
+    def test_default_scroll_preflight_requires_the_production_runtime_policy(self):
+        dataset = {"id": "image-scroll", "version": "v1", "manifestSha256": "a" * 64}
+        record = {
+            "profile": "default", "renderer": "RASTER", "diagnosticsRequested": False,
+            "diagnosticsEnabled": False,
+            "runtimeConfigurationReport": (
+                "storage:\n  effective: STANDARD\n"
+                "targetColorConversion: disabled\nphysicalVariantCache: disabled\n"
+                "scrollRasterReuse: disabled\nautomaticPreparation: disabled\n"
+                "prefetchWorker: LEGACY_PER_ENTRY_THREAD"),
+            "fixture": {
+                "dataset": dataset,
+                "logicalDimensions": {"width": 540, "height": 960},
+                "runtimeLogicalDimensions": {"width": 540, "height": 960},
+                "imageControls": 663, "rows": 221, "columns": 3, "tileWidth": 179,
+                "explicitPreparationRequested": False,
+            },
+        }
+        run.validate_scroll_preflight(record, dataset, 540, 960, require_default=True)
+        record["runtimeConfigurationReport"] = record["runtimeConfigurationReport"].replace(
+            "physicalVariantCache: disabled", "physicalVariantCache: enabled")
+        with self.assertRaisesRegex(run.RunnerError, "production defaults"):
+            run.validate_scroll_preflight(record, dataset, 540, 960, require_default=True)
 
     def test_percentile_math(self):
         self.assertEqual(25, run.percentile([10, 20, 30, 40], 0.5))

@@ -121,6 +121,24 @@ class ImageRenderingSourceContractTests(unittest.TestCase):
         self.assertIn('"--scroll-driver"', runner)
         self.assertIn('"scrollDriver", config.getString("scrollDriver")', app)
 
+    def test_paint_split_probe_uses_benchmark_only_paint_instrumentation_and_inline_preflight(self):
+        app = (SOURCE / "ImageRenderingBenchmarkApp.java").read_text(encoding="utf-8")
+        scroll = (SOURCE / "ScrollWorkload.java").read_text(encoding="utf-8")
+        runner = (ROOT / "runners/run.py").read_text(encoding="utf-8")
+        self.assertIn('"paint-split-probe".equals(config.getString("scrollDriver"))', app)
+        self.assertIn("validatePaintSplitPreconditions();", app)
+        self.assertIn("emitPreflight();", app)
+        self.assertIn("new MeasuredRow(paintProbeCounters)", scroll)
+        self.assertIn("new MeasuredImageControl(thumbnail, paintProbeCounters)", scroll)
+        self.assertIn("super.onPaint(graphics);", scroll)
+        self.assertIn("void paintTreeOnly()", scroll)
+        self.assertIn("onPaint(graphics);\n      paintChildren();", scroll)
+        self.assertIn('"rowPaintCount"', scroll)
+        self.assertIn('"imagePaintCount"', scroll)
+        self.assertIn('"cumulativeImageControlPaintNs"', scroll)
+        self.assertIn('getattr(arguments, "scroll_driver", "fixed-step") != "paint-split-probe"', runner)
+        self.assertIn("validate_paint_split_result", runner)
+
     def test_active_benchmark_sources_do_not_reintroduce_raw_masks(self):
         active_paths = [ROOT / "runners/run.py", ROOT / "tools/packaging/build_windows.py"]
         active_paths.extend(SOURCE.rglob("*.java"))

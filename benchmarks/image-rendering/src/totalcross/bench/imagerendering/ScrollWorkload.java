@@ -30,11 +30,14 @@ final class ScrollWorkload implements TimerListener {
   private static final int TIMER_MILLIS = 16;
   private static final String DRIVER_FIXED_STEP = "fixed-step";
   private static final String DRIVER_HISTORICAL = "historical-driver";
+  private static final String DRIVER_PAINT_SPLIT = "paint-split-probe";
+  private static final int PAINT_SPLIT_SAMPLE_COUNT = 5;
 
   private final ImageRenderingBenchmarkApp app;
   private final JSONObject config;
   private final boolean preparation;
   private final String scrollDriver;
+  private final PaintProbeCounters paintProbeCounters;
   private final ScrollContainer mainContainer;
   private final ScrollContainer scroll;
   private final BenchSupport.DatasetEntry[] entries;
@@ -74,12 +77,15 @@ final class ScrollWorkload implements TimerListener {
     String profile = config.getString("profile");
     preparation = profile.startsWith("prepared-") || profile.startsWith("combined-");
     scrollDriver = config.getString("scrollDriver");
-    if (!DRIVER_FIXED_STEP.equals(scrollDriver) && !DRIVER_HISTORICAL.equals(scrollDriver)) {
+    if (!DRIVER_FIXED_STEP.equals(scrollDriver) && !DRIVER_HISTORICAL.equals(scrollDriver)
+        && !DRIVER_PAINT_SPLIT.equals(scrollDriver)) {
       throw new IllegalArgumentException("unsupported scroll driver: " + scrollDriver);
     }
-    if (DRIVER_HISTORICAL.equals(scrollDriver) && (!"default".equals(profile) || preparation)) {
-      throw new IllegalArgumentException("historical-driver requires the default profile");
+    if ((DRIVER_HISTORICAL.equals(scrollDriver) || DRIVER_PAINT_SPLIT.equals(scrollDriver))
+        && (!"default".equals(profile) || preparation)) {
+      throw new IllegalArgumentException(scrollDriver + " requires the default profile");
     }
+    paintProbeCounters = DRIVER_PAINT_SPLIT.equals(scrollDriver) ? new PaintProbeCounters() : null;
     entries = BenchSupport.readDataset(config);
     if (entries.length != BenchSupport.EXPECTED_FILE_COUNT || entries.length % COLUMNS != 0) {
       throw new IllegalStateException("scroll workload requires 663 images arranged in complete rows");
@@ -102,7 +108,7 @@ final class ScrollWorkload implements TimerListener {
     BenchSupport.put(config, "width", viewportWidth);
     BenchSupport.put(config, "height", viewportHeight);
     mainContainer = new ScrollContainer();
-    scroll = new ScrollContainer();
+    scroll = paintProbeCounters == null ? new ScrollContainer() : new MeasuredScrollContainer();
     app.add(mainContainer);
     mainContainer.setBackColor(Color.brighter(Color.BLUE));
     mainContainer.setRect(Control.LEFT, Control.TOP, Control.FILL, Control.FILL);
@@ -122,7 +128,7 @@ final class ScrollWorkload implements TimerListener {
           if (rowIndex > 0 && controlsInRow != COLUMNS) {
             throw new IllegalStateException("each scroll row must contain exactly three ImageControls");
           }
-          row = new Container();
+          row = paintProbeCounters == null ? new Container() : new MeasuredRow(paintProbeCounters);
           row.setBackColor(Color.darker(Color.GREEN));
           scroll.add(row, Control.LEFT, Control.AFTER + 2, viewportWidth, tileWidth);
           rows[rowIndex] = row;
@@ -131,7 +137,8 @@ final class ScrollWorkload implements TimerListener {
         Image image = BenchSupport.loadFilesystemImage(root + "/" + entries[i].path);
         Image thumbnail = image.getSmoothScaledInstance(tileWidth, tileWidth);
         image = null;
-        ImageControl control = new ImageControl(thumbnail);
+        ImageControl control = paintProbeCounters == null ? new ImageControl(thumbnail)
+            : new MeasuredImageControl(thumbnail, paintProbeCounters);
         row.add(control, Control.AFTER + 1, Control.TOP, tileWidth, tileWidth);
         controls[i] = control;
         controlsInRow++;
@@ -194,6 +201,10 @@ final class ScrollWorkload implements TimerListener {
     try {
       if (DRIVER_HISTORICAL.equals(scrollDriver)) {
         runHistoricalPass();
+        return;
+      }
+      if (DRIVER_PAINT_SPLIT.equals(scrollDriver)) {
+        runPaintSplitProbe();
         return;
       }
       if (passStartedNs == 0L) {
@@ -434,6 +445,263 @@ final class ScrollWorkload implements TimerListener {
     app.exit(0);
   }
 
+  private void runPaintSplitProbe() throws Exception {
+    if (paintProbeCounters == null || !(scroll instanceof MeasuredScrollContainer)) {
+      throw new IllegalStateException("paint-split-probe requires benchmark paint instrumentation");
+    }
+    int middle = scrollMinimum + (scrollMaximum - scrollMinimum) / 2;
+    int[] positions = {scrollMinimum, middle, scrollMaximum};
+    String[] labels = {"top", "middle", "bottom"};
+    JSONArray positionResults = new JSONArray();
+    long probeStartedNs = System.nanoTime();
+    boolean fullCorpusPaintDetected = false;
+
+    for (int positionIndex = 0; positionIndex < positions.length; positionIndex++) {
+      int expectedPosition = positions[positionIndex];
+      moveToPaintProbePosition(expectedPosition);
+      scroll.repaintNow(); // one untimed stabilization repaint at this fixed position
+      requirePaintProbePosition(expectedPosition);
+
+      PaintSplitPhase tree = measurePaintSplitPhase(false, expectedPosition);
+      requirePaintProbePosition(expectedPosition);
+      PaintSplitPhase repaint = measurePaintSplitPhase(true, expectedPosition);
+      requirePaintProbePosition(expectedPosition);
+
+      boolean comparable = sameDistribution(tree.rowCounts, repaint.rowCounts)
+          && sameDistribution(tree.imageCounts, repaint.imageCounts);
+      Object residual = comparable
+          ? Double.valueOf(repaint.paintTimes.percentileValue(0.50)
+              - tree.paintTimes.percentileValue(0.50))
+          : JSONObject.NULL;
+      boolean fullCorpusAtPosition = tree.paintsFullCorpus() || repaint.paintsFullCorpus();
+      fullCorpusPaintDetected |= fullCorpusAtPosition;
+      JSONObject viewport = scrollViewport();
+      positionResults.put(BenchSupport.object(
+          "label", labels[positionIndex],
+          "requestedPosition", expectedPosition,
+          "scrollPosition", scroll.sbV.getValue(),
+          "scrollContentPosition", scroll.getScrollPosition(DragEvent.DOWN),
+          "scrollViewport", viewport,
+          "paintTreeOnly", tree.toJson("paintTreeNs"),
+          "repaintNow", repaint.toJson("repaintNowNs"),
+          "visibleWorkComparable", comparable,
+          "estimatedPresentResidualNs", residual,
+          "fullCorpusPaintDetected", fullCorpusAtPosition));
+    }
+
+    long totalProbeWallTimeNs = Math.max(0L, System.nanoTime() - probeStartedNs);
+    app.removeTimerListener(this);
+    JSONObject measurements = BenchSupport.object(
+        "scrollDriver", DRIVER_PAINT_SPLIT,
+        "positionCount", positions.length,
+        "samplesPerMeasurement", PAINT_SPLIT_SAMPLE_COUNT,
+        "imageControls", controls.length,
+        "rows", rows.length,
+        "columns", COLUMNS,
+        "tileWidth", tileWidth,
+        "scrollMinimum", scrollMinimum,
+        "scrollMaximum", scrollMaximum,
+        "positions", positionResults,
+        "fullCorpusPaintDetected", fullCorpusPaintDetected,
+        "preparation", false,
+        "diagnostics", JSONObject.NULL,
+        "axes", BenchSupport.object(
+            "requestedLogicalViewportWidth", config.getInt("requestedLogicalWidth"),
+            "requestedLogicalViewportHeight", config.getInt("requestedLogicalHeight"),
+            "logicalViewportWidth", scroll.getRect().width,
+            "logicalViewportHeight", scroll.getRect().height,
+            "displayScale", getDisplayScale()));
+    JSONObject durations = BenchSupport.object("wallTime", totalProbeWallTimeNs);
+    app.emit(app.runRecord(measurements, durations, config.getInt("round"),
+        config.getString("phase"), config.getString("family")));
+    app.exit(0);
+  }
+
+  private void moveToPaintProbePosition(int target) {
+    int delta = target - scroll.sbV.getValue();
+    if (delta != 0 && !scroll.scrollContent(0, delta, true)) {
+      throw new IllegalStateException("paint-split-probe could not move to its fixed viewport position");
+    }
+    requirePaintProbePosition(target);
+  }
+
+  private void requirePaintProbePosition(int expected) {
+    int scrollbarPosition = scroll.sbV.getValue();
+    int contentPosition = scroll.getScrollPosition(DragEvent.DOWN);
+    if (scrollbarPosition != expected || contentPosition != expected) {
+      throw new IllegalStateException("paint-split-probe viewport position is not synchronized: expected="
+          + expected + ", scrollbar=" + scrollbarPosition + ", content=" + contentPosition);
+    }
+  }
+
+  private JSONObject scrollViewport() {
+    return BenchSupport.object("x", scroll.getRect().x, "y", scroll.getRect().y,
+        "width", scroll.getRect().width, "height", scroll.getRect().height);
+  }
+
+  private PaintSplitPhase measurePaintSplitPhase(boolean fullRepaint, int expectedPosition) {
+    PaintSplitPhase result = new PaintSplitPhase(PAINT_SPLIT_SAMPLE_COUNT);
+    for (int sampleIndex = 0; sampleIndex < PAINT_SPLIT_SAMPLE_COUNT; sampleIndex++) {
+      requirePaintProbePosition(expectedPosition);
+      paintProbeCounters.reset();
+      long startedNs = System.nanoTime();
+      if (fullRepaint) {
+        scroll.repaintNow();
+      } else {
+        ((MeasuredScrollContainer) scroll).paintTreeOnly();
+      }
+      long elapsedNs = Math.max(0L, System.nanoTime() - startedNs);
+      requirePaintProbePosition(expectedPosition);
+      result.add(sampleIndex, fullRepaint ? "repaintNowNs" : "paintTreeNs", elapsedNs,
+          paintProbeCounters, scroll.sbV.getValue(), scroll.getScrollPosition(DragEvent.DOWN));
+    }
+    return result;
+  }
+
+  private static boolean sameDistribution(int[] left, int[] right) {
+    if (left.length != right.length) {
+      return false;
+    }
+    int[] sortedLeft = Arrays.copyOf(left, left.length);
+    int[] sortedRight = Arrays.copyOf(right, right.length);
+    Arrays.sort(sortedLeft);
+    Arrays.sort(sortedRight);
+    return Arrays.equals(sortedLeft, sortedRight);
+  }
+
+  private static final class PaintProbeCounters {
+    int rowPaintCount;
+    int imagePaintCount;
+    long rowPaintNs;
+    long imagePaintNs;
+
+    void reset() {
+      rowPaintCount = 0;
+      imagePaintCount = 0;
+      rowPaintNs = 0L;
+      imagePaintNs = 0L;
+    }
+
+    void recordRow(long elapsedNs) {
+      rowPaintCount++;
+      rowPaintNs += Math.max(0L, elapsedNs);
+    }
+
+    void recordImage(long elapsedNs) {
+      imagePaintCount++;
+      imagePaintNs += Math.max(0L, elapsedNs);
+    }
+  }
+
+  private static final class MeasuredRow extends Container {
+    private final PaintProbeCounters counters;
+
+    MeasuredRow(PaintProbeCounters counters) {
+      this.counters = counters;
+    }
+
+    @Override
+    public void onPaint(Graphics graphics) {
+      long startedNs = System.nanoTime();
+      try {
+        super.onPaint(graphics);
+      } finally {
+        counters.recordRow(System.nanoTime() - startedNs);
+      }
+    }
+  }
+
+  private static final class MeasuredImageControl extends ImageControl {
+    private final PaintProbeCounters counters;
+
+    MeasuredImageControl(Image image, PaintProbeCounters counters) {
+      super(image);
+      this.counters = counters;
+    }
+
+    @Override
+    public void onPaint(Graphics graphics) {
+      long startedNs = System.nanoTime();
+      try {
+        super.onPaint(graphics);
+      } finally {
+        counters.recordImage(System.nanoTime() - startedNs);
+      }
+    }
+  }
+
+  private static final class MeasuredScrollContainer extends ScrollContainer {
+    void paintTreeOnly() {
+      Graphics graphics = getGraphics();
+      if (graphics == null) {
+        throw new IllegalStateException("paint-split-probe has no graphics surface");
+      }
+      onPaint(graphics);
+      paintChildren();
+    }
+  }
+
+  private static final class PaintSplitPhase {
+    private final JSONArray samples = new JSONArray();
+    private final SampleSeries paintTimes = new SampleSeries();
+    private final int[] rowCounts;
+    private final int[] imageCounts;
+    private long cumulativeRowPaintNs;
+    private long cumulativeImagePaintNs;
+
+    PaintSplitPhase(int sampleCount) {
+      rowCounts = new int[sampleCount];
+      imageCounts = new int[sampleCount];
+    }
+
+    void add(int sampleIndex, String timingKey, long elapsedNs, PaintProbeCounters counters,
+        int scrollbarPosition, int contentPosition) {
+      rowCounts[sampleIndex] = counters.rowPaintCount;
+      imageCounts[sampleIndex] = counters.imagePaintCount;
+      cumulativeRowPaintNs += counters.rowPaintNs;
+      cumulativeImagePaintNs += counters.imagePaintNs;
+      paintTimes.add(elapsedNs);
+      samples.put(BenchSupport.object(
+          "sampleIndex", sampleIndex,
+          timingKey, elapsedNs,
+          "rowPaintCount", counters.rowPaintCount,
+          "rowPaintNs", counters.rowPaintNs,
+          "imagePaintCount", counters.imagePaintCount,
+          "imagePaintNs", counters.imagePaintNs,
+          "scrollbarPosition", scrollbarPosition,
+          "scrollContentPosition", contentPosition));
+    }
+
+    boolean paintsFullCorpus() {
+      for (int i = 0; i < rowCounts.length; i++) {
+        if (rowCounts[i] >= 221 || imageCounts[i] >= 663) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    JSONObject toJson(String timingKey) {
+      return BenchSupport.object(
+          "sampleCount", paintTimes.size(),
+          "samples", samples,
+          "statistics", paintTimes.statistics(),
+          "rowPaintCounts", intArray(rowCounts),
+          "imagePaintCounts", intArray(imageCounts),
+          "cumulativeRowPaintNs", cumulativeRowPaintNs,
+          "cumulativeImageControlPaintNs", cumulativeImagePaintNs,
+          "timingKey", timingKey);
+    }
+
+    private static JSONArray intArray(int[] values) {
+      JSONArray result = new JSONArray();
+      for (int value : values) {
+        result.put(value);
+      }
+      return result;
+    }
+  }
+
   private static String passName(int index) {
     if (index == 0) {
       return "cold-forward";
@@ -608,6 +876,15 @@ final class ScrollWorkload implements TimerListener {
       int low = (int) Math.floor(position);
       int high = (int) Math.ceil(position);
       return sorted[low] + (sorted[high] - sorted[low]) * (position - low);
+    }
+
+    double percentileValue(double fraction) {
+      if (size == 0) {
+        return 0.0;
+      }
+      long[] sorted = Arrays.copyOf(values, size);
+      Arrays.sort(sorted);
+      return percentile(sorted, fraction);
     }
   }
 }

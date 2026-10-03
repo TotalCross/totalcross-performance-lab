@@ -67,6 +67,87 @@ def protocol_text(run_record, summary):
     return "launcher diagnostic\n" + run.PREFIX + json.dumps(run_record) + "\n" + run.PREFIX + json.dumps(summary) + "\n"
 
 
+def paint_split_record(mismatched_visible_work=False):
+    times = [100, 200, 300, 400, 500]
+    positions = []
+    for label, scroll_position, rows in (("top", 0, 5), ("middle", 50, 7), ("bottom", 100, 6)):
+        phases = []
+        for timing_key, offset in (("paintTreeNs", 0), ("repaintNowNs", 200)):
+            samples = []
+            row_counts = []
+            image_counts = []
+            for sample_index, elapsed in enumerate(times):
+                row_count = rows + (sample_index % 2)
+                image_count = row_count * 3
+                if mismatched_visible_work and timing_key == "repaintNowNs" and sample_index == 4:
+                    image_count += 1
+                row_counts.append(row_count)
+                image_counts.append(image_count)
+                samples.append({
+                    "sampleIndex": sample_index,
+                    timing_key: elapsed + offset,
+                    "rowPaintCount": row_count,
+                    "rowPaintNs": 10,
+                    "imagePaintCount": image_count,
+                    "imagePaintNs": 20,
+                    "scrollbarPosition": scroll_position,
+                    "scrollContentPosition": scroll_position,
+                })
+            phase_times = [sample[timing_key] for sample in samples]
+            phases.append({
+                "sampleCount": 5,
+                "samples": samples,
+                "statistics": {
+                    "sampleCount": 5,
+                    "p50Ns": run.percentile(phase_times, 0.50),
+                    "p95Ns": run.percentile(phase_times, 0.95),
+                    "p99Ns": run.percentile(phase_times, 0.99),
+                    "maxNs": max(phase_times),
+                },
+                "rowPaintCounts": row_counts,
+                "imagePaintCounts": image_counts,
+                "cumulativeRowPaintNs": sum(sample["rowPaintNs"] for sample in samples),
+                "cumulativeImageControlPaintNs": sum(sample["imagePaintNs"] for sample in samples),
+            })
+        comparable = sorted(phases[0]["rowPaintCounts"]) == sorted(phases[1]["rowPaintCounts"])
+        comparable &= sorted(phases[0]["imagePaintCounts"]) == sorted(phases[1]["imagePaintCounts"])
+        positions.append({
+            "label": label,
+            "requestedPosition": scroll_position,
+            "scrollPosition": scroll_position,
+            "scrollContentPosition": scroll_position,
+            "scrollViewport": {"x": 0, "y": 0, "width": 540, "height": 900},
+            "paintTreeOnly": phases[0],
+            "repaintNow": phases[1],
+            "visibleWorkComparable": comparable,
+            "estimatedPresentResidualNs": (phases[1]["statistics"]["p50Ns"]
+                                             - phases[0]["statistics"]["p50Ns"])
+                if comparable else None,
+            "fullCorpusPaintDetected": False,
+        })
+    return {
+        "family": "scroll",
+        "profile": "default",
+        "logicalDimensions": {"width": 540, "height": 960},
+        "renderer": "RASTER",
+        "diagnosticsEnabled": False,
+        "measurements": {
+            "scrollDriver": "paint-split-probe",
+            "imageControls": 663,
+            "rows": 221,
+            "columns": 3,
+            "tileWidth": 179,
+            "preparation": False,
+            "positionCount": 3,
+            "samplesPerMeasurement": 5,
+            "scrollMinimum": 0,
+            "scrollMaximum": 100,
+            "positions": positions,
+            "fullCorpusPaintDetected": False,
+        },
+    }
+
+
 class RunnerContractTests(unittest.TestCase):
     def test_parses_valid_run_and_final_summary(self):
         run_record, summary = records()
@@ -217,6 +298,37 @@ class RunnerContractTests(unittest.TestCase):
             scroll_driver="fixed-step", family="scroll", profiles="compact",
             rounds=3, warmups=1, diagnostics=False, width=540, height=960,
         ))
+
+    def test_paint_split_probe_is_limited_to_one_default_run_and_requires_preflight(self):
+        valid = SimpleNamespace(
+            scroll_driver="paint-split-probe", family="scroll", profiles="default",
+            rounds=1, warmups=0, diagnostics=False, width=540, height=960,
+            require_default_scroll_preflight=True,
+        )
+        run.validate_scroll_driver_arguments(valid)
+        with self.assertRaisesRegex(run.RunnerError, "requires --require-default-scroll-preflight"):
+            run.validate_scroll_driver_arguments(SimpleNamespace(**{
+                **vars(valid), "require_default_scroll_preflight": False,
+            }))
+        for change in ({"profiles": "compact"}, {"rounds": 2}, {"warmups": 1},
+                       {"diagnostics": True}, {"width": 480}):
+            with self.subTest(change=change):
+                with self.assertRaisesRegex(run.RunnerError, "paint-split-probe requires"):
+                    run.validate_scroll_driver_arguments(SimpleNamespace(**{**vars(valid), **change}))
+
+    def test_paint_split_result_validates_phase_samples_positions_and_residual(self):
+        record = paint_split_record()
+        run.validate_paint_split_result(record, 540, 960)
+        record["measurements"]["positions"][0]["paintTreeOnly"]["samples"][0]["scrollbarPosition"] = 1
+        with self.assertRaisesRegex(run.RunnerError, "invalid duration, paint count, or position"):
+            run.validate_paint_split_result(record, 540, 960)
+
+    def test_paint_split_result_with_changed_visible_work_has_no_residual(self):
+        record = paint_split_record(mismatched_visible_work=True)
+        run.validate_paint_split_result(record, 540, 960)
+        record["measurements"]["positions"][0]["estimatedPresentResidualNs"] = 200
+        with self.assertRaisesRegex(run.RunnerError, "residual must be absent"):
+            run.validate_paint_split_result(record, 540, 960)
 
     def test_historical_result_validator_checks_fields_schedule_and_endpoint(self):
         stats = lambda count: {"sampleCount": count, "p50Ns": 10, "p95Ns": 10,

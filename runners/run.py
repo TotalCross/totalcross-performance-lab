@@ -213,13 +213,15 @@ def validate_scroll_driver_arguments(arguments) -> None:
     driver = getattr(arguments, "scroll_driver", "fixed-step")
     if driver == "fixed-step":
         return
-    if driver != "historical-driver":
+    if driver not in ("historical-driver", "paint-split-probe"):
         raise RunnerError("invalid scroll driver")
     profiles = comma_values(arguments.profiles, DEFAULT_PROFILES[arguments.family], PROFILES, "profile")
     if (arguments.family != "scroll" or profiles != ("default",) or arguments.rounds != 1
             or arguments.warmups != 0 or arguments.diagnostics or arguments.width != 540
             or arguments.height != 960):
-        raise RunnerError("historical-driver requires one default scroll round at 540x960 with no warmup or diagnostics")
+        raise RunnerError(driver + " requires one default scroll round at 540x960 with no warmup or diagnostics")
+    if driver == "paint-split-probe" and not getattr(arguments, "require_default_scroll_preflight", False):
+        raise RunnerError("paint-split-probe requires --require-default-scroll-preflight")
 
 
 def validate_historical_scroll_result(record: dict[str, Any], width: int, height: int) -> None:
@@ -283,6 +285,113 @@ def validate_historical_scroll_result(record: dict[str, Any], width: int, height
                 or any(type(stats.get(field)) not in (int, float)
                        for field in ("p50Ns", "p95Ns", "p99Ns", "maxNs"))):
             raise RunnerError("historical scroll result has invalid " + name)
+
+
+def validate_paint_split_result(record: dict[str, Any], width: int, height: int) -> None:
+    measurements = record.get("measurements")
+    if not isinstance(measurements, dict):
+        raise RunnerError("paint-split result is missing measurements")
+    if (record.get("family") != "scroll" or record.get("profile") != "default"
+            or measurements.get("scrollDriver") != "paint-split-probe"):
+        raise RunnerError("paint-split result identity does not match the requested probe")
+    if (record.get("logicalDimensions") != {"width": width, "height": height}
+            or record.get("renderer") != "RASTER" or record.get("diagnosticsEnabled") is not False):
+        raise RunnerError("paint-split result dimensions or runtime mode are invalid")
+    if (measurements.get("imageControls") != 663 or measurements.get("rows") != 221
+            or measurements.get("columns") != 3 or measurements.get("tileWidth") != 179
+            or measurements.get("preparation") is not False):
+        raise RunnerError("paint-split result fixture geometry or profile is invalid")
+    if measurements.get("positionCount") != 3 or measurements.get("samplesPerMeasurement") != 5:
+        raise RunnerError("paint-split result must contain three positions and five samples per phase")
+    scroll_minimum = measurements.get("scrollMinimum")
+    scroll_maximum = measurements.get("scrollMaximum")
+    if type(scroll_minimum) is not int or type(scroll_maximum) is not int or scroll_maximum <= scroll_minimum:
+        raise RunnerError("paint-split result scrollbar range is invalid")
+    positions = measurements.get("positions")
+    if not isinstance(positions, list) or len(positions) != 3:
+        raise RunnerError("paint-split result is missing top, middle, and bottom positions")
+    expected_positions = (scroll_minimum, scroll_minimum + (scroll_maximum - scroll_minimum) // 2,
+                          scroll_maximum)
+    full_corpus_detected = False
+    for index, (position, expected_scroll) in enumerate(zip(positions, expected_positions)):
+        if not isinstance(position, dict) or position.get("label") != ("top", "middle", "bottom")[index]:
+            raise RunnerError("paint-split result positions are not ordered top, middle, bottom")
+        if (position.get("requestedPosition") != expected_scroll
+                or position.get("scrollPosition") != expected_scroll
+                or position.get("scrollContentPosition") != expected_scroll):
+            raise RunnerError("paint-split position did not remain fixed at its requested scrollbar value")
+        viewport = position.get("scrollViewport")
+        if (not isinstance(viewport, dict) or type(viewport.get("width")) is not int
+                or type(viewport.get("height")) is not int or viewport["width"] < 1 or viewport["height"] < 1):
+            raise RunnerError("paint-split result has an invalid scroll viewport")
+
+        phases = []
+        for phase_name, timing_key in (("paintTreeOnly", "paintTreeNs"), ("repaintNow", "repaintNowNs")):
+            phase = position.get(phase_name)
+            if not isinstance(phase, dict) or phase.get("sampleCount") != 5:
+                raise RunnerError("paint-split result phase must contain exactly five samples: " + phase_name)
+            samples = phase.get("samples")
+            if not isinstance(samples, list) or len(samples) != 5:
+                raise RunnerError("paint-split result is missing per-sample data: " + phase_name)
+            row_counts = []
+            image_counts = []
+            row_paint_ns = 0
+            image_paint_ns = 0
+            for sample_index, sample in enumerate(samples):
+                required_ints = (timing_key, "rowPaintCount", "rowPaintNs", "imagePaintCount", "imagePaintNs",
+                                 "scrollbarPosition", "scrollContentPosition")
+                if (not isinstance(sample, dict) or sample.get("sampleIndex") != sample_index
+                        or any(type(sample.get(field)) is not int for field in required_ints)):
+                    raise RunnerError("paint-split result contains an incomplete sample: " + phase_name)
+                if (sample[timing_key] < 0 or sample["rowPaintNs"] < 0 or sample["imagePaintNs"] < 0
+                        or not 0 <= sample["rowPaintCount"] <= 221
+                        or not 0 <= sample["imagePaintCount"] <= 663
+                        or sample["scrollbarPosition"] != expected_scroll
+                        or sample["scrollContentPosition"] != expected_scroll):
+                    raise RunnerError("paint-split sample has an invalid duration, paint count, or position")
+                row_counts.append(sample["rowPaintCount"])
+                image_counts.append(sample["imagePaintCount"])
+                row_paint_ns += sample["rowPaintNs"]
+                image_paint_ns += sample["imagePaintNs"]
+            if phase.get("rowPaintCounts") != row_counts or phase.get("imagePaintCounts") != image_counts:
+                raise RunnerError("paint-split sample paint-count arrays do not match per-sample records")
+            if (phase.get("cumulativeRowPaintNs") != row_paint_ns
+                    or phase.get("cumulativeImageControlPaintNs") != image_paint_ns):
+                raise RunnerError("paint-split cumulative control paint time is inconsistent")
+            stats = phase.get("statistics")
+            elapsed = [sample[timing_key] for sample in samples]
+            if (not isinstance(stats, dict) or stats.get("sampleCount") != 5
+                    or any(type(stats.get(field)) not in (int, float)
+                           for field in ("p50Ns", "p95Ns", "p99Ns", "maxNs"))):
+                raise RunnerError("paint-split phase has invalid timing statistics: " + phase_name)
+            for field, expected in (("p50Ns", percentile(elapsed, 0.50)),
+                                    ("p95Ns", percentile(elapsed, 0.95)),
+                                    ("p99Ns", percentile(elapsed, 0.99)), ("maxNs", max(elapsed))):
+                if abs(stats[field] - expected) > 1.0:
+                    raise RunnerError("paint-split phase statistics do not match its samples: " + phase_name)
+            phases.append((row_counts, image_counts, stats))
+            if any(rows >= 221 or images >= 663 for rows, images in zip(row_counts, image_counts)):
+                full_corpus_detected = True
+
+        tree_counts, tree_images, tree_stats = phases[0]
+        repaint_counts, repaint_images, repaint_stats = phases[1]
+        comparable = sorted(tree_counts) == sorted(repaint_counts) and sorted(tree_images) == sorted(repaint_images)
+        if position.get("visibleWorkComparable") is not comparable:
+            raise RunnerError("paint-split visible-work comparability flag is inconsistent")
+        residual = position.get("estimatedPresentResidualNs")
+        if comparable:
+            expected_residual = repaint_stats["p50Ns"] - tree_stats["p50Ns"]
+            if type(residual) not in (int, float) or abs(residual - expected_residual) > 1.0:
+                raise RunnerError("paint-split estimated residual does not match the median phase difference")
+        elif residual is not None:
+            raise RunnerError("paint-split residual must be absent when visible work differs")
+        if position.get("fullCorpusPaintDetected") is not any(
+                rows >= 221 or images >= 663
+                for counts, images_by_sample, _ in phases
+                for rows, images in zip(counts, images_by_sample)):
+            raise RunnerError("paint-split full-corpus detection flag is inconsistent")
+    if measurements.get("fullCorpusPaintDetected") is not full_corpus_detected:
+        raise RunnerError("paint-split overall full-corpus detection flag is inconsistent")
 
 
 def dataset_info(cache: Path, dataset_ref: str) -> dict[str, Any] | None:
@@ -474,6 +583,19 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
         shutil.copy2(debug_console, run_dir / "DebugConsole.txt")
     if child.returncode:
         raise RunnerError("child exited with status %d" % child.returncode)
+    scroll_driver = getattr(arguments, "scroll_driver", "fixed-step")
+    if scroll_driver == "paint-split-probe":
+        preflight = parse_preflight(child.stdout, arguments.family, cell["workload"], cell["profile"])
+        if (preflight.get("runtimeSourceCommit") != runtime_commit
+                or preflight.get("benchmarkSourceCommit") != benchmark_commit):
+            raise RunnerError("inline scroll preflight provenance does not match the runner identity")
+        expected_identity = getattr(arguments, "runtime_identity", None)
+        if expected_identity is not None and preflight.get("runtimeIdentity") != expected_identity:
+            raise RunnerError("inline scroll preflight runtime identity does not match the package provenance")
+        validate_scroll_preflight(preflight, dataset, arguments.width, arguments.height,
+                                  require_default=True, scroll_driver=scroll_driver)
+        (run_dir / "preflight.json").write_text(json.dumps(preflight, indent=2, sort_keys=True) + "\n",
+                                                encoding="utf-8")
     run, _ = parse_protocol(child.stdout, arguments.family, cell["workload"], cell["profile"], round_number, phase)
     if run.get("runtimeSourceCommit") != runtime_commit or run.get("benchmarkSourceCommit") != benchmark_commit:
         raise RunnerError("run provenance commit does not match runner preflight")
@@ -491,8 +613,10 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
     if getattr(arguments, "runtime_provenance", None) is not None:
         run["runtimeProvenance"] = arguments.runtime_provenance
     if (arguments.family == "scroll"
-            and getattr(arguments, "scroll_driver", "fixed-step") == "historical-driver"):
+            and scroll_driver == "historical-driver"):
         validate_historical_scroll_result(run, arguments.width, arguments.height)
+    elif arguments.family == "scroll" and scroll_driver == "paint-split-probe":
+        validate_paint_split_result(run, arguments.width, arguments.height)
     elif getattr(arguments, "require_default_scroll_preflight", False):
         measurements = run.get("measurements", {})
         logical = run.get("logicalDimensions")
@@ -762,15 +886,16 @@ def execute(arguments) -> int:
         else:
             arguments.runtime_identity = "github-artifact:%s;sha256:%s;runtime-files-sha256:%s" % (
                 official_provenance["artifactName"], official_provenance["outerArtifactSha256"], runtime_hash)
-        process_index += 1
-        try:
-            launch_preflight(arguments, cell, process_index, dataset, runtime_commit, benchmark_commit,
-                             runtime_files, runtime_hash, env, output_dir)
-        except RunnerError as error:
-            failures.append({"cell": cell, "phase": "preflight", "round": 0, "error": str(error)})
-            if arguments.fail_fast:
-                break
-            continue
+        if getattr(arguments, "scroll_driver", "fixed-step") != "paint-split-probe":
+            process_index += 1
+            try:
+                launch_preflight(arguments, cell, process_index, dataset, runtime_commit, benchmark_commit,
+                                 runtime_files, runtime_hash, env, output_dir)
+            except RunnerError as error:
+                failures.append({"cell": cell, "phase": "preflight", "round": 0, "error": str(error)})
+                if arguments.fail_fast:
+                    break
+                continue
         for phase, count in (("warmup", arguments.warmups), ("measured", arguments.rounds)):
             for ordinal in range(count):
                 process_index += 1
@@ -837,8 +962,8 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--width", type=int, default=540)
     render.add_argument("--height", type=int, default=960)
     render.add_argument("--diagnostics", action="store_true")
-    render.add_argument("--scroll-driver", choices=("fixed-step", "historical-driver"), default="fixed-step",
-                        help="scroll cadence and position driver; historical-driver is a single-pass probe")
+    render.add_argument("--scroll-driver", choices=("fixed-step", "historical-driver", "paint-split-probe"), default="fixed-step",
+                        help="scroll cadence and position driver; probe modes are one-round investigations")
     render.add_argument("--fail-fast", action="store_true")
     render.add_argument("--runtime-source", type=Path,
                         help="clean TotalCross checkout for locally built runtimes; not used with attested packages")

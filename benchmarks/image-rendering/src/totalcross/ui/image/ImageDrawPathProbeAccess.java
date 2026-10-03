@@ -49,6 +49,22 @@ public final class ImageDrawPathProbeAccess {
     JSONObject snapshot() throws JSONException;
   }
 
+  public interface AdmissionMemoryHooks {
+    void start(Image[] images, String policy);
+    void paint(int index);
+    JSONObject frame() throws JSONException;
+    JSONObject finish(Image[] images) throws JSONException;
+  }
+  private static AdmissionMemoryHooks admissionMemoryHooks;
+  public static void installAdmissionMemoryHooks(AdmissionMemoryHooks hooks) {admissionMemoryHooks=hooks;}
+  public static void startAdmissionMemory(Image[] images,String policy) {
+    if(admissionMemoryHooks==null)throw new IllegalStateException("memory probe needs its isolated package");
+    admissionMemoryHooks.start(images,policy);
+  }
+  public static void admissionMemoryPaint(int index) {if(admissionMemoryHooks!=null)admissionMemoryHooks.paint(index);}
+  public static JSONObject admissionMemoryFrame() throws JSONException {return admissionMemoryHooks.frame();}
+  public static JSONObject finishAdmissionMemory(Image[] images) throws JSONException {return admissionMemoryHooks.finish(images);}
+
   private static CausalHooks causalHooks;
 
   public static void installCausalHooks(CausalHooks hooks) {

@@ -1,0 +1,973 @@
+diff --git a/TotalCrossSDK/src/main/java/totalcross/ui/image/AdmissionMemoryForTest.java b/TotalCrossSDK/src/main/java/totalcross/ui/image/AdmissionMemoryForTest.java
+new file mode 100644
+index 000000000..0bff6b93a
+--- /dev/null
++++ b/TotalCrossSDK/src/main/java/totalcross/ui/image/AdmissionMemoryForTest.java
+@@ -0,0 +1,70 @@
++// Copyright (C) 2026 Amalgam Solucoes em TI Ltda
++//
++// SPDX-License-Identifier: LGPL-2.1-only
++
++package totalcross.ui.image;
++
++/** Isolated diagnostics. Primitive ledgers never retain Images, pipelines or backings. */
++final class AdmissionMemoryForTest {
++  static boolean enabled;
++  static boolean diagnostics;
++  static long liveCount, peakCount, liveBytes, peakBytes, installs, detaches, replacements, invalidations;
++  static long pendingDiscarded, materializations, materializationNs, allocatedBytes;
++  static long[] paints, mats, admissions, hits;
++  static int[] widths, heights, formats;
++  static long[] bytes;
++  static int[] keyIndices;
++  static long[] keyScales, keyGenerations;
++  static int keyCount;
++  static boolean[] keyAdmitted;
++
++  static void start(int count) {
++    enabled=true; diagnostics=true;
++    liveCount=peakCount=liveBytes=peakBytes=installs=detaches=replacements=invalidations=0;
++    pendingDiscarded=materializations=materializationNs=allocatedBytes=0;
++    paints=new long[count];mats=new long[count];admissions=new long[count];hits=new long[count];
++    widths=new int[count];heights=new int[count];formats=new int[count];bytes=new long[count];
++    keyIndices=new int[count*4+16];keyAdmitted=new boolean[keyIndices.length];keyScales=new long[keyIndices.length];keyGenerations=new long[keyIndices.length];keyCount=0;
++    NativeImageBacking.metricForTest(200,1);
++  }
++  static boolean tracked(ImagePipeline p) {return enabled && p!=null && p.admissionProbeIndexForTest>=0 && p.admissionProbeIndexForTest<paints.length;}
++  static long size(Image image) {
++    if(image.backing==null)return 0;
++    if(image.backing instanceof NativeImageBacking)return ((NativeImageBacking)image.backing).backingBytesForTest();
++    RasterImageBacking b=(RasterImageBacking)image.backing;
++    return 4L*(b.pixelsOfAllFrames()!=null?b.pixelsOfAllFrames().length:b.pixels()!=null?b.pixels().length:0);
++  }
++  static void tag(ImageBacking backing, int metric) {
++    if(backing instanceof NativeImageBacking){
++      long h=((NativeImageBacking)backing).nativeHandleForBridge();
++      if(h<=0||h>Integer.MAX_VALUE)throw new IllegalStateException("probe handle out of private metric range");
++      NativeImageBacking.metricForTest(metric,(int)h);
++    }
++  }
++  static void source(ImagePipeline p) {
++    if(p.root() instanceof EncodedImageSource)tag(((EncodedImageSource)p.root()).decodedBackingForPreparationCleanup(),201);
++  }
++  static void resolved(ImagePipeline p, Image image, long scale, long generation, long elapsed) {
++    if(!tracked(p))return;int i=p.admissionProbeIndexForTest;
++    source(p);tag(image.backing,202);materializations++;mats[i]++;
++    long size=size(image);allocatedBytes+=size;materializationNs+=elapsed;
++    bytes[i]=size;widths[i]=image.getPixelWidth();heights[i]=image.getPixelHeight();
++    formats[i]=image.backing instanceof NativeImageBacking?((NativeImageBacking)image.backing).formatForTest():0;
++    for(int k=0;k<keyCount;k++)if(keyIndices[k]==i&&keyScales[k]==scale&&keyGenerations[k]==generation)return;
++    if(keyCount==keyIndices.length)throw new IllegalStateException("probe key ledger exhausted");
++    keyIndices[keyCount]=i;keyScales[keyCount]=scale;keyGenerations[keyCount++]=generation;
++  }
++  static void admittedKey(ImagePipeline p,long scale,long generation) {
++    for(int k=0;k<keyCount;k++)if(keyIndices[k]==p.admissionProbeIndexForTest&&keyScales[k]==scale&&keyGenerations[k]==generation)keyAdmitted[k]=true;
++  }
++  static void installed(ImagePipeline p, Image image) {
++    long n=size(image);p.cachedProbeBytesForTest=n;p.cachedProbeTrackedForTest=true;
++    liveCount++;liveBytes+=n;installs++;admissions[p.admissionProbeIndexForTest]++;
++    peakCount=Math.max(peakCount,liveCount);peakBytes=Math.max(peakBytes,liveBytes);
++  }
++  static void detached(ImagePipeline p, boolean replacement) {
++    if(!p.cachedProbeTrackedForTest)return;
++    liveCount--;liveBytes-=p.cachedProbeBytesForTest;detaches++;if(replacement)replacements++;
++    p.cachedProbeTrackedForTest=false;p.cachedProbeBytesForTest=0;
++  }
++}
+diff --git a/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java b/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
+index 2f6bf3ebf..c473e20b5 100644
+--- a/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
++++ b/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
+@@ -83,0 +84,9 @@ public class Image extends GfxSurface {
++  // Experiment-only: enabled by the P12 causal probe after normal startup paint.
++  static int copyRectPhysicalOnlyForTest;
++  // Isolated admission experiment; no production setting/API enables this field.
++  static int immediateMaterializedAdmissionForTest;
++  static int causalResolveCallsForTest;
++  static int causalResolveCacheHitsForTest;
++  static int causalVariantObservationsForTest;
++  static int causalVariantAdmissionsForTest;
++
+@@ -181,0 +191,4 @@ public class Image extends GfxSurface {
++    causalResolveCallsForTest = 0;
++    causalResolveCacheHitsForTest = 0;
++    causalVariantObservationsForTest = 0;
++    causalVariantAdmissionsForTest = 0;
+@@ -1298,0 +1312,3 @@ public class Image extends GfxSurface {
++    if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++      causalResolveCallsForTest++;
++    }
+@@ -1304,0 +1321,3 @@ public class Image extends GfxSurface {
++      if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++        causalResolveCacheHitsForTest++;
++      }
+@@ -1310 +1329,6 @@ public class Image extends GfxSurface {
+-    Image resolved = resolvePipeline(deferred, effectiveScale);
++    long admissionMaterializeStarted = AdmissionMemoryForTest.tracked(deferred) && AdmissionMemoryForTest.diagnostics ? System.nanoTime() : 0;
++    Image resolved;
++    boolean admissionTracked=AdmissionMemoryForTest.tracked(deferred);
++    if(admissionTracked)NativeImageBacking.metricForTest(204,1);
++    try {resolved=resolvePipeline(deferred,effectiveScale);}
++    finally {if(admissionTracked)NativeImageBacking.metricForTest(204,0);}
+@@ -1313 +1337,8 @@ public class Image extends GfxSurface {
+-    boolean admitted = deferred.observeMaterializedVariant(scaleBits, sourceDecodeGeneration);
++    if(AdmissionMemoryForTest.tracked(deferred))AdmissionMemoryForTest.resolved(deferred,resolved,scaleBits,sourceDecodeGeneration,
++        admissionMaterializeStarted==0?0:System.nanoTime()-admissionMaterializeStarted);
++    if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++      causalVariantObservationsForTest++;
++    }
++    boolean admitted = (immediateMaterializedAdmissionForTest != 0
++        && copyRectPhysicalOnlyForTest != 0 && imageOperationAccountingForTest)
++        || deferred.observeMaterializedVariant(scaleBits, sourceDecodeGeneration);
+@@ -1314,0 +1346,3 @@ public class Image extends GfxSurface {
++      if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++        causalVariantAdmissionsForTest++;
++      }
+diff --git a/TotalCrossSDK/src/main/java/totalcross/ui/image/ImagePipeline.java b/TotalCrossSDK/src/main/java/totalcross/ui/image/ImagePipeline.java
+index a93b9b924..cc6b14424 100644
+--- a/TotalCrossSDK/src/main/java/totalcross/ui/image/ImagePipeline.java
++++ b/TotalCrossSDK/src/main/java/totalcross/ui/image/ImagePipeline.java
+@@ -43,0 +44,5 @@ final class ImagePipeline {
++  int admissionProbeIndexForTest = -1;
++  long cachedProbeBytesForTest;
++  boolean cachedProbeTrackedForTest;
++  private boolean cachedProbeInvalidSeenForTest;
++
+@@ -360,0 +366,4 @@ final class ImagePipeline {
++    if(AdmissionMemoryForTest.tracked(this) && cachedVariant!=null && cachedScaleBits==scaleBits
++        && cachedVariantGeneration!=sourceDecodeGeneration && !cachedProbeInvalidSeenForTest) {
++      AdmissionMemoryForTest.invalidations++;cachedProbeInvalidSeenForTest=true;
++    }
+@@ -363,0 +373 @@ final class ImagePipeline {
++        if(AdmissionMemoryForTest.tracked(this))AdmissionMemoryForTest.hits[admissionProbeIndexForTest]++;
+@@ -365,0 +376 @@ final class ImagePipeline {
++      if(AdmissionMemoryForTest.tracked(this) && !cachedProbeInvalidSeenForTest)AdmissionMemoryForTest.invalidations++;
+@@ -371,0 +383 @@ final class ImagePipeline {
++    if(AdmissionMemoryForTest.tracked(this))AdmissionMemoryForTest.detached(this,false);
+@@ -391,0 +404 @@ final class ImagePipeline {
++    if(AdmissionMemoryForTest.tracked(this) && pendingVariant)AdmissionMemoryForTest.pendingDiscarded++;
+@@ -399,0 +413,6 @@ final class ImagePipeline {
++    if(AdmissionMemoryForTest.tracked(this) && cachedVariant!=variant) {
++      AdmissionMemoryForTest.detached(this,cachedVariant!=null);
++      AdmissionMemoryForTest.installed(this,variant);
++      AdmissionMemoryForTest.admittedKey(this,scaleBits,sourceDecodeGeneration);
++      cachedProbeInvalidSeenForTest=false;
++    }
+@@ -408,0 +428,3 @@ final class ImagePipeline {
++  boolean pendingForAdmissionProbe() {return pendingVariant;}
++  Image retainedForAdmissionProbe() {return cachedVariant;}
++
+diff --git a/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java b/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java
+index d25829d93..aa92d07e2 100644
+--- a/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java
++++ b/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java
+@@ -18,0 +19,3 @@ public final class ImageRasterFeatureBridge {
++  static int physicalCopyAttemptsForTest;
++  static int physicalCopyFallbacksForTest;
++  static int causalIdentityFallbacksForTest;
+@@ -75,0 +79,3 @@ public final class ImageRasterFeatureBridge {
++    if ((status & (1 << 12)) != 0) physicalCopyAttemptsForTest++;
++    if ((status & (1 << 14)) != 0) physicalCopyFallbacksForTest++;
++    if ((status & ImageRasterDiagnostics.DRAW_IDENTITY_FALLBACK) != 0) causalIdentityFallbacksForTest++;
+@@ -137,0 +144,3 @@ public final class ImageRasterFeatureBridge {
++    physicalCopyAttemptsForTest = 0;
++    physicalCopyFallbacksForTest = 0;
++    causalIdentityFallbacksForTest = 0;
+diff --git a/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageAdmissionMemoryExperimentTest.java b/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageAdmissionMemoryExperimentTest.java
+new file mode 100644
+index 000000000..28159b1eb
+--- /dev/null
++++ b/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageAdmissionMemoryExperimentTest.java
+@@ -0,0 +1,66 @@
++// Copyright (C) 2026 Amalgam Solucoes em TI Ltda
++//
++// SPDX-License-Identifier: LGPL-2.1-only
++package totalcross.ui.image;
++import static org.junit.jupiter.api.Assertions.*;
++import org.junit.jupiter.api.*;
++class ImageAdmissionMemoryExperimentTest {
++  private ImagePipeline p;
++  @BeforeEach void start() throws Exception {
++    AdmissionMemoryForTest.start(1);
++    p=new Image(4,4).getSmoothScaledInstance(2,2).pipelineForSmoke();
++    p.admissionProbeIndexForTest=0;
++  }
++  @AfterEach void stop() {AdmissionMemoryForTest.enabled=false;}
++  @Test void installationReplacementReleaseCountActualStorage() throws Exception {
++    p.cacheMaterializedVariant(1,new Image(4,4),1);
++    assertEquals(64,AdmissionMemoryForTest.liveBytes);
++    p.cacheMaterializedVariant(2,new Image(8,8),1);
++    assertEquals(256,AdmissionMemoryForTest.liveBytes);
++    assertEquals(256,AdmissionMemoryForTest.peakBytes);
++    assertEquals(1,AdmissionMemoryForTest.peakCount);
++    assertEquals(1,AdmissionMemoryForTest.replacements);
++    assertEquals(1,p.cachedVariantCountForSmoke());
++    p.releaseCachedVariantTextures();
++    assertEquals(256,AdmissionMemoryForTest.liveBytes);
++    p.clearCachedVariants();
++    assertEquals(0,AdmissionMemoryForTest.liveBytes);
++    assertEquals(0,AdmissionMemoryForTest.liveCount);
++    assertEquals(2,AdmissionMemoryForTest.detaches);
++  }
++  @Test void pendingOwnsNoRasterAndChangedKeyDiscardsPending() {
++    assertFalse(p.observeMaterializedVariant(1,1));
++    assertEquals(0,AdmissionMemoryForTest.liveBytes);
++    assertFalse(p.observeMaterializedVariant(2,1));
++    assertEquals(1,AdmissionMemoryForTest.pendingDiscarded);
++    assertTrue(p.observeMaterializedVariant(2,1));
++    assertFalse(p.pendingForAdmissionProbe());
++  }
++  @Test void generationMismatchCountsOnceWithoutChangingOwnership() throws Exception {
++    p.cacheMaterializedVariant(1,new Image(4,4),1);
++    assertNull(p.cachedMaterializedVariant(1,2));
++    assertNull(p.cachedMaterializedVariant(1,2));
++    assertEquals(1,AdmissionMemoryForTest.invalidations);
++    assertEquals(64,AdmissionMemoryForTest.liveBytes);
++    assertNotNull(p.cachedMaterializedVariant(1,1));
++  }
++  @Test void exactKeyLedgerIncludesUnadmittedAllocatedWork() throws Exception {
++    Image raster=new Image(4,4);
++    AdmissionMemoryForTest.resolved(p,raster,1,1,7);
++    AdmissionMemoryForTest.resolved(p,raster,1,1,9);
++    AdmissionMemoryForTest.resolved(p,raster,2,1,11);
++    assertEquals(2,AdmissionMemoryForTest.keyCount);
++    assertEquals(3,AdmissionMemoryForTest.materializations);
++    assertEquals(192,AdmissionMemoryForTest.allocatedBytes);
++    assertEquals(27,AdmissionMemoryForTest.materializationNs);
++    assertEquals(0,AdmissionMemoryForTest.liveBytes);
++  }
++  @Test void disabledAccountingDoesNotTrackInstallation() throws Exception {
++    AdmissionMemoryForTest.enabled=false;
++    p.cacheMaterializedVariant(1,new Image(4,4),1);
++    p.cacheMaterializedVariant(2,new Image(8,8),1);
++    assertEquals(0,AdmissionMemoryForTest.liveBytes);
++    assertEquals(0,AdmissionMemoryForTest.installs);
++    assertEquals(1,p.cachedVariantCountForSmoke());
++  }
++}
+diff --git a/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageImmediateAdmissionExperimentTest.java b/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageImmediateAdmissionExperimentTest.java
+new file mode 100644
+index 000000000..da520a7ba
+--- /dev/null
++++ b/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageImmediateAdmissionExperimentTest.java
+@@ -0,0 +1,163 @@
++// Copyright (C) 2026 Amalgam Solucoes em TI Ltda
++//
++// SPDX-License-Identifier: LGPL-2.1-only
++
++package totalcross.ui.image;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++import java.awt.image.BufferedImage;
++import java.io.ByteArrayOutputStream;
++import javax.imageio.ImageIO;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++
++/** JVM-only contracts for the isolated first-successful-materialization hook. */
++class ImageImmediateAdmissionExperimentTest {
++  private boolean previousAccounting;
++
++  @BeforeEach void reset() {
++    assertEquals(0, Image.immediateMaterializedAdmissionForTest);
++    previousAccounting = Image.imageOperationAccountingForTest;
++    Image.resetImageOperationAccountingForTest();
++    Image.copyRectPhysicalOnlyForTest = 0;
++  }
++
++  @AfterEach void restore() {
++    Image.immediateMaterializedAdmissionForTest = 0;
++    Image.copyRectPhysicalOnlyForTest = 0;
++    Image.imageOperationAccountingForTest = previousAccounting;
++  }
++
++  private void enable() {
++    Image.copyRectPhysicalOnlyForTest = 1;
++    Image.immediateMaterializedAdmissionForTest = 1;
++  }
++
++  private Image deferred() throws Exception {
++    BufferedImage pixels = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
++    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
++    ImageIO.write(pixels, "png", bytes);
++    return new Image(bytes.toByteArray()).getSmoothScaledInstance(48, 48);
++  }
++
++  @Test void firstSuccessfulExactScaleMaterializationIsAdmitted() throws Exception {
++    enable();
++    Image image = deferred();
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    Image first = image.resolveForDrawing(2);
++    assertTrue(first.backing.isValid());
++    assertEquals(96, first.getPixelWidth());
++    assertEquals(1, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++    assertSame(first, image.cachedFinalRasterForDrawing(2));
++    assertSame(first, image.resolveForDrawing(2));
++    assertEquals(1, Image.causalResolveCacheHitsForTest);
++    assertEquals(1, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++  }
++
++  @Test void disabledAdmissionHookKeepsProductionSecondObservation() throws Exception {
++    Image.copyRectPhysicalOnlyForTest = 1;
++    Image image = deferred();
++    Image first = image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertEquals(0, Image.causalVariantAdmissionsForTest);
++    Image second = image.resolveForDrawing(2);
++    assertNotSame(first, second);
++    assertSame(second, image.cachedFinalRasterForDrawing(2));
++    assertEquals(2, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++  }
++
++  @Test void immediateHookRequiresPhysicalOnlyRouting() throws Exception {
++    Image.immediateMaterializedAdmissionForTest = 1;
++    Image image = deferred();
++    image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertSame(image.resolveForDrawing(2), image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void immediateHookRequiresExplicitTestAccounting() throws Exception {
++    enable();
++    Image.imageOperationAccountingForTest = false;
++    Image image = deferred();
++    image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertSame(image.resolveForDrawing(2), image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void invalidScalesCannotObserveOrAdmit() throws Exception {
++    enable();
++    Image image = deferred();
++    for (double scale : new double[] {0, -1, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY}) {
++      assertThrows(ImageException.class, () -> image.resolveForDrawing(scale));
++      assertThrows(ImageException.class, () -> image.cachedFinalRasterForDrawing(scale));
++    }
++    assertEquals(0, Image.causalVariantObservationsForTest);
++    assertEquals(0, Image.causalVariantAdmissionsForTest);
++    assertEquals(0, image.pipelineForSmoke().cachedVariantCountForSmoke());
++  }
++
++  @Test void exactScaleCacheKeyIsUnchanged() throws Exception {
++    enable();
++    Image image = deferred();
++    Image two = image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(1));
++    assertNull(image.cachedFinalRasterForDrawing(4));
++    Image four = image.resolveForDrawing(4);
++    assertNotSame(two, four);
++    assertEquals(192, four.getPixelWidth());
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertSame(four, image.cachedFinalRasterForDrawing(4));
++    assertEquals(1, image.pipelineForSmoke().cachedVariantCountForSmoke());
++  }
++
++  @Test void changedDecodeGenerationStillRejectsAnAdmittedRaster() throws Exception {
++    enable();
++    Image image = deferred();
++    Image old = image.resolveForDrawing(2);
++    EncodedImageSource source = (EncodedImageSource) image.pipelineForSmoke().root();
++    source.evictDecodedBacking();
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    Image fresh = image.resolveForDrawing(2);
++    assertNotSame(old, fresh);
++    assertSame(fresh, image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void invalidBackingStillRejectsAnAdmittedRaster() throws Exception {
++    enable();
++    Image image = deferred();
++    Image old = image.resolveForDrawing(2);
++    ImageBacking backing = old.backing;
++    old.backing = null;
++    try {
++      assertNull(image.cachedFinalRasterForDrawing(2));
++      assertEquals(0, image.pipelineForSmoke().cachedVariantCountForSmoke());
++    } finally {
++      old.backing = backing;
++    }
++    Image fresh = image.resolveForDrawing(2);
++    assertNotSame(old, fresh);
++    assertSame(fresh, image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void failedMaterializationCannotObserveOrAdmitAndRetryAdmitsImmediately() throws Exception {
++    enable();
++    // The existing allocation hook is consumed by the legacy BMP decode path.
++    BufferedImage pixels = new BufferedImage(96, 96, BufferedImage.TYPE_INT_RGB);
++    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
++    assertTrue(ImageIO.write(pixels, "bmp", bytes));
++    Image image = new Image(bytes.toByteArray()).getSmoothScaledInstance(48, 48);
++    Image.failNextDecodedRasterAllocationForTest();
++    assertThrows(TransientImageMaterializationException.class, () -> image.resolveForDrawing(2));
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertEquals(0, Image.causalVariantObservationsForTest);
++    assertEquals(0, Image.causalVariantAdmissionsForTest);
++    Image recovered = image.resolveForDrawing(2);
++    assertSame(recovered, image.cachedFinalRasterForDrawing(2));
++    assertEquals(1, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++  }
++}
+diff --git a/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h b/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h
+index 9b680730d..35d5a7d78 100644
+--- a/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h
++++ b/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h
+@@ -186,0 +187,2 @@ static int skiaDrawGeometryPlan(Context currentContext, TCObject dstSurf, TCObje
++   int32* causalPhysicalOnly = allowPhysicalCopy
++      ? imageTestAccountingField(currentContext, "copyRectPhysicalOnlyForTest") : null;
+@@ -190 +192,2 @@ static int skiaDrawGeometryPlan(Context currentContext, TCObject dstSurf, TCObje
+-      allowPhysicalCopy != 0 && doClip != 0);
++      allowPhysicalCopy != 0 && doClip != 0,
++      causalPhysicalOnly != null && *causalPhysicalOnly != 0);
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia.h b/TotalCrossVM/src/nm/ui/skia/skia.h
+index 6a338067b..062b0cb44 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia.h
++++ b/TotalCrossVM/src/nm/ui/skia/skia.h
+@@ -188 +188 @@ int skia_image_backing_draw_geometry_to_surface(int32 targetSurface,
+-    bool allowPhysicalCopy);
++    bool allowPhysicalCopy, bool physicalOnlyForTest);
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia_image_backing.cpp b/TotalCrossVM/src/nm/ui/skia/skia_image_backing.cpp
+index 074285cfb..a7fbe9a08 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia_image_backing.cpp
++++ b/TotalCrossVM/src/nm/ui/skia/skia_image_backing.cpp
+@@ -8,0 +9,5 @@
++#include <chrono>
++#include <cmath>
++#include <cstring>
++#include "skia_writepixels_probe.h"
++
+@@ -55,0 +61,52 @@ uint64_t promotionBytesForTest;
++// Experiment-only historical bit-2 equivalent; zero in every normal startup.
++static bool warmWritePixelsEnabledForTest;
++static bool failWarmWritePixelsForTest;
++static bool warmSummaryOnlyForTest;
++// Diagnostic tags hold addresses only, never ownership. Categories: derived=1, decoded=2.
++static bool admissionMemoryEnabledForTest;
++static bool admissionMaterializationForTest;
++struct AdmissionMemoryTag { int category; uint64_t bytes; };
++static std::map<const NativeImageBackingRecord*, AdmissionMemoryTag> admissionMemoryTags;
++// live count, peak count, live bytes, peak bytes, releases, tags, allocated bytes.
++static uint64_t admissionMemoryMetrics[3][7];
++
++static void admissionMemoryRemove(const NativeImageBackingRecord& backing) {
++    auto found = admissionMemoryTags.find(&backing);
++    if (found == admissionMemoryTags.end()) return;
++    auto& m = admissionMemoryMetrics[found->second.category];
++    --m[0]; m[2] -= found->second.bytes; ++m[4];
++    admissionMemoryTags.erase(found);
++}
++static void admissionMemoryTagBacking(const NativeImageBackingRecord* backing, int category) {
++    if (!admissionMemoryEnabledForTest || !backing) return;
++    auto found = admissionMemoryTags.find(backing);
++    if (found != admissionMemoryTags.end()) {
++        if (found->second.category == category && found->second.bytes == backing->backingBytes) return;
++        admissionMemoryRemove(*backing);
++    }
++    admissionMemoryTags[backing] = {category, backing->backingBytes};
++    auto& m = admissionMemoryMetrics[category];
++    ++m[0]; m[2] += backing->backingBytes; ++m[5]; m[6] += backing->backingBytes;
++    m[1] = std::max(m[1],m[0]); m[3] = std::max(m[3],m[2]);
++}
++static uint64_t warmWritePixelsMetrics[11];
++static uint64_t warmWritePixelsReasons[12];
++struct WarmWritePixelsRecord { uint64_t fields[37] = {}; };
++static std::vector<WarmWritePixelsRecord> warmWritePixelsRecords;
++// Historical backing has opacity state; current backing does not. Keep proof
++// metadata entirely outside backing representation and key it by handle/generation.
++static std::map<std::pair<int64_t, uint64_t>, int> warmOpacityProofs;
++
++static uint64_t warmNowNs() {
++    return std::chrono::duration_cast<std::chrono::nanoseconds>(
++        std::chrono::steady_clock::now().time_since_epoch()).count();
++}
++static uint64_t warmFloatBits(float value) {
++    uint32_t bits; std::memcpy(&bits, &value, sizeof(bits)); return bits;
++}
++static void warmReset() {
++    std::fill_n(warmWritePixelsMetrics, 11, uint64_t(0));
++    std::fill_n(warmWritePixelsReasons, 12, uint64_t(0));
++    warmWritePixelsRecords.clear();
++}
++
+@@ -169,0 +227 @@ void recordBackingReleased(const NativeImageBackingRecord& backing) {
++    if (admissionMemoryEnabledForTest) admissionMemoryRemove(backing);
+@@ -340,0 +399,204 @@ void recordSurfaceMutation(int32 surfaceId) {
++bool integralWritePixelsCoordinate(float value) {
++    return std::isfinite(value) && std::floor(value) == value;
++}
++
++struct WritePixelsDeviceCopyPlan {
++    SkIRect sourcePixels;
++    SkIRect destinationPixels;
++    bool clipped;
++};
++
++enum class WritePixelsRejectReason {
++    InvalidTargetOrSource,
++    AlphaMask,
++    Matrix,
++    SourceRect,
++    SizeMismatch,
++    FractionalDestination,
++    DestinationBounds,
++};
++
++static int warmPlanRejection;
++bool rejectWritePixelsPlan(WritePixelsRejectReason reason) {
++    switch (reason) {
++    case WritePixelsRejectReason::InvalidTargetOrSource: warmPlanRejection = 1; break;
++    case WritePixelsRejectReason::AlphaMask: warmPlanRejection = 2; break;
++    case WritePixelsRejectReason::SourceRect: warmPlanRejection = 3; break;
++    case WritePixelsRejectReason::Matrix: warmPlanRejection = 4; break;
++    case WritePixelsRejectReason::FractionalDestination: warmPlanRejection = 5; break;
++    case WritePixelsRejectReason::SizeMismatch: warmPlanRejection = 6; break;
++    case WritePixelsRejectReason::DestinationBounds: warmPlanRejection = 7; break;
++    }
++    return false;
++}
++
++bool buildWritePixelsDeviceCopyPlan(
++    SkCanvas* targetCanvas, bool validSource, int32 sourceWidth, int32 sourceHeight,
++    float srcLeft, float srcTop, float srcRight, float srcBottom,
++    float dstLeft, float dstTop, float dstRight, float dstBottom,
++    int32 alphaMask, bool knownOpaque, WritePixelsDeviceCopyPlan* plan) {
++    if (!targetCanvas || !validSource || sourceWidth <= 0 || sourceHeight <= 0 || !plan) {
++        return rejectWritePixelsPlan(WritePixelsRejectReason::InvalidTargetOrSource);
++    }
++    if (alphaMask != 255) {
++        return rejectWritePixelsPlan(WritePixelsRejectReason::AlphaMask);
++    }
++    if (!integralWritePixelsCoordinate(srcLeft) || !integralWritePixelsCoordinate(srcTop)
++        || !integralWritePixelsCoordinate(srcRight) || !integralWritePixelsCoordinate(srcBottom)
++        || srcRight <= srcLeft || srcBottom <= srcTop
++        || srcLeft < 0 || srcTop < 0 || srcRight > sourceWidth || srcBottom > sourceHeight) {
++        return rejectWritePixelsPlan(WritePixelsRejectReason::SourceRect);
++    }
++
++    const SkMatrix matrix = targetCanvas->getTotalMatrix();
++    if (matrix.hasPerspective() || matrix.getSkewX() != 0 || matrix.getSkewY() != 0
++        || !std::isfinite(matrix.getScaleX()) || !std::isfinite(matrix.getScaleY())
++        || !std::isfinite(matrix.getTranslateX()) || !std::isfinite(matrix.getTranslateY())
++        || matrix.getScaleX() <= 0 || matrix.getScaleY() <= 0) {
++        return rejectWritePixelsPlan(WritePixelsRejectReason::Matrix);
++    }
++
++    const float deviceLeft = matrix.getScaleX() * dstLeft + matrix.getTranslateX();
++    const float deviceTop = matrix.getScaleY() * dstTop + matrix.getTranslateY();
++    const float deviceRight = matrix.getScaleX() * dstRight + matrix.getTranslateX();
++    const float deviceBottom = matrix.getScaleY() * dstBottom + matrix.getTranslateY();
++    if (!integralWritePixelsCoordinate(deviceLeft) || !integralWritePixelsCoordinate(deviceTop)
++        || !integralWritePixelsCoordinate(deviceRight)
++        || !integralWritePixelsCoordinate(deviceBottom)) {
++        return rejectWritePixelsPlan(WritePixelsRejectReason::FractionalDestination);
++    }
++
++    const SkIRect sourceRect = SkIRect::MakeLTRB(
++        static_cast<int32>(srcLeft), static_cast<int32>(srcTop),
++        static_cast<int32>(srcRight), static_cast<int32>(srcBottom));
++    const SkIRect mappedDestination = SkIRect::MakeLTRB(
++        static_cast<int32>(deviceLeft), static_cast<int32>(deviceTop),
++        static_cast<int32>(deviceRight), static_cast<int32>(deviceBottom));
++    if (mappedDestination.width() != sourceRect.width()
++        || mappedDestination.height() != sourceRect.height()) {
++        return rejectWritePixelsPlan(WritePixelsRejectReason::SizeMismatch);
++    }
++
++    SkIRect deviceClip;
++    SkPixmap targetPixels;
++    if (!targetCanvas->getDeviceClipBounds(&deviceClip) || !targetCanvas->peekPixels(&targetPixels)) {
++        return rejectWritePixelsPlan(WritePixelsRejectReason::DestinationBounds);
++    }
++    SkIRect visibleDestination = mappedDestination;
++    if (!visibleDestination.intersect(deviceClip)
++        || !visibleDestination.intersect(SkIRect::MakeWH(targetPixels.width(), targetPixels.height()))) {
++        return rejectWritePixelsPlan(WritePixelsRejectReason::DestinationBounds);
++    }
++
++    const int32 sourceOffsetX = visibleDestination.left() - mappedDestination.left();
++    const int32 sourceOffsetY = visibleDestination.top() - mappedDestination.top();
++    const SkIRect visibleSource = SkIRect::MakeLTRB(
++        sourceRect.left() + sourceOffsetX, sourceRect.top() + sourceOffsetY,
++        sourceRect.left() + sourceOffsetX + visibleDestination.width(),
++        sourceRect.top() + sourceOffsetY + visibleDestination.height());
++    if (!sourceRect.contains(visibleSource)
++        || visibleSource.width() != visibleDestination.width()
++        || visibleSource.height() != visibleDestination.height()) {
++        return rejectWritePixelsPlan(WritePixelsRejectReason::SourceRect);
++    }
++
++    plan->sourcePixels = visibleSource;
++    plan->destinationPixels = visibleDestination;
++    plan->clipped = visibleDestination.left() != mappedDestination.left()
++        || visibleDestination.top() != mappedDestination.top()
++        || visibleDestination.right() != mappedDestination.right()
++        || visibleDestination.bottom() != mappedDestination.bottom();
++    return true;
++}
++
++// Restored from f5dad132 proveOpaqueForWritePixels RGBA alpha scan.
++static bool warmProveOpaque(int64_t handle, NativeImageBackingRecord* source) {
++    auto key = std::make_pair(handle, source->generation);
++    auto known = warmOpacityProofs.find(key);
++    if (known != warmOpacityProofs.end()) return known->second == 1;
++    sk_sp<SkImage> image = source->snapshot();
++    SkPixmap pixmap;
++    if (!image || !image->peekPixels(&pixmap)) return false;
++    bool opaque = true;
++    for (int32 y = 0; y < source->height && opaque; ++y) {
++        const uint8_t* row = static_cast<const uint8_t*>(pixmap.addr(0, y));
++        if (!row) return false;
++        for (int32 x = 0; x < source->width; ++x) {
++            if (row[static_cast<size_t>(x) * 4 + 3] != 0xff) { opaque = false; break; }
++        }
++    }
++    warmOpacityProofs[key] = opaque ? 1 : 2;
++    ++warmWritePixelsMetrics[5];
++    warmWritePixelsMetrics[6] += static_cast<uint64_t>(source->width) * source->height;
++    return opaque;
++}
++
++static bool warmTryWritePixels(SkCanvas* canvas, int64_t handle,
++    NativeImageBackingRecord* source, float sl, float st, float sr, float sb,
++    float dl, float dt, float dr, float db, int32 alpha, WarmWritePixelsRecord* record) {
++    const auto key = std::make_pair(handle, source ? source->generation : uint64_t(0));
++    record->fields[0] = handle;
++    record->fields[1] = source ? static_cast<int>(source->format) : 255;
++    record->fields[2] = source ? source->width : 0;
++    record->fields[3] = source ? source->height : 0;
++    auto known = warmOpacityProofs.find(key);
++    record->fields[4] = known == warmOpacityProofs.end() ? 0 : known->second;
++    record->fields[5] = record->fields[4];
++    const float inputs[] = {sl, st, sr, sb, dl, dt, dr, db};
++    for (int i = 0; i < 8; ++i) record->fields[10 + i] = warmFloatBits(inputs[i]);
++    if (canvas) {
++        const SkMatrix matrix = canvas->getTotalMatrix();
++        const float device[] = {matrix.getScaleX()*dl+matrix.getTranslateX(),
++            matrix.getScaleY()*dt+matrix.getTranslateY(),
++            matrix.getScaleX()*dr+matrix.getTranslateX(),
++            matrix.getScaleY()*db+matrix.getTranslateY(),
++            matrix.getScaleX(), matrix.getScaleY(), matrix.getTranslateX(), matrix.getTranslateY()};
++        for (int i = 0; i < 4; ++i) {
++            record->fields[18+i] = warmFloatBits(device[i]);
++            record->fields[30+i] = warmFloatBits(device[4+i]);
++        }
++    }
++    auto reject = [&](int reason) {
++        record->fields[7] = reason; ++warmWritePixelsReasons[reason];
++        ++warmWritePixelsMetrics[2]; return false;
++    };
++    WritePixelsDeviceCopyPlan plan;
++    warmPlanRejection = 0;
++    if (!buildWritePixelsDeviceCopyPlan(canvas, source != nullptr,
++            source ? source->width : 0, source ? source->height : 0,
++            sl, st, sr, sb, dl, dt, dr, db, alpha,
++            record->fields[4] == 1, &plan)) return reject(warmPlanRejection);
++    const int coords[] = {plan.sourcePixels.left(), plan.sourcePixels.top(),
++        plan.sourcePixels.right(), plan.sourcePixels.bottom(),
++        plan.destinationPixels.left(), plan.destinationPixels.top(),
++        plan.destinationPixels.right(), plan.destinationPixels.bottom()};
++    for (int i=0; i<8; ++i) record->fields[22+i] = static_cast<uint64_t>(coords[i]);
++    record->fields[9] = plan.clipped;
++    // This default-only experiment restores the historical RGBA branch. No
++    // compact conversion or representation change is introduced to force hits.
++    if (source->format != BackingFormat::RGBA8888) return reject(9);
++    bool opaque = warmProveOpaque(handle, source);
++    known = warmOpacityProofs.find(key);
++    record->fields[5] = known == warmOpacityProofs.end() ? 0 : known->second;
++    if (!opaque) return reject(8);
++    sk_sp<SkImage> image = source->snapshot();
++    SkPixmap pixmap, subset;
++    if (!image || !image->peekPixels(&pixmap)
++        || !pixmap.extractSubset(&subset, plan.sourcePixels)) return reject(10);
++    const uint64_t writeStart = warmSummaryOnlyForTest ? 0 : warmNowNs();
++    bool written;
++    if (failWarmWritePixelsForTest) { failWarmWritePixelsForTest = false; written = false; }
++    else written = canvas->writePixels(subset.info(), subset.addr(), subset.rowBytes(),
++        plan.destinationPixels.left(), plan.destinationPixels.top());
++    record->fields[35] = warmSummaryOnlyForTest ? 0 : warmNowNs() - writeStart;
++    warmWritePixelsMetrics[8] += record->fields[35];
++    if (!written) return reject(11);
++    record->fields[6] = 1;
++    record->fields[8] = static_cast<uint64_t>(plan.sourcePixels.width())
++        * static_cast<uint64_t>(plan.sourcePixels.height()) * 4;
++    ++warmWritePixelsMetrics[1];
++    warmWritePixelsMetrics[3] += record->fields[8];
++    warmWritePixelsMetrics[4] += plan.clipped ? 1 : 0;
++    return true;
++}
++
+@@ -937,2 +1199,30 @@ int skia_image_backing_draw_to_surface(int32 targetSurface, int64_t sourceHandle
+-    return drawOnCanvas(skiaGetCanvas(targetSurface), findBacking(sourceHandle), srcLeft, srcTop,
+-                        srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom, alphaMask);
++    SkCanvas* canvas = skiaGetCanvas(targetSurface);
++    NativeImageBackingRecord* source = findBacking(sourceHandle);
++#if TC_GRAPHICS_SOFTWARE
++    if (warmWritePixelsEnabledForTest && backingAccountingForTest) {
++        WarmWritePixelsRecord record;
++        ++warmWritePixelsMetrics[0];
++        const uint64_t start = warmSummaryOnlyForTest ? 0 : warmNowNs();
++        const bool handled = warmTryWritePixels(canvas, sourceHandle, source,
++            srcLeft, srcTop, srcRight, srcBottom, dstLeft, dstTop, dstRight, dstBottom,
++            alphaMask, &record);
++        record.fields[34] = warmSummaryOnlyForTest ? 0 : warmNowNs() - start;
++        warmWritePixelsMetrics[7] += record.fields[34];
++        if (handled) {
++            if (!warmSummaryOnlyForTest) warmWritePixelsRecords.push_back(record);
++            // Historical hits mark target surface mutation; preserve its bookkeeping.
++            recordSurfaceMutation(targetSurface);
++            return 1;
++        }
++        const uint64_t fallbackStart = warmSummaryOnlyForTest ? 0 : warmNowNs();
++        const int result = drawOnCanvas(canvas, source, srcLeft, srcTop, srcRight,
++            srcBottom, dstLeft, dstTop, dstRight, dstBottom, alphaMask);
++        record.fields[36] = warmSummaryOnlyForTest ? 0 : warmNowNs() - fallbackStart;
++        warmWritePixelsMetrics[9] += record.fields[36];
++        ++warmWritePixelsMetrics[10];
++        if (!warmSummaryOnlyForTest) warmWritePixelsRecords.push_back(record);
++        return result;
++    }
++#endif
++    return drawOnCanvas(canvas, source, srcLeft, srcTop, srcRight, srcBottom,
++        dstLeft, dstTop, dstRight, dstBottom, alphaMask);
+@@ -1002,0 +1293 @@ void skia_image_backing_reset_accounting_for_test(void) {
++    if (warmWritePixelsEnabledForTest) warmReset();
+@@ -1056,0 +1348,33 @@ uint64_t skia_image_backing_test_metric(int32 metric, int32 format) {
++    // Existing private test bridge; no production setting or SDK API additions.
++    if (metric == 108) { warmSummaryOnlyForTest = format == 1; return warmSummaryOnlyForTest; }
++    if (metric == 205) return admissionMemoryEnabledForTest && admissionMaterializationForTest;
++    if (metric == 204) {admissionMaterializationForTest = format == 1; return admissionMaterializationForTest;}
++    if (metric == 200) {
++        admissionMemoryTags.clear();
++        for (auto& category : admissionMemoryMetrics) std::fill_n(category,7,uint64_t(0));
++        admissionMemoryEnabledForTest = format == 1; return admissionMemoryEnabledForTest;
++    }
++    if (metric == 201 || metric == 202) {
++        admissionMemoryTagBacking(findBacking(format),metric == 201 ? 2 : 1); return 0;
++    }
++    if (metric == 203) {
++        const int category = format / 8, field = format % 8;
++        return category >= 1 && category <= 2 && field >= 0 && field < 7
++            ? admissionMemoryMetrics[category][field] : 0;
++    }
++    if (metric == WP_SWITCH) {
++        if (format == 1) { warmOpacityProofs.clear(); warmReset(); }
++        warmWritePixelsEnabledForTest = format == 1;
++        return warmWritePixelsEnabledForTest;
++    }
++    if (metric == WP_ENABLED) return warmWritePixelsEnabledForTest;
++    if (metric == WP_METRICS) return format >= 0 && format < 11 ? warmWritePixelsMetrics[format] : 0;
++    if (metric == WP_RECORD_COUNT) return warmWritePixelsRecords.size();
++    if (metric == WP_REASONS) return format >= 0 && format < 12 ? warmWritePixelsReasons[format] : 0;
++    if (metric == WP_RECORD_FIELD) {
++        const int index = format / 37, field = format % 37;
++        return index >= 0 && static_cast<size_t>(index) < warmWritePixelsRecords.size()
++            && field >= 0 ? warmWritePixelsRecords[index].fields[field] : 0;
++    }
++    if (metric == WP_FAIL_NEXT) { failWarmWritePixelsForTest = true; return 0; }
++
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp b/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp
+index 3466bf11a..86bdc235d 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp
++++ b/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp
+@@ -1027 +1027 @@ int skia_image_backing_draw_geometry_to_surface(int32 targetSurface,
+-    bool allowPhysicalCopy) {
++    bool allowPhysicalCopy, bool physicalOnlyForTest) {
+@@ -1045,0 +1046,5 @@ int skia_image_backing_draw_geometry_to_surface(int32 targetSurface,
++    // P12 experiment: preserve production physical eligibility, but let Java
++    // resolve the final raster instead of terminating copyRect with generic draw.
++    if (allowPhysicalCopy && physicalOnlyForTest) {
++        return status;
++    }
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia_image_geometry_materialize.cpp b/TotalCrossVM/src/nm/ui/skia/skia_image_geometry_materialize.cpp
+index 61f9a0577..aee3b47ec 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia_image_geometry_materialize.cpp
++++ b/TotalCrossVM/src/nm/ui/skia/skia_image_geometry_materialize.cpp
+@@ -127 +127,3 @@ int64_t skia_image_backing_materialize_geometry(const SkiaImageDrawPlanData* pla
+-        return registerBacking(std::move(backing));
++        const int64_t handle = registerBacking(std::move(backing));
++        if (skia_image_backing_test_metric(205,0)) skia_image_backing_test_metric(202,static_cast<int32>(handle));
++        return handle;
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp b/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp
+index 5b64194a9..f6b4de614 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp
++++ b/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp
+@@ -6,0 +7 @@
++#include "skia_writepixels_probe.h"
+@@ -109 +110 @@ static bool testPhysicalIdentityCopyCase(int operation, int32 alphaMask,
+-        destinationRight, destinationBottom, true);
++        destinationRight, destinationBottom, true, expectCopyHit || expectIdentityHit);
+@@ -111,0 +113,15 @@ static bool testPhysicalIdentityCopyCase(int operation, int32 alphaMask,
++    const bool baselinePhysicalHit = (status & (SKIA_IMAGE_DRAW_PHYSICAL_COPY_HIT
++        | SKIA_IMAGE_DRAW_PHYSICAL_IDENTITY_HIT)) != 0;
++    // Rejected physical-only calls must return before drawing. Fixtures with
++    // physical hits exercised the enabled switch in the baseline call above.
++    if (!baselinePhysicalHit && !failDirectWritePixels) {
++        const int physicalOnlyStatus = skia_image_backing_draw_geometry_to_surface(destinationSurface, &plan,
++            static_cast<float>(sourceLeft), 0, sourceRight, sourceBottom, destinationX, destinationY,
++            destinationRight, destinationBottom, true, true);
++        if ((physicalOnlyStatus & (SKIA_IMAGE_DRAW_HANDLED | SKIA_IMAGE_DRAW_GENERIC_GEOMETRY
++                | SKIA_IMAGE_DRAW_SMOOTH_RESAMPLE)) != 0) {
++            std::fprintf(stderr, "physical-only experiment routing failed\n");
++            return false;
++        }
++    }
++
+@@ -116 +132 @@ static bool testPhysicalIdentityCopyCase(int operation, int32 alphaMask,
+-        destinationX, destinationY, destinationRight, destinationBottom, false);
++        destinationX, destinationY, destinationRight, destinationBottom, false, false);
+@@ -276 +292 @@ static bool testPhysicalCopyFallbackCase(const char* name, int destinationColorT
+-        destinationBottom, true);
++        destinationBottom, true, false);
+@@ -279 +295 @@ static bool testPhysicalCopyFallbackCase(const char* name, int destinationColorT
+-        destinationRight, destinationBottom, false);
++        destinationRight, destinationBottom, false, false);
+@@ -472,0 +489,114 @@ static bool testBoldStyle(const char* fontPath) {
++static bool testWarmWritePixelsCase(int kind, int reason, bool clip=false, bool enabled=true) {
++    uint8_t rgba[64];
++    for(int i=0;i<16;++i) {rgba[i*4]=i*7;rgba[i*4+1]=80;rgba[i*4+2]=144;rgba[i*4+3]=kind==3?128:255;}
++    const int64_t source=kind==12 ? skia_image_backing_create_empty_with_format(4,4,1)
++        : skia_image_backing_create_empty(4,4);
++    const int64_t target=skia_image_backing_create_empty(8,8), fallback=skia_image_backing_create_empty(8,8);
++    if(!source||!target||!fallback||!skia_image_backing_write_rgba_pixels(source,rgba,0,0,4,4,16))return false;
++    const int t=skia_image_backing_surface_id(target),f=skia_image_backing_surface_id(fallback);
++    float sl=0,sr=4,dl=1,dt=1,dr=5,db=5;int alpha=255;
++    if(kind==1){dr=7;db=7;} // actual scale mismatch
++    if(kind==2){dl=1.5f;dr=5.5f;}
++    if(kind==4)alpha=128;
++    if(kind==5)sl=0.5f;
++    if(kind==6){sr=5;dr=6;}
++    if(kind==7){dl=20;dr=24;}
++    if(kind==8){skia_image_backing_skew_surface_for_test(t,.5f,0);skia_image_backing_skew_surface_for_test(f,.5f,0);}
++    if(kind==9||kind==10){skia_setSurfaceScale(t,2);skia_setSurfaceScale(f,2);}
++    if(kind==9){dr=3;db=3;} // scale2 still device1:1
++    if(clip){skia_setClip(t,2,1,3,5);skia_setClip(f,2,1,3,5);}
++    skia_image_backing_test_metric(WP_SWITCH,1); // clear prior event evidence
++    skia_image_backing_test_metric(WP_SWITCH,0);skia_image_backing_reset_accounting_for_test();
++    const int baseline=skia_image_backing_draw_to_surface(f,source,sl,0,sr,4,dl,dt,dr,db,alpha);
++    skia_image_backing_test_metric(WP_SWITCH,enabled?1:0);
++    if(kind==11)skia_image_backing_test_metric(WP_FAIL_NEXT,0);
++    const int result=skia_image_backing_draw_to_surface(t,source,sl,0,sr,4,dl,dt,dr,db,alpha);
++    bool valid=result==baseline&&result==1;
++    if(enabled){
++        valid &= skia_image_backing_test_metric(WP_METRICS,0)==1
++            &&skia_image_backing_test_metric(WP_METRICS,1)==(reason==0?1:0)
++            &&skia_image_backing_test_metric(WP_METRICS,2)==(reason==0?0:1)
++            &&skia_image_backing_test_metric(WP_RECORD_FIELD,7)==static_cast<uint64_t>(reason);
++        if(reason==0)valid &= skia_image_backing_test_metric(WP_METRICS,3)==(clip?16:64)
++            &&skia_image_backing_test_metric(WP_METRICS,4)==(clip?1:0)
++            &&skia_image_backing_test_metric(WP_RECORD_FIELD,5)==1;
++    }else valid &= skia_image_backing_test_metric(WP_RECORD_COUNT,0)==0;
++    if(!valid)std::fprintf(stderr,"initial wp metrics attempts=%llu hits=%llu reason=%llu bytes=%llu opacity=%llu\n",
++        (unsigned long long)skia_image_backing_test_metric(WP_METRICS,0),
++        (unsigned long long)skia_image_backing_test_metric(WP_METRICS,1),
++        (unsigned long long)skia_image_backing_test_metric(WP_RECORD_FIELD,7),
++        (unsigned long long)skia_image_backing_test_metric(WP_METRICS,3),
++        (unsigned long long)skia_image_backing_test_metric(WP_RECORD_FIELD,5));
++    for(int y=0;y<8;++y)for(int x=0;x<8;++x) {
++        if(skia_getPixel(t,x,y)!=skia_getPixel(f,x,y)) {valid=false;
++            std::fprintf(stderr,"wp parity mismatch %d,%d\n",x,y);}
++    }
++    if(clip){skia_restoreClip(t);skia_restoreClip(f);}
++    if(kind==0&&enabled&&!clip){
++        skia_image_backing_reset_accounting_for_test();
++        skia_image_backing_draw_to_surface(t,source,0,0,4,4,1,1,5,5,255);
++        valid &= skia_image_backing_test_metric(WP_METRICS,5)==0;
++        rgba[3]=128;skia_image_backing_write_rgba_pixels(source,rgba,0,0,4,4,16);
++        skia_image_backing_reset_accounting_for_test();
++        skia_image_backing_draw_to_surface(t,source,0,0,4,4,1,1,5,5,255);
++        valid &= skia_image_backing_test_metric(WP_METRICS,1)==0&&skia_image_backing_test_metric(WP_REASONS,8)==1;
++        if(!valid)std::fprintf(stderr,"opacity reuse/invalidation scans=%llu hits=%llu opacityReject=%llu\n",
++            (unsigned long long)skia_image_backing_test_metric(WP_METRICS,5),
++            (unsigned long long)skia_image_backing_test_metric(WP_METRICS,1),
++            (unsigned long long)skia_image_backing_test_metric(WP_REASONS,8));
++    }
++    skia_image_backing_test_metric(WP_SWITCH,0);
++    skia_image_backing_release(source);skia_image_backing_release(target);skia_image_backing_release(fallback);
++    if(!valid)std::fprintf(stderr,"warm writePixels case %d failed (reason %d)\n",kind,reason);
++    return valid;
++}
++static bool testWarmWritePixels(){
++    if(skia_image_backing_test_metric(WP_ENABLED,0)!=0)return false;
++    const int reasons[]={0,6,5,8,2,3,3,7,4,0,6,11,9};
++    for(int k=0;k<13;++k)if(!testWarmWritePixelsCase(k,reasons[k]))return false;
++    if(!testWarmWritePixelsCase(0,0,true)||!testWarmWritePixelsCase(0,0,false,false))return false;
++    skia_image_backing_test_metric(WP_SWITCH,1);skia_image_backing_reset_accounting_for_test();
++    if(skia_image_backing_draw_to_surface(-1,0,0,0,1,1,0,0,1,1,255)!=0
++        ||skia_image_backing_test_metric(WP_REASONS,1)!=1)return false;
++    skia_image_backing_test_metric(WP_SWITCH,0);
++    std::puts("historical warm writePixels eligibility/clipping/parity assertions passed");return true;
++}
++
++static bool testAdmissionMemoryAccounting() {
++    skia_image_backing_reset_accounting_for_test();
++    skia_image_backing_test_metric(200,1);
++    const int64_t decoded=skia_image_backing_create_empty(4,4);
++    const int64_t first=skia_image_backing_create_empty(8,8);
++    const int64_t second=skia_image_backing_create_empty(2,2);
++    if (!decoded || !first || !second) return false;
++    skia_image_backing_test_metric(201,static_cast<int>(decoded));
++    skia_image_backing_test_metric(202,static_cast<int>(first));
++    skia_image_backing_test_metric(202,static_cast<int>(first));
++    skia_image_backing_test_metric(202,static_cast<int>(second));
++    bool valid=skia_image_backing_test_metric(203,8)==2
++        && skia_image_backing_test_metric(203,10)==272
++        && skia_image_backing_test_metric(203,18)==64;
++    skia_image_backing_release(first);
++    valid=valid && skia_image_backing_test_metric(203,8)==1
++        && skia_image_backing_test_metric(203,10)==16
++        && skia_image_backing_test_metric(203,11)==272
++        && skia_image_backing_test_metric(203,12)==1;
++    skia_image_backing_release(second);skia_image_backing_release(decoded);
++    valid=valid && skia_image_backing_test_metric(203,8)==0
++        && skia_image_backing_test_metric(203,10)==0
++        && skia_image_backing_test_metric(203,16)==0;
++    // Both native speculative kinds still require second observation, under accounting.
++    const uint32_t key[]={42,17};
++    for(int kind=1;kind<=2;++kind) {
++        int64_t source=skia_image_backing_create_empty(4,4);
++        valid=valid && skia_image_backing_variant_observe_for_test(source,kind,key,2)==0
++            && skia_image_backing_variant_observe_for_test(source,kind,key,2)==1
++            && skia_image_backing_variant_observe_for_test(source,kind,key,2)==2;
++        skia_image_backing_release(source);
++    }
++    skia_image_backing_test_metric(200,0);
++    if (!valid) std::fputs("admission memory category accounting failed\n",stderr);
++    else std::puts("admission memory category accounting assertions passed");
++    return valid;
++}
++
+@@ -473,0 +604,2 @@ int main(int argc, char** argv) {
++    if (!testAdmissionMemoryAccounting()) return 1;
++    if (!testWarmWritePixels()) return 1;
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia_writepixels_probe.h b/TotalCrossVM/src/nm/ui/skia/skia_writepixels_probe.h
+new file mode 100644
+index 000000000..ae1751ec2
+--- /dev/null
++++ b/TotalCrossVM/src/nm/ui/skia/skia_writepixels_probe.h
+@@ -0,0 +1,20 @@
++// Copyright (C) 2026 Amalgam Solucoes em TI Ltda
++//
++// SPDX-License-Identifier: LGPL-2.1-only
++
++#ifndef SKIA_WRITEPIXELS_PROBE_H
++#define SKIA_WRITEPIXELS_PROBE_H
++
++// Reserved existing NativeImageBacking test metric IDs; off in normal startup.
++enum { WP_SWITCH=100, WP_ENABLED=101, WP_METRICS=102, WP_RECORD_COUNT=103,
++       WP_REASONS=104, WP_RECORD_FIELD=105, WP_FAIL_NEXT=106 };
++// Metrics: attempts,hits,fallbacks,bytes,clippedHits,opacityScans,scanPixels,
++// attemptNs,writeNs,fallbackNs,fallbackDraws.
++// Reasons: 0 none,1 invalid,2 alpha,3 source,4 matrix,5 fractional device,
++// 6 extent mismatch,7 bounds,8 opacity,9 unsupported format,10 pixels,11 write.
++// Record fields: handle,format,width,height,opacityBefore/After,hit,reason,
++// bytes,clipped; float32-bit input source[4],logicalDest[4],mappedDevice[4];
++// clipped source[4],clipped device[4]; float32-bit matrix scale/translation[4];
++// attemptNs,writeNs,fallbackNs. All 37 fields retained for offline analysis.
++
++#endif

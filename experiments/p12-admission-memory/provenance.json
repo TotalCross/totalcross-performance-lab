@@ -1,0 +1,143 @@
+{
+  "runtimeSourceCommit": "1944f203c4bf2130ab8fda1497d0922bacacfaf0",
+  "parentRuntimeSourceCommit": "18baece1f199ab5d2e7cad6d864c40c188bd1bab",
+  "baseRuntimeSourceCommit": "5a44f503bf6fa1bec350f1218f4d501a70fc4812",
+  "runtimeSource": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-admission-memory",
+  "configuration": "Release macOS arm64 SDL Skia SOFTWARE",
+  "buildCommands": {
+    "sdk": [
+      "./gradlew-agent",
+      "dist",
+      "test",
+      "--tests",
+      "totalcross.ui.image.ImageAdmissionMemoryExperimentTest",
+      "--tests",
+      "totalcross.ui.image.ImageImmediateAdmissionExperimentTest",
+      "--tests",
+      "totalcross.ui.image.ImageDestinationScaleTest",
+      "--tests",
+      "totalcross.ui.image.ImageBackingContractTest",
+      "--tests",
+      "totalcross.ui.image.ImageDecodeRequirementTest",
+      "--tests",
+      "totalcross.ui.image.ImageDecodePolicyTest"
+    ],
+    "native": [
+      "ninja",
+      "-C",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-admission-memory",
+      "tcvm",
+      "Launcher",
+      "skia_surface_test"
+    ],
+    "configure": [
+      "cmake",
+      "-S",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-admission-memory/TotalCrossVM",
+      "-B",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-admission-memory",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_OSX_ARCHITECTURES=arm64",
+      "-DTC_RENDERER_SKIA=ON",
+      "-DTC_WINDOWING_SDL=ON",
+      "-DTC_WINDOWING_NATIVE=OFF",
+      "-DTC_BUILD_NATIVE_STARTUP_TEST=ON",
+      "-DSQLITE3_RELEASE_TAG=sqlite3-3.32.3-r2",
+      "-DQRCODEGEN_RELEASE_TAG=qrcodegen-20250123-r2",
+      "-DTCVM_DEPOT_TOOLS_DIR=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools",
+      "-DSDL2_DEPOT_ROOT=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools/sdl2/local/macos/arm64"
+    ]
+  },
+  "runtimePatchSha256": "18037252f29cc3336130577e9450f23331848a74f82e1c91005289734a2b059f",
+  "memoryPatchSha256": "3b12ad6b84995aacf32924f0b9096ff882ec001e57efb41e06042cfa0e8168f6",
+  "measurementStatus": "not launched",
+  "measuredNativeProcesses": 0,
+  "validation": {
+    "sdkTests": 63,
+    "pythonTests": 115,
+    "nativeTests": "category liveness/idempotent tags/release; both native speculative kinds miss-materialize-hit; previous writePixels/physical/surface tests passed",
+    "javaCompile": "official normal 8 sources; isolated 10 sources passed"
+  },
+  "artifacts": [
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-admission-memory/TotalCrossSDK/dist/totalcross-sdk.jar",
+      "sha256": "4843b164e5455024d358b5860908db053e651dae34cc1501e5bd979b7a7499be"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-admission-memory/Launcher",
+      "sha256": "382975b93d0bb48e5f5b60e725ac049375776df912daa436531643fc4afe80b9"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-admission-memory/libtcvm.dylib",
+      "sha256": "d2da736635e9ef317ca5c15c827f698150e04cc25f480841a0c3f5c25df38fa1"
+    }
+  ],
+  "cases": [
+    {
+      "order": 1,
+      "workload": "one-shot",
+      "policy": "SECOND_OBSERVATION",
+      "status": "not launched"
+    },
+    {
+      "order": 2,
+      "workload": "one-shot",
+      "policy": "IMMEDIATE",
+      "status": "not launched"
+    },
+    {
+      "order": 3,
+      "workload": "repeated-scroll",
+      "policy": "SECOND_OBSERVATION",
+      "status": "not launched"
+    },
+    {
+      "order": 4,
+      "workload": "repeated-scroll",
+      "policy": "IMMEDIATE",
+      "status": "not launched"
+    }
+  ],
+  "unchangedNativeSpeculativeFunctionHashes": {
+    "int rasterVariantObserveInternal": "0f75550d29ef57200695e7526b85b3022fec3452d058a81b62780df73e1fdff5",
+    "bool rasterVariantStoreInternal": "18ff85e557e72b1f97448d24b5511db9e609efa00fb71db9f8334261645c4e29"
+  },
+  "committedSourceBuildCommands": {
+    "sdk": [
+      "./gradlew-agent",
+      "dist",
+      "-x",
+      "test"
+    ],
+    "configure": [
+      "cmake",
+      "-S",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-admission-memory/TotalCrossVM",
+      "-B",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-admission-memory",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_OSX_ARCHITECTURES=arm64",
+      "-DTC_RENDERER_SKIA=ON",
+      "-DTC_WINDOWING_SDL=ON",
+      "-DTC_WINDOWING_NATIVE=OFF",
+      "-DTC_BUILD_NATIVE_STARTUP_TEST=ON",
+      "-DSQLITE3_RELEASE_TAG=sqlite3-3.32.3-r2",
+      "-DQRCODEGEN_RELEASE_TAG=qrcodegen-20250123-r2",
+      "-DTCVM_DEPOT_TOOLS_DIR=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools",
+      "-DSDL2_DEPOT_ROOT=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools/sdl2/local/macos/arm64"
+    ],
+    "native": [
+      "ninja",
+      "-C",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-admission-memory",
+      "tcvm",
+      "Launcher",
+      "skia_surface_test"
+    ]
+  },
+  "datasetManifestSha256": "4dac75139e4e7095f5843a696f5fcd84055bf798e90b49614d6e4243120f5dbe"
+}

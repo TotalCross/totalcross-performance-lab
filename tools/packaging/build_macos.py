@@ -181,13 +181,17 @@ def parse_profiles(raw: str | None) -> tuple[str, ...]:
 
 
 def selected_java_sources(source_root: Path, profiles: tuple[str, ...], causal_experiment: bool = False,
-                          immediate_experiment: bool = False, writepixels_experiment: bool = False) -> list[Path]:
+                          immediate_experiment: bool = False, writepixels_experiment: bool = False, memory_experiment: bool = False) -> list[Path]:
     profile_root = source_root / "profiles"
     shared = sorted(path for path in source_root.rglob("*.java") if profile_root not in path.parents)
     # Package-private SDK accounting is accessed only by this benchmark source.
     shared += sorted((source_root.parents[1] / "ui/image").glob("ImageDrawPathProbeAccess.java"))
-    if sum((causal_experiment, immediate_experiment, writepixels_experiment)) > 1:
+    if sum((causal_experiment, immediate_experiment, writepixels_experiment,memory_experiment)) > 1:
         raise PackageError("choose only one isolated experiment")
+    if memory_experiment:
+        if profiles != ("default",): raise PackageError("memory experiment requires only default")
+        hook=ROOT / "experiments/p12-copyrect-causal/src/totalcross/ui/image/ImageCausalProbeHooks.java"
+        return shared+[hook]+sorted((ROOT/"experiments/p12-admission-memory/src").rglob("*.java"))
     if writepixels_experiment:
         if profiles != ("default",):
             raise PackageError("writePixels experiment requires only default")
@@ -287,13 +291,14 @@ def build(arguments) -> Path:
     causal_experiment = getattr(arguments, "copyrect_causal_experiment", False)
     immediate_experiment = getattr(arguments, "immediate_admission_experiment", False)
     writepixels_experiment = getattr(arguments, "writepixels_warm_experiment", False)
-    if causal_experiment or immediate_experiment or writepixels_experiment:
-        from tools.copyrect_causal import EXPERIMENT_RUNTIME, IMMEDIATE_RUNTIME, WRITEPIXELS_RUNTIME
-        expected = WRITEPIXELS_RUNTIME if writepixels_experiment else IMMEDIATE_RUNTIME if immediate_experiment else EXPERIMENT_RUNTIME
+    memory_experiment = getattr(arguments,"materialized_admission_memory_experiment",False)
+    if causal_experiment or immediate_experiment or writepixels_experiment or memory_experiment:
+        from tools.copyrect_causal import EXPERIMENT_RUNTIME, IMMEDIATE_RUNTIME, WRITEPIXELS_RUNTIME, MEMORY_RUNTIME
+        expected = MEMORY_RUNTIME if memory_experiment else WRITEPIXELS_RUNTIME if writepixels_experiment else IMMEDIATE_RUNTIME if immediate_experiment else EXPERIMENT_RUNTIME
         if official_mode or source_commit != expected:
             raise PackageError("causal experiment requires its pinned custom SDK/native source")
     sources = selected_java_sources(ROOT / "benchmarks/image-rendering/src/totalcross/bench/imagerendering",
-                                    selected_profiles, causal_experiment, immediate_experiment, writepixels_experiment)
+                                    selected_profiles, causal_experiment, immediate_experiment, writepixels_experiment,memory_experiment)
     output.parent.mkdir(parents=True, exist_ok=True)
     log_path = output.with_name(output.name + ".build.log")
     if log_path.exists():
@@ -393,7 +398,7 @@ def build(arguments) -> Path:
             else:
                 official_runtime_provenance = None
             for profile in selected_profiles:
-                entry = ("WritePixelsWarmDefault" if writepixels_experiment else "ImmediateAdmissionDefault" if immediate_experiment else
+                entry = ("MaterializedAdmissionMemoryDefault" if memory_experiment else "WritePixelsWarmDefault" if writepixels_experiment else "ImmediateAdmissionDefault" if immediate_experiment else
                          "CausalDefault" if causal_experiment else PROFILE_CLASSES[profile])
                 prefix = "image-rendering-" + profile
                 jar_path = stage / "inputs" / profile / (entry + ".jar")
@@ -519,6 +524,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="raw GitHub artifact metadata JSON")
     parser.add_argument("--official-workflow-run", type=Path,
                         help="raw GitHub workflow run JSON")
+    parser.add_argument("--materialized-admission-memory-experiment",action="store_true",
+                        help="include only the one-slot admission memory experiment")
     parser.add_argument("--copyrect-causal-experiment", action="store_true",
                         help="include only the pinned P12 experimental hooks/default entry")
     parser.add_argument("--writepixels-warm-experiment", action="store_true",

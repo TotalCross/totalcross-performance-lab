@@ -1,0 +1,720 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "materialized-admission-memory-probe-v1.schema.json",
+  "type": "object",
+  "properties": {
+    "scrollDriver": {
+      "const": "materialized-admission-memory-probe"
+    },
+    "admissionPolicy": {
+      "enum": [
+        "SECOND_OBSERVATION",
+        "IMMEDIATE"
+      ]
+    },
+    "admissionWorkload": {
+      "enum": [
+        "one-shot",
+        "repeated-scroll"
+      ]
+    },
+    "memoryProbeDiagnostics": {
+      "const": true
+    },
+    "capacityPerPipeline": {
+      "const": 1
+    },
+    "prepareRequests": {
+      "const": 0
+    },
+    "imageControls": {
+      "const": 663
+    },
+    "rows": {
+      "const": 221
+    },
+    "tileWidth": {
+      "const": 169
+    },
+    "viewportHeight": {
+      "const": 910
+    },
+    "scrollMaximum": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "nominalStepMillis": {
+      "const": 16
+    },
+    "positions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "frames": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "properties": {
+          "routeIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "extraPaint": {
+            "type": "boolean"
+          },
+          "paintTreeNs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "elapsedNs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "memory": {
+            "type": "object",
+            "properties": {
+              "cacheLiveCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cachePeakCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cacheLiveBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cachePeakBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "materializations": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "materializationNs": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "allocatedFinalBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "admissions": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "nativeLiveCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "nativePeakCount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "nativeLiveBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "nativePeakBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "nativeDerived": {
+                "type": "object",
+                "properties": {
+                  "liveCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "peakCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "liveBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "peakBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "releasedCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "taggedCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "allocatedBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "liveCount",
+                  "peakCount",
+                  "liveBytes",
+                  "peakBytes",
+                  "releasedCount",
+                  "taggedCount",
+                  "allocatedBytes"
+                ],
+                "additionalProperties": false
+              },
+              "nativeDecoded": {
+                "type": "object",
+                "properties": {
+                  "liveCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "peakCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "liveBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "peakBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "releasedCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "taggedCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "allocatedBytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "liveCount",
+                  "peakCount",
+                  "liveBytes",
+                  "peakBytes",
+                  "releasedCount",
+                  "taggedCount",
+                  "allocatedBytes"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "cacheLiveCount",
+              "cachePeakCount",
+              "cacheLiveBytes",
+              "cachePeakBytes",
+              "materializations",
+              "materializationNs",
+              "allocatedFinalBytes",
+              "admissions",
+              "nativeLiveCount",
+              "nativePeakCount",
+              "nativeLiveBytes",
+              "nativePeakBytes",
+              "nativeDerived",
+              "nativeDecoded"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "routeIndex",
+          "position",
+          "extraPaint",
+          "paintTreeNs",
+          "elapsedNs",
+          "memory"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "workloadNs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "cacheLiveCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cachePeakCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cacheLiveBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cachePeakBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "materializations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "materializationNs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "allocatedFinalBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "admissions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nativeLiveCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nativePeakCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nativeLiveBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nativePeakBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nativeDerived": {
+          "type": "object",
+          "properties": {
+            "liveCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "peakCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "liveBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "peakBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "releasedCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "taggedCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "allocatedBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "liveCount",
+            "peakCount",
+            "liveBytes",
+            "peakBytes",
+            "releasedCount",
+            "taggedCount",
+            "allocatedBytes"
+          ],
+          "additionalProperties": false
+        },
+        "nativeDecoded": {
+          "type": "object",
+          "properties": {
+            "liveCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "peakCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "liveBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "peakBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "releasedCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "taggedCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "allocatedBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "liveCount",
+            "peakCount",
+            "liveBytes",
+            "peakBytes",
+            "releasedCount",
+            "taggedCount",
+            "allocatedBytes"
+          ],
+          "additionalProperties": false
+        },
+        "detaches": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "replacements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "invalidations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "discardedPending": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uniqueExactKeys": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uniqueAdmittedKeys": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pendingAtEnd": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "referencedDecodedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "postGcNativeLiveBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "perImage": {
+          "type": "array",
+          "minItems": 663,
+          "maxItems": 663,
+          "items": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "paints": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "materializations": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "admissions": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "hits": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "format": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "rowBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "retainedBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "pending": {
+                "type": "boolean"
+              },
+              "retained": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "index",
+              "paints",
+              "materializations",
+              "admissions",
+              "hits",
+              "width",
+              "height",
+              "format",
+              "bytes",
+              "rowBytes",
+              "retainedBytes",
+              "pending",
+              "retained"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "counters": {
+          "type": "object"
+        },
+        "writePixels": {
+          "type": "object",
+          "properties": {
+            "attempts": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "hits": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fallbacks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "copiedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "clippedHits": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "opacityScans": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "opacityScanPixels": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "attemptNs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "writeNs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fallbackNs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fallbackDraws": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "attempts",
+            "hits",
+            "fallbacks",
+            "copiedBytes",
+            "clippedHits",
+            "opacityScans",
+            "opacityScanPixels",
+            "attemptNs",
+            "writeNs",
+            "fallbackNs",
+            "fallbackDraws"
+          ],
+          "additionalProperties": false
+        },
+        "postGcNativeDerived": {
+          "type": "object",
+          "properties": {
+            "liveCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "peakCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "liveBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "peakBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "releasedCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "taggedCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "allocatedBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "liveCount",
+            "peakCount",
+            "liveBytes",
+            "peakBytes",
+            "releasedCount",
+            "taggedCount",
+            "allocatedBytes"
+          ],
+          "additionalProperties": false
+        },
+        "postGcNativeDecoded": {
+          "type": "object",
+          "properties": {
+            "liveCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "peakCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "liveBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "peakBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "releasedCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "taggedCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "allocatedBytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "liveCount",
+            "peakCount",
+            "liveBytes",
+            "peakBytes",
+            "releasedCount",
+            "taggedCount",
+            "allocatedBytes"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "cacheLiveCount",
+        "cachePeakCount",
+        "cacheLiveBytes",
+        "cachePeakBytes",
+        "materializations",
+        "materializationNs",
+        "allocatedFinalBytes",
+        "admissions",
+        "nativeLiveCount",
+        "nativePeakCount",
+        "nativeLiveBytes",
+        "nativePeakBytes",
+        "nativeDerived",
+        "nativeDecoded",
+        "detaches",
+        "replacements",
+        "invalidations",
+        "discardedPending",
+        "uniqueExactKeys",
+        "uniqueAdmittedKeys",
+        "pendingAtEnd",
+        "referencedDecodedBytes",
+        "postGcNativeLiveBytes",
+        "perImage",
+        "counters",
+        "writePixels",
+        "postGcNativeDerived",
+        "postGcNativeDecoded"
+      ],
+      "additionalProperties": false
+    },
+    "runtimeDefaultsUnchanged": {
+      "const": true
+    },
+    "runtimeConfigurationBefore": {
+      "type": "string"
+    },
+    "runtimeConfigurationAfter": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "scrollDriver",
+    "admissionPolicy",
+    "admissionWorkload",
+    "memoryProbeDiagnostics",
+    "capacityPerPipeline",
+    "prepareRequests",
+    "imageControls",
+    "rows",
+    "tileWidth",
+    "viewportHeight",
+    "scrollMaximum",
+    "nominalStepMillis",
+    "positions",
+    "frames",
+    "workloadNs",
+    "summary",
+    "runtimeDefaultsUnchanged",
+    "runtimeConfigurationBefore",
+    "runtimeConfigurationAfter"
+  ],
+  "additionalProperties": false
+}

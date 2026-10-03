@@ -11,7 +11,9 @@ BASE_RUNTIME = "5a44f503bf6fa1bec350f1218f4d501a70fc4812"
 EXPERIMENT_RUNTIME = "fc08c39499dead73b327ad259a992ab34ec42870"
 IMMEDIATE_RUNTIME = "f95c280db3d6856d17582ea31d47aaded6a0e492"
 WRITEPIXELS_RUNTIME = "18baece1f199ab5d2e7cad6d864c40c188bd1bab"
+MEMORY_RUNTIME = "1944f203c4bf2130ab8fda1497d0922bacacfaf0"
 EXPERIMENTS = {
+    "materialized-admission-memory-probe": (MEMORY_RUNTIME,"MaterializedAdmissionMemoryDefault","p12-admission-memory"),
     "writepixels-warm-path-probe": (WRITEPIXELS_RUNTIME, "WritePixelsWarmDefault", "p12-writepixels-warm"),
     "copyrect-causal-probe": (EXPERIMENT_RUNTIME, "CausalDefault", "p12-copyrect-causal"),
     "immediate-admission-probe": (IMMEDIATE_RUNTIME, "ImmediateAdmissionDefault", "p12-immediate-admission"),
@@ -36,12 +38,12 @@ def is_experiment_package(manifest, source, driver="copyrect-causal-probe"):
                             text=True, capture_output=True, check=False)
     if actual.returncode != 0 or actual.stdout != patch.read_text():
         return False
-    if driver in ("immediate-admission-probe", "writepixels-warm-path-probe"):
-        parent = IMMEDIATE_RUNTIME if driver == "writepixels-warm-path-probe" else EXPERIMENT_RUNTIME
+    if driver in ("immediate-admission-probe", "writepixels-warm-path-probe", "materialized-admission-memory-probe"):
+        parent = WRITEPIXELS_RUNTIME if driver == "materialized-admission-memory-probe" else IMMEDIATE_RUNTIME if driver == "writepixels-warm-path-probe" else EXPERIMENT_RUNTIME
         delta = subprocess.run(["git", "-C", str(source), "diff", parent, expected,
                                 "--binary", "--unified=0"], text=True, capture_output=True, check=False)
         return delta.returncode == 0 and delta.stdout == patch.with_name(
-            "writepixels.patch" if driver == "writepixels-warm-path-probe" else "admission.patch").read_text()
+            "memory.patch" if driver == "materialized-admission-memory-probe" else "writepixels.patch" if driver == "writepixels-warm-path-probe" else "admission.patch").read_text()
     return True
 
 

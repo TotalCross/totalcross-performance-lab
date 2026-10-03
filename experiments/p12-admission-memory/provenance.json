@@ -52,13 +52,49 @@
   },
   "runtimePatchSha256": "18037252f29cc3336130577e9450f23331848a74f82e1c91005289734a2b059f",
   "memoryPatchSha256": "3b12ad6b84995aacf32924f0b9096ff882ec001e57efb41e06042cfa0e8168f6",
-  "measurementStatus": "not launched",
-  "measuredNativeProcesses": 0,
+  "measurementStatus": "completed: four native exit0; first record recovered offline; no native replacement",
+  "measuredNativeProcesses": 4,
   "validation": {
     "sdkTests": 63,
-    "pythonTests": 115,
+    "pythonTests": 116,
     "nativeTests": "category liveness/idempotent tags/release; both native speculative kinds miss-materialize-hit; previous writePixels/physical/surface tests passed",
-    "javaCompile": "official normal 8 sources; isolated 10 sources passed"
+    "javaCompile": "official normal 8 sources; isolated 10 sources passed",
+    "postRun": "all four original protocol/schema/lifecycle records; inline preflight; source/package/build/evidence hashes; matching routes and per-image paint counts; cache/native post-GC agreement",
+    "initialOwnershipTestFailure": "test wrongly expected texture release to remove software slot; corrected test to prove retention and then actual clear/detach; production release semantics unchanged",
+    "logs": [
+      {
+        "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/sdk-validation.log",
+        "sha256": "d4a999e2a3deb690c0793b3543c84fa8801f4088a171ae2186798d8e7a763203"
+      },
+      {
+        "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/sdk-committed-build.log",
+        "sha256": "2423e2b5d111f0731289979680c5c1831eb27afa74bf824d312c792eb8db2041"
+      },
+      {
+        "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/native-unit-test.log",
+        "sha256": "d75feddb68ffb698a744a6fb703c395407edb4805834e783226436a9e3c2be65"
+      },
+      {
+        "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/native-committed-build.log",
+        "sha256": "fe5ab9c379f8763f1b638aa2300f7343459fe5f19c80d84f5ee694544b5f3830"
+      },
+      {
+        "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/javac-normal.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/javac-memory.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/lab-tests-final.log",
+        "sha256": "0d6cf2a4a1cee48331fcf170c8b372ca5697cf9a985444cc2c047a6933a3a117"
+      },
+      {
+        "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/package-build.log",
+        "sha256": "605d5ac85f0e2be33ea4113a201db92e1f301a1d58788ea4fc896ab45713fe36"
+      }
+    ]
   },
   "artifacts": [
     {
@@ -79,25 +115,181 @@
       "order": 1,
       "workload": "one-shot",
       "policy": "SECOND_OBSERVATION",
-      "status": "not launched"
+      "nativeExitCode": 0,
+      "runnerExitCode": 1,
+      "completeValidRecords": 1,
+      "paintFrames": 44,
+      "extraPaints": 0,
+      "uniqueImages": 663,
+      "runnerCommand": [
+        "python3",
+        "runners/run.py",
+        "image-rendering",
+        "scroll",
+        "--profile",
+        "default",
+        "--scroll-driver",
+        "materialized-admission-memory-probe",
+        "--admission-workload",
+        "one-shot",
+        "--admission-policy",
+        "SECOND_OBSERVATION",
+        "--rounds",
+        "1",
+        "--warmups",
+        "0",
+        "--timeout-seconds",
+        "180",
+        "--width",
+        "540",
+        "--height",
+        "960",
+        "--runtime-source",
+        ".local-data/runtime-admission-memory",
+        "--dataset-cache",
+        ".local-data/datasets/p12-final/image-scroll/v1",
+        "--package-manifest",
+        ".local-data/packages/image-rendering-macos-admission-memory-probe/package-manifest.json",
+        "--results-dir",
+        "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-second_observation",
+        "--require-default-scroll-preflight",
+        "--fail-fast"
+      ]
     },
     {
       "order": 2,
       "workload": "one-shot",
       "policy": "IMMEDIATE",
-      "status": "not launched"
+      "nativeExitCode": 0,
+      "runnerExitCode": 0,
+      "completeValidRecords": 1,
+      "paintFrames": 44,
+      "extraPaints": 0,
+      "uniqueImages": 663,
+      "runnerCommand": [
+        "python3",
+        ".local-data/admission-memory/run_with_corrected_schema.py",
+        "image-rendering",
+        "scroll",
+        "--profile",
+        "default",
+        "--scroll-driver",
+        "materialized-admission-memory-probe",
+        "--admission-workload",
+        "one-shot",
+        "--admission-policy",
+        "IMMEDIATE",
+        "--rounds",
+        "1",
+        "--warmups",
+        "0",
+        "--timeout-seconds",
+        "180",
+        "--width",
+        "540",
+        "--height",
+        "960",
+        "--runtime-source",
+        ".local-data/runtime-admission-memory",
+        "--dataset-cache",
+        ".local-data/datasets/p12-final/image-scroll/v1",
+        "--package-manifest",
+        ".local-data/packages/image-rendering-macos-admission-memory-probe/package-manifest.json",
+        "--results-dir",
+        "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-immediate",
+        "--require-default-scroll-preflight",
+        "--fail-fast"
+      ]
     },
     {
       "order": 3,
       "workload": "repeated-scroll",
       "policy": "SECOND_OBSERVATION",
-      "status": "not launched"
+      "nativeExitCode": 0,
+      "runnerExitCode": 0,
+      "completeValidRecords": 1,
+      "paintFrames": 653,
+      "extraPaints": 0,
+      "uniqueImages": 663,
+      "runnerCommand": [
+        "python3",
+        ".local-data/admission-memory/run_with_corrected_schema.py",
+        "image-rendering",
+        "scroll",
+        "--profile",
+        "default",
+        "--scroll-driver",
+        "materialized-admission-memory-probe",
+        "--admission-workload",
+        "repeated-scroll",
+        "--admission-policy",
+        "SECOND_OBSERVATION",
+        "--rounds",
+        "1",
+        "--warmups",
+        "0",
+        "--timeout-seconds",
+        "180",
+        "--width",
+        "540",
+        "--height",
+        "960",
+        "--runtime-source",
+        ".local-data/runtime-admission-memory",
+        "--dataset-cache",
+        ".local-data/datasets/p12-final/image-scroll/v1",
+        "--package-manifest",
+        ".local-data/packages/image-rendering-macos-admission-memory-probe/package-manifest.json",
+        "--results-dir",
+        "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-second_observation",
+        "--require-default-scroll-preflight",
+        "--fail-fast"
+      ]
     },
     {
       "order": 4,
       "workload": "repeated-scroll",
       "policy": "IMMEDIATE",
-      "status": "not launched"
+      "nativeExitCode": 0,
+      "runnerExitCode": 0,
+      "completeValidRecords": 1,
+      "paintFrames": 653,
+      "extraPaints": 0,
+      "uniqueImages": 663,
+      "runnerCommand": [
+        "python3",
+        ".local-data/admission-memory/run_with_corrected_schema.py",
+        "image-rendering",
+        "scroll",
+        "--profile",
+        "default",
+        "--scroll-driver",
+        "materialized-admission-memory-probe",
+        "--admission-workload",
+        "repeated-scroll",
+        "--admission-policy",
+        "IMMEDIATE",
+        "--rounds",
+        "1",
+        "--warmups",
+        "0",
+        "--timeout-seconds",
+        "180",
+        "--width",
+        "540",
+        "--height",
+        "960",
+        "--runtime-source",
+        ".local-data/runtime-admission-memory",
+        "--dataset-cache",
+        ".local-data/datasets/p12-final/image-scroll/v1",
+        "--package-manifest",
+        ".local-data/packages/image-rendering-macos-admission-memory-probe/package-manifest.json",
+        "--results-dir",
+        "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-immediate",
+        "--require-default-scroll-preflight",
+        "--fail-fast"
+      ]
     }
   ],
   "unchangedNativeSpeculativeFunctionHashes": {
@@ -139,5 +331,228 @@
       "skia_surface_test"
     ]
   },
-  "datasetManifestSha256": "4dac75139e4e7095f5843a696f5fcd84055bf798e90b49614d6e4243120f5dbe"
+  "datasetManifestSha256": "4dac75139e4e7095f5843a696f5fcd84055bf798e90b49614d6e4243120f5dbe",
+  "runnerInvocations": 5,
+  "warmupProcesses": 0,
+  "separatePreflightProcesses": 0,
+  "evidenceFiles": [
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-second_observation/run-20261003T211251Z-46419/processes/0001-default-measured-1/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-second_observation/run-20261003T211251Z-46419/processes/0001-default-measured-1/stdout.log",
+      "sha256": "8c4e109eab4e067e52b72017ccc2bc95ce1ac7c0093214a160df24ebfd3b3b28"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-second_observation/run-20261003T211251Z-46419/processes/0001-default-measured-1/tcbench-run.json",
+      "sha256": "2e0d994c61cc2b3a12b875d66978a8d67f1b26e146a24781961832aa9766015f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-second_observation/run-20261003T211251Z-46419/processes/0001-default-measured-1/exit-status.json",
+      "sha256": "1887e993ed71d8985766ef1289c1ff23878d287c390204be73af5882ab9a49b4"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-second_observation/run-20261003T211251Z-46419/processes/0001-default-measured-1/DebugConsole.txt",
+      "sha256": "77d3a9bb84073f5e091b8db26345fc87b90f98644e99e4bc96c403e2c691b93a"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-second_observation/run-20261003T211251Z-46419/processes/0001-default-measured-1/preflight.json",
+      "sha256": "9a0c738944a34f4480aa14a700ebb0af46f6224a5e9328011ce637e38be2040f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-second_observation/run-20261003T211251Z-46419/runs-recovered-offline.jsonl",
+      "sha256": "7eb0283b66552a0565d3123e1b3e9da0f1387def3523b7bbe00b2e4dba675b8f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/case-1-launch.json",
+      "sha256": "8f9de41810735a237f0843336b73e6c5d95dee2b607a87c41935f12a8e6c41f2"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/case-1-status.json",
+      "sha256": "6a187dffe942c035a75b682490a5dd0af00f7b8ce9082f5c673e5edbcb951dc0"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/case-1-runner.log",
+      "sha256": "f865777bd8520f0f73daf2c145c65f0de5923a2eaf537182cb6cbcbaf42711fe"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-immediate/run-20261003T211457Z-49039/processes/0001-default-measured-1/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-immediate/run-20261003T211457Z-49039/processes/0001-default-measured-1/stdout.log",
+      "sha256": "db87af872736a58706e15fc2588c18af734dfac223d8eaa2398bcc3e2fa3c520"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-immediate/run-20261003T211457Z-49039/processes/0001-default-measured-1/tcbench-run.json",
+      "sha256": "31643dd3049dfb1cd1c7b9fbb56bf4273a45f65687427dc421d1f2ac4fc9bfbc"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-immediate/run-20261003T211457Z-49039/processes/0001-default-measured-1/exit-status.json",
+      "sha256": "445a61fd22dd7779fd9daada886eb33624bef01fe9fce8517786fb5dce46b699"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-immediate/run-20261003T211457Z-49039/processes/0001-default-measured-1/DebugConsole.txt",
+      "sha256": "24bd7e89c832ab6b1faae4e20f088c4908b195741148229d51b9778ca96e2e7f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-immediate/run-20261003T211457Z-49039/processes/0001-default-measured-1/preflight.json",
+      "sha256": "9a0c738944a34f4480aa14a700ebb0af46f6224a5e9328011ce637e38be2040f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-immediate/run-20261003T211457Z-49039/failures.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-immediate/run-20261003T211457Z-49039/runs.jsonl",
+      "sha256": "673b50f8ad5cd752d350db8ce292b33f22ffa0a1d0e5e0b81f2a101aeba8c530"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-one-shot-immediate/run-20261003T211457Z-49039/default-scroll.summary.json",
+      "sha256": "d3c001a2785be3ea41bf1aad22a02a5f084e87ce21e3f135ffd96d2f1a9f5423"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/case-2-launch.json",
+      "sha256": "4d73516fa567e9f47c968f16fee7b8233cdbbe0f8d013c43f8445e30d1149bdb"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/case-2-status.json",
+      "sha256": "5827fa5809a62fe1f1ea2418a46d28c2345e9f163bae8bfa2093c1717c1cfdc6"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/case-2-runner.log",
+      "sha256": "5d0818dd0731d64b04d17feebd1c6eb0c290effc58acfb8c11450167167250be"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-second_observation/run-20261003T211554Z-50096/processes/0001-default-measured-1/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-second_observation/run-20261003T211554Z-50096/processes/0001-default-measured-1/stdout.log",
+      "sha256": "68587ba80cddc063a1c9784cb4ea858ea5e8a6569d16f7093a63bf4f62a4ea34"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-second_observation/run-20261003T211554Z-50096/processes/0001-default-measured-1/tcbench-run.json",
+      "sha256": "83cde582215bff8cdb8c118e64ce16f62efb91620bb88293efdbd42ac77b3c0f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-second_observation/run-20261003T211554Z-50096/processes/0001-default-measured-1/exit-status.json",
+      "sha256": "cc56c330f838441b75c5b4f514525352026739bb981d02219e6d8d966e046314"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-second_observation/run-20261003T211554Z-50096/processes/0001-default-measured-1/DebugConsole.txt",
+      "sha256": "44a0069ab7401222d59707fe7c46653cb291757c5a0496126c1b1f8d52a9975f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-second_observation/run-20261003T211554Z-50096/processes/0001-default-measured-1/preflight.json",
+      "sha256": "9a0c738944a34f4480aa14a700ebb0af46f6224a5e9328011ce637e38be2040f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-second_observation/run-20261003T211554Z-50096/failures.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-second_observation/run-20261003T211554Z-50096/runs.jsonl",
+      "sha256": "764a787bcfb7600d7b0cc590c5dfada649d76cdf26ce591ff88a542d56fc44d4"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-second_observation/run-20261003T211554Z-50096/default-scroll.summary.json",
+      "sha256": "8ba2209c8a17d5e3707ebfff05b6eea854bf3bdf7e901491979a5753bc123fc5"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/case-3-launch.json",
+      "sha256": "c571ebd72b5f6184ab5a8c466f51097e0cdbf30f4d847ebaa50fe30972b42171"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/case-3-status.json",
+      "sha256": "cfc7633d0eedd38401016da357b466a82912600279da6bf4293efd2db8ae0a44"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/case-3-runner.log",
+      "sha256": "cd84bb0ee9b286b49da4804e70157f0b6da4256cb2a14233a95c4dc3abb7cbec"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-immediate/run-20261003T211705Z-51154/processes/0001-default-measured-1/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-immediate/run-20261003T211705Z-51154/processes/0001-default-measured-1/stdout.log",
+      "sha256": "c9b44d6b12ed0af3cf4f7816e9f169abf3de48ff0c050b737aea0702168f11c9"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-immediate/run-20261003T211705Z-51154/processes/0001-default-measured-1/tcbench-run.json",
+      "sha256": "5a8eb16a52deea2f4f5f5abef5ef51a8e03f04c0a1936533c84d339122c525a9"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-immediate/run-20261003T211705Z-51154/processes/0001-default-measured-1/exit-status.json",
+      "sha256": "a57b2ef533f9bd8a30bb4981ec1a6f95805a956361548d451d717230c9d47a87"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-immediate/run-20261003T211705Z-51154/processes/0001-default-measured-1/DebugConsole.txt",
+      "sha256": "d49875667f183c1999dac70ada68d2bcfe4f9ddc730470ff130427e4e02b5022"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-immediate/run-20261003T211705Z-51154/processes/0001-default-measured-1/preflight.json",
+      "sha256": "9a0c738944a34f4480aa14a700ebb0af46f6224a5e9328011ce637e38be2040f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-immediate/run-20261003T211705Z-51154/failures.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-immediate/run-20261003T211705Z-51154/runs.jsonl",
+      "sha256": "fa76cda7c2d150c385e3ae3d569008d10d5a6907eab74aa0a2cceaeba769afbb"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-admission-memory-repeated-scroll-immediate/run-20261003T211705Z-51154/default-scroll.summary.json",
+      "sha256": "18646a38a22329ad2e34090edcc4d429afe09aa8ca09a2744937e41c7b506f9d"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/case-4-launch.json",
+      "sha256": "db05970429bc0913d96e3aa735b4085718c8efc26136d6822d5215eabc9949d6"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/case-4-status.json",
+      "sha256": "aa7d38c432023097f5e5efccf1a23f06e82c50635176d8a0c1449f4a8afde974"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/case-4-runner.log",
+      "sha256": "2eed300caee9d662513651a4cec40f134e9ae290a421b6bab751509e0c2f33b1"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/prelaunch.json",
+      "sha256": "f1dc01ad2d984f92ce1fa82301e3ebf239ecec595e376ddf2694cc5138638d53"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/run_case.py",
+      "sha256": "a3ca2aaac06db382a13a7b478252850bb013314264026053dfdd71e64b951aca"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/run_with_corrected_schema.py",
+      "sha256": "b6d55b2d603bc492ac42818fef9bab65914c97c9c0d0a0c62162106398c83ebb"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/case-1-launch-cli-setup-failure.json",
+      "sha256": "f584f18aee2d447d4ced0eb8d1c0321a6eca1c5638adcba9719c49930ecd6326"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/case-1-status-cli-setup-failure.json",
+      "sha256": "fd3a96bfac3e88343b290ffd9bfab73215a23c9a0fc1669dd4ffcb67f58b8f2e"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/admission-memory/logs/case-1-runner-cli-setup-failure.log",
+      "sha256": "07841075733beafb9ef543b1e0fa2c9597931d1e7270c059a835947ffb631333"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/packages/image-rendering-macos-admission-memory-probe/package-manifest.json",
+      "sha256": "9842653fd2713061560e57934d9aa0053e4294a556da74a67c52955ac5e514dd"
+    }
+  ],
+  "toolingRecovery": {
+    "cliSetupFailure": "--profiles rejected before native launch, corrected to --profile; exit2 and zero native processes",
+    "firstRecordSchemaRecovery": "schema tile const169 corrected offline to179; original native exit0 with complete run/summary; first runner exit1; no replacement",
+    "cases2to4": "analysis-only correction wrapper; identical package/runtime; original deployed implementation commit b82701c43a783e30f8cd920347db31eb1e71e99e"
+  },
+  "schemaCorrectionWrapperSource": "# Analysis-only correction; deployed Java/native package remains identical.\nimport sys\nfrom pathlib import Path\nsys.path.insert(0,str(Path.cwd()))\nfrom runners import run\noriginal=run.read_json\ndef read_json(path):\n    data=original(path)\n    if Path(path).name=='materialized-admission-memory-probe-v1.schema.json':\n        assert data['properties']['tileWidth']['const']==169\n        data['properties']['tileWidth']['const']=179\n    return data\nrun.read_json=read_json\nraise SystemExit(run.main(sys.argv[1:]))\n"
 }

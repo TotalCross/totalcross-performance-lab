@@ -53,7 +53,8 @@ public final class ImageRenderingBenchmarkApp {
       return;
     }
     String scrollDriver = config.getString("scrollDriver");
-    if ("paint-split-probe".equals(scrollDriver) || "paint-preparation-probe".equals(scrollDriver)) {
+    if ("paint-split-probe".equals(scrollDriver) || "paint-preparation-probe".equals(scrollDriver)
+        || "draw-path-probe".equals(scrollDriver)) {
       validateDefaultPaintProbePreconditions();
       emitPreflight();
     }

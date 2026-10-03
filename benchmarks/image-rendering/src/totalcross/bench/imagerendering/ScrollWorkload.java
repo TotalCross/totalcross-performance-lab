@@ -18,6 +18,7 @@ import totalcross.ui.event.TimerListener;
 import totalcross.ui.gfx.Color;
 import totalcross.ui.gfx.Graphics;
 import totalcross.ui.image.Image;
+import totalcross.ui.image.ImageDrawPathProbeAccess;
 
 /** Real-corpus scroll and explicit visible-image preparation workloads. */
 final class ScrollWorkload implements TimerListener {
@@ -32,6 +33,7 @@ final class ScrollWorkload implements TimerListener {
   private static final String DRIVER_HISTORICAL = "historical-driver";
   private static final String DRIVER_PAINT_SPLIT = "paint-split-probe";
   private static final String DRIVER_PAINT_PREPARATION = "paint-preparation-probe";
+  private static final String DRIVER_DRAW_PATH = "draw-path-probe";
   private static final int PAINT_SPLIT_SAMPLE_COUNT = 5;
   private static final int PAINT_PREPARATION_NOT_STARTED = 0;
   private static final int PAINT_PREPARATION_WAITING = 1;
@@ -97,15 +99,17 @@ final class ScrollWorkload implements TimerListener {
     preparation = profile.startsWith("prepared-") || profile.startsWith("combined-");
     scrollDriver = config.getString("scrollDriver");
     if (!DRIVER_FIXED_STEP.equals(scrollDriver) && !DRIVER_HISTORICAL.equals(scrollDriver)
-        && !DRIVER_PAINT_SPLIT.equals(scrollDriver) && !DRIVER_PAINT_PREPARATION.equals(scrollDriver)) {
+        && !DRIVER_PAINT_SPLIT.equals(scrollDriver) && !DRIVER_PAINT_PREPARATION.equals(scrollDriver)
+        && !DRIVER_DRAW_PATH.equals(scrollDriver)) {
       throw new IllegalArgumentException("unsupported scroll driver: " + scrollDriver);
     }
     if ((DRIVER_HISTORICAL.equals(scrollDriver) || DRIVER_PAINT_SPLIT.equals(scrollDriver)
-        || DRIVER_PAINT_PREPARATION.equals(scrollDriver))
+        || DRIVER_PAINT_PREPARATION.equals(scrollDriver) || DRIVER_DRAW_PATH.equals(scrollDriver))
         && (!"default".equals(profile) || preparation)) {
       throw new IllegalArgumentException(scrollDriver + " requires the default profile");
     }
     paintProbeCounters = DRIVER_PAINT_SPLIT.equals(scrollDriver) || DRIVER_PAINT_PREPARATION.equals(scrollDriver)
+        || DRIVER_DRAW_PATH.equals(scrollDriver)
         ? new PaintProbeCounters() : null;
     entries = BenchSupport.readDataset(config);
     if (entries.length != BenchSupport.EXPECTED_FILE_COUNT || entries.length % COLUMNS != 0) {
@@ -220,6 +224,10 @@ final class ScrollWorkload implements TimerListener {
     app.removeTimer(timer);
     timer = null;
     try {
+      if (DRIVER_DRAW_PATH.equals(scrollDriver)) {
+        runDrawPathProbe();
+        return;
+      }
       if (DRIVER_HISTORICAL.equals(scrollDriver)) {
         runHistoricalPass();
         return;
@@ -474,6 +482,111 @@ final class ScrollWorkload implements TimerListener {
     app.emit(app.runRecord(measurements, durations, config.getInt("round"),
         config.getString("phase"), config.getString("family")));
     app.exit(0);
+  }
+
+  private void runDrawPathProbe() throws Exception {
+    if (paintProbeCounters == null || !(scroll instanceof MeasuredScrollContainer) || scrollMinimum != 0) {
+      throw new IllegalStateException("draw-path-probe requires measured controls at top position zero");
+    }
+    moveToPaintProbePosition(0);
+    // Retain the exact visible row/control/Image references before stabilization.
+    int visibleCount = countVisibleImageControls(0);
+    if (visibleCount != 18) {
+      throw new IllegalStateException("draw-path-probe requires eighteen visible controls");
+    }
+    ImageControl[] visibleControls = new ImageControl[visibleCount];
+    Image[] visibleImages = new Image[visibleCount];
+    Container[] visibleRows = new Container[visibleCount];
+    int[] visibleIndices = new int[visibleCount];
+    int visibleIndex = 0;
+    for (int i = 0; i < controls.length; i++) {
+      int itemTop = 2 + (i / COLUMNS) * (tileWidth + 2);
+      if (itemTop < scroll.getRect().height && itemTop + tileWidth > 0) {
+        visibleControls[visibleIndex] = controls[i];
+        visibleImages[visibleIndex] = controls[i].getImage();
+        visibleRows[visibleIndex] = rows[i / COLUMNS];
+        visibleIndices[visibleIndex++] = i;
+      }
+    }
+    scroll.repaintNow(); // exactly one ordinary untimed stabilization repaint
+    requirePaintProbePosition(0);
+    paintProbeCounters.reset();
+    ImageDrawPathProbeAccess.reset();
+    long aggregateStartNs = System.nanoTime();
+    ((MeasuredScrollContainer) scroll).paintTreeOnly();
+    long aggregateElapsedNs = System.nanoTime() - aggregateStartNs;
+    JSONObject aggregateAccounting = ImageDrawPathProbeAccess.snapshot();
+    JSONObject aggregate = drawPathSample(aggregateAccounting, aggregateElapsedNs, "paintTreeNs");
+    if (paintProbeCounters.rowPaintCount != 6 || paintProbeCounters.imagePaintCount != 18) {
+      throw new IllegalStateException("draw-path-probe aggregate must paint six rows/eighteen controls");
+    }
+    JSONArray individual = new JSONArray();
+    long[] elapsedTimes = new long[visibleCount];
+    long sumNs = 0L;
+    boolean unexpected = ImageDrawPathProbeAccess.unexpectedDisabledPathActivity(aggregateAccounting);
+    for (int i = 0; i < visibleCount; i++) {
+      requireDrawPathIdentity(visibleIndices[i], visibleControls[i], visibleImages[i], visibleRows[i]);
+      paintProbeCounters.reset();
+      ImageDrawPathProbeAccess.reset();
+      long start = System.nanoTime();
+      visibleControls[i].onPaint(visibleControls[i].getGraphics());
+      long elapsed = System.nanoTime() - start;
+      JSONObject accounting = ImageDrawPathProbeAccess.snapshot();
+      requireDrawPathIdentity(visibleIndices[i], visibleControls[i], visibleImages[i], visibleRows[i]);
+      elapsedTimes[i] = elapsed;
+      sumNs += elapsed;
+      JSONObject sample = drawPathSample(accounting, elapsed, "imageControlPaintNs");
+      BenchSupport.put(sample, "datasetIndex", visibleIndices[i]);
+      BenchSupport.put(sample, "path", entries[visibleIndices[i]].path);
+      BenchSupport.put(sample, "format", entries[visibleIndices[i]].format);
+      BenchSupport.put(sample, "rowIndex", visibleIndices[i] / COLUMNS);
+      BenchSupport.put(sample, "copyRectAttemptsExceedOne", accounting.getInt("copyRectPlanAttempts") > 1);
+      unexpected |= ImageDrawPathProbeAccess.unexpectedDisabledPathActivity(accounting);
+      individual.put(sample);
+    }
+    for (int i = 0; i < visibleCount; i++) {
+      requireDrawPathIdentity(visibleIndices[i], visibleControls[i], visibleImages[i], visibleRows[i]);
+    }
+    Arrays.sort(elapsedTimes);
+    JSONObject measurements = BenchSupport.object(
+        "scrollDriver", DRIVER_DRAW_PATH, "imageControls", controls.length, "rows", rows.length,
+        "columns", COLUMNS, "tileWidth", tileWidth, "scrollPosition", 0,
+        "stabilizationRepaints", 1, "aggregateSamples", 1, "perControlSamples", 18,
+        "prepareRequests", 0, "preparation", false, "diagnostics", JSONObject.NULL,
+        "sameImageInstances", true, "sameControlInstances", true, "sameRowInstances", true,
+        "physicalCopyAccounting", "hit-only; attempt/fallback counters unavailable",
+        "lastStatusScope", "last copyRect plan attempt in each accounting sample",
+        "aggregate", aggregate, "perControl", individual, "unexpectedDisabledPathActivity", unexpected,
+        "individualTimingNs", BenchSupport.object("min", elapsedTimes[0],
+            "median", elapsedTimes[8] + (elapsedTimes[9] - elapsedTimes[8]) / 2.0,
+            "max", elapsedTimes[17], "sum", sumNs),
+        "axes", BenchSupport.object("requestedLogicalViewportWidth", config.getInt("width"),
+            "requestedLogicalViewportHeight", config.getInt("height"),
+            "logicalViewportWidth", scroll.getRect().width, "logicalViewportHeight", scroll.getRect().height,
+            "displayScale", getDisplayScale()));
+    app.removeTimerListener(this);
+    app.emit(app.runRecord(measurements, BenchSupport.object("wallTime", aggregateElapsedNs + sumNs),
+        config.getInt("round"), config.getString("phase"), config.getString("family")));
+    app.exit(0);
+  }
+
+  private void requireDrawPathIdentity(int index, ImageControl control, Image image, Container row) {
+    requirePaintProbePosition(0);
+    if (controls[index] != control || control.getImage() != image || rows[index / COLUMNS] != row) {
+      throw new IllegalStateException("draw-path-probe changed its row/control/Image instances");
+    }
+  }
+
+  private JSONObject drawPathSample(JSONObject accounting, long elapsedNs, String timingKey) throws Exception {
+    requirePaintProbePosition(0);
+    int status = accounting.getInt("copyRectPlanLastStatus");
+    return BenchSupport.object(timingKey, elapsedNs, "counters", accounting,
+        "rawStatus", status, "statusHex", "0x" + Integer.toHexString(status),
+        "statusFlags", ImageDrawPathProbeAccess.decodeStatus(status),
+        "classification", ImageDrawPathProbeAccess.classify(accounting),
+        "rowPaintCount", paintProbeCounters.rowPaintCount, "rowPaintNs", paintProbeCounters.rowPaintNs,
+        "imagePaintCount", paintProbeCounters.imagePaintCount, "imagePaintNs", paintProbeCounters.imagePaintNs,
+        "scrollPosition", scroll.sbV.getValue());
   }
 
   private void runPaintSplitProbe() throws Exception {

@@ -225,6 +225,16 @@ def validate_scroll_driver_arguments(arguments) -> None:
         raise RunnerError(driver + " requires --require-default-scroll-preflight")
 
 
+def is_matching_local_candidate_package(package_manifest: dict[str, Any], runtime_source: Path | None,
+                                        runtime_commit: str) -> bool:
+    """Allow a clean local Release build when it exactly matches the selected source checkout."""
+    build = package_manifest.get("buildConfiguration", {})
+    return (runtime_source is not None
+            and build.get("runtimeArtifactMode") == "local-release-build"
+            and package_manifest.get("totalcrossSourceCommit") == runtime_commit
+            and package_manifest.get("runtimeArtifactSourceCommit") == runtime_commit)
+
+
 def validate_historical_scroll_result(record: dict[str, Any], width: int, height: int) -> None:
     measurements = record.get("measurements")
     if not isinstance(measurements, dict):
@@ -1047,10 +1057,13 @@ def execute(arguments) -> int:
             from tools.copyrect_causal import is_experiment_package
             causal_package = (arguments.scroll_driver in ("copyrect-causal-probe", "immediate-admission-probe", "writepixels-warm-path-probe", "materialized-admission-memory-probe")
                               and is_experiment_package(package_manifest, runtime_source if official_provenance is None else None, arguments.scroll_driver))
-            if ((official_provenance is None and not causal_package) or arguments.family != "scroll" or selected_profiles != ("default",)
+            local_candidate_package = (official_provenance is None and is_matching_local_candidate_package(
+                package_manifest, runtime_source, runtime_commit))
+            if ((official_provenance is None and not causal_package and not local_candidate_package)
+                    or arguments.family != "scroll" or selected_profiles != ("default",)
                     or arguments.rounds != 1 or arguments.warmups != 0 or arguments.width != 540
                     or arguments.height != 960 or arguments.diagnostics):
-                raise RunnerError("production-default gate requires one official default 540x960 scroll with no warmup or diagnostics")
+                raise RunnerError("production-default gate requires one official or matching local default 540x960 scroll with no warmup or diagnostics")
             if inventory != ["default"]:
                 raise RunnerError("production-default gate requires a default-only official package")
             arguments.fail_fast = True

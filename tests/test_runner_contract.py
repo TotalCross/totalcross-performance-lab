@@ -394,6 +394,26 @@ class RunnerContractTests(unittest.TestCase):
             rounds=3, warmups=1, diagnostics=False, width=540, height=960,
         ))
 
+    def test_default_gate_accepts_only_matching_clean_local_release_package(self):
+        source = Path("/tmp/clean-totalcross-candidate")
+        revision = "a" * 40
+        manifest = {
+            "totalcrossSourceCommit": revision,
+            "runtimeArtifactSourceCommit": revision,
+            "buildConfiguration": {"runtimeArtifactMode": "local-release-build"},
+        }
+        self.assertTrue(run.is_matching_local_candidate_package(manifest, source, revision))
+        self.assertFalse(run.is_matching_local_candidate_package(manifest, None, revision))
+        self.assertFalse(run.is_matching_local_candidate_package(manifest, source, "b" * 40))
+
+        wrong_mode = json.loads(json.dumps(manifest))
+        wrong_mode["buildConfiguration"]["runtimeArtifactMode"] = "github-actions-package"
+        self.assertFalse(run.is_matching_local_candidate_package(wrong_mode, source, revision))
+
+        wrong_runtime = json.loads(json.dumps(manifest))
+        wrong_runtime["runtimeArtifactSourceCommit"] = "b" * 40
+        self.assertFalse(run.is_matching_local_candidate_package(wrong_runtime, source, revision))
+
     def test_paint_split_probe_is_limited_to_one_default_run_and_requires_preflight(self):
         valid = SimpleNamespace(
             scroll_driver="paint-split-probe", family="scroll", profiles="default",

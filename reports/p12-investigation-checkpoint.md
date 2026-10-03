@@ -791,3 +791,67 @@ the default-only package and build log remain under
 `.local-data/packages/image-rendering-macos-official-paint-split-c5d01d8/`.
 No P12 matrix, preparation, SIGBUS, Windows, or additional benchmark work was
 resumed.
+
+## Official-package explicit preparation paint comparison (2026-10-02,
+America/Sao_Paulo)
+
+This one-process probe compares repeated paint-tree work at the top of the
+default scroll viewport before and after one explicit
+`scroll.prepareForDisplay(callback)`. It uses the official TotalCross package
+from workflow run `37076804175`, artifact `11256633898` (`TotalCross-7.2.2`),
+runtime source SHA `5a44f503bf6fa1bec350f1218f4d501a70fc4812`. The benchmark
+package inventory contains only `default`; its manifest SHA-256 is
+`e65b33ebd8a58b1cc1f90b75311e0dcac9be7136e8f8e656a68e18d1704a8351`. The
+official SDK JAR, Launcher, and `libtcvm.dylib` hashes match the pinned values
+recorded above. The deployed input JAR SHA-256 is
+`935158309b87fe0a7a2b8b485de2d72780fbf71b0da91f77ea2c7312ec5ea606`, the
+application TCZ is
+`fa562554d98361a4c056fc4e54f972e320406fa46768ff4b10c86e0ce4dd93d8`, the
+executable is
+`3439082ff2b6e7bab37d7049b5860b6d4743297536bb7c9ba6806a2b45445884`, and the
+deployed native library is
+`421f957d551a75022a92db21638620732614e6d033a6f417ada09c6867cb8f24`.
+
+The inline preflight confirmed RASTER, STANDARD storage, target-color
+conversion/physical-variant cache/scroll raster reuse/automatic preparation
+disabled, `LEGACY_PER_ENTRY_THREAD`, diagnostics disabled, and
+`image-scroll/v1` with 663 controls, 221 rows, 3 columns, logical size 540x960,
+and 179-pixel tiles. Phase A performed one untimed stabilization repaint and
+five paint-tree samples at scroll position 0. The process then invoked
+`prepareForDisplay` once and waited for its single callback before taking five
+Phase C paint-tree samples. It reused the same UI instances throughout; the
+scroll position and visible row/image counts matched across both phases.
+
+| Top position (0) | p50 (ms) | p95 (ms) | p99 (ms) | max (ms) | ImageControl.onPaint p50 / sample | Cumulative ImageControl.onPaint (5 samples) | Rows / images per sample |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Before preparation | 278.192 | 280.546 | 280.845 | 280.920 | 277.762 ms | 1391.137 ms | 6 / 18 |
+| After preparation | 3.532 | 3.760 | 3.799 | 3.808 | 3.255 ms | 16.516 ms | 6 / 18 |
+
+`prepareForDisplay` was invoked at monotonic timestamp
+`1200276079390000 ns`; its callback completed at
+`1200276785966041 ns`. The measured wait was `706.576 ms`, with one request,
+one callback, and status `callback-completed`. At request time, 18 visible
+ImageControls were counted. The first prepared sample was 3.808 ms and all five
+prepared samples remained below 3.81 ms. Before and after positions were both
+0; every sample painted six rows and 18 ImageControls, so the timing comparison
+is valid.
+
+The absolute paint-tree p50 improvement was `274.660 ms`, a `98.73%`
+reduction. In this controlled comparison, explicit preparation/materialization
+state accounts for the dominant repeated `ImageControl.onPaint` cost. This
+result does not identify a deeper native cause. RuntimeDiagnostics reported
+unsupported in the official runtime, so internal ready/adopted/failure counts
+were unavailable; only the visible request count and callback result were
+recorded.
+
+The exact one-process invocation was:
+
+    python3 runners/run.py image-rendering scroll --profile default --scroll-driver paint-preparation-probe --rounds 1 --warmups 0 --timeout-seconds 180 --width 540 --height 960 --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 --package-manifest .local-data/packages/image-rendering-macos-official-paint-preparation-d466536/package-manifest.json --results-dir .local-data/results/image-rendering-paint-preparation-official --require-default-scroll-preflight --fail-fast
+
+The runner summary records one successful measured child, zero failures, and
+one inline preflight; it started no separate preflight process. The run source
+commit was `d466536b3f4d3c0cf2b70eb1cd9e7caf0bfa711a`. Raw output remains
+outside Git at
+`.local-data/results/image-rendering-paint-preparation-official/run-20261003T015757Z-45068/`.
+No second probe, fixed-step benchmark, historical driver, profile variant,
+matrix, SIGBUS, or Windows run was started.

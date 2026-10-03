@@ -213,7 +213,7 @@ def validate_scroll_driver_arguments(arguments) -> None:
     driver = getattr(arguments, "scroll_driver", "fixed-step")
     if driver == "fixed-step":
         return
-    probe_drivers = ("paint-split-probe", "paint-preparation-probe")
+    probe_drivers = ("paint-split-probe", "paint-preparation-probe", "draw-path-probe")
     if driver not in ("historical-driver",) + probe_drivers:
         raise RunnerError("invalid scroll driver")
     profiles = comma_values(arguments.profiles, DEFAULT_PROFILES[arguments.family], PROFILES, "profile")
@@ -525,6 +525,85 @@ def validate_paint_preparation_result(record: dict[str, Any], width: int, height
         raise RunnerError("paint-preparation improvement must be omitted when comparison is invalid")
 
 
+def validate_draw_path_result(record: dict[str, Any], width: int, height: int,
+                              manifest_entries: list[dict] | None = None) -> None:
+    if (record.get("family") != "scroll" or record.get("profile") != "default"
+            or record.get("renderer") != "RASTER" or record.get("diagnosticsEnabled") is not False
+            or record.get("logicalDimensions") != {"width": width, "height": height}):
+        raise RunnerError("draw-path-probe requires default RASTER scroll with diagnostics disabled at 540x960")
+    measurements = record.get("measurements")
+    schema = read_json(SCHEMA_DIR / "image-draw-path-probe-v1.schema.json")
+    validate_schema(measurements, schema, SCHEMA_DIR)
+    controls = measurements["perControl"]
+    if len(controls) != 18:
+        raise RunnerError("draw-path-probe requires exactly eighteen individual controls")
+    # SDK ImageRasterDiagnostics flags, mirrored by the benchmark-only decoder.
+    bits = {"handled": 1, "identityAttempted": 1 << 1, "identityHit": 1 << 2,
+            "identityFallback": 1 << 3, "targetColorAttempted": 1 << 4,
+            "targetColorHit": 1 << 5, "targetColorMaterialized": 1 << 6,
+            "targetColorFallback": 1 << 7, "physicalVariantAttempted": 1 << 8,
+            "physicalVariantHit": 1 << 9, "physicalVariantMaterialized": 1 << 10,
+            "physicalVariantFallback": 1 << 11, "physicalCopyHit": 1 << 13,
+            "genericGeometry": 1 << 16, "smoothResample": 1 << 17}
+    unexpected = False
+    aggregate = measurements["aggregate"]
+    for sample in [aggregate, *controls]:
+        counters = sample["counters"]
+        status = counters["copyRectPlanLastStatus"]
+        if sample["rawStatus"] != status or sample["statusHex"] != hex(status):
+            raise RunnerError("draw-path-probe raw native status is inconsistent")
+        flags = {name: bool(status & bit) for name, bit in bits.items()}
+        if sample["statusFlags"] != flags:
+            raise RunnerError("draw-path-probe decoded status bits are inconsistent")
+        if (counters["copyRectPlanAttempts"] != counters["copyRectPlanHandled"] + counters["copyRectPlanFallbacks"]
+                or counters["cachedFinalRasterProbes"] != counters["cachedFinalRasterHits"] + counters["cachedFinalRasterMisses"]):
+            raise RunnerError("draw-path-probe aggregate/counter accounting is inconsistent")
+        if sample["scrollPosition"] != 0:
+            raise RunnerError("draw-path-probe must retain top position zero")
+        for path in ("targetColor", "physicalVariant"):
+            unexpected |= (any(flags[path + event] for event in ("Attempted", "Hit", "Materialized", "Fallback"))
+                           or any(counters[path + event] > 0 for event in ("Hits", "Materializations", "Fallbacks")))
+        expected_tags = []
+        for key, tag in (("cachedFinalRasterHits", "cached-final hit"), ("cachedFinalRasterMisses", "cached-final miss"),
+                         ("identityAttempts", "identity attempted"), ("identityHits", "identity hit"),
+                         ("identityFallbacks", "identity fallback")):
+            if counters[key] > 0:
+                expected_tags.append(tag)
+        expected_tags.append("physical-copy hit" if counters["physicalCopyHits"] > 0 else "physical-copy no hit")
+        for path, label in (("targetColor", "target-color"), ("physicalVariant", "physical-variant")):
+            if flags[path + "Attempted"]:
+                expected_tags.append(label + " attempted")
+            for bit_suffix, count_suffix, tag in (("Hit", "Hits", "hit"), ("Materialized", "Materializations", "materialized"),
+                                                 ("Fallback", "Fallbacks", "fallback")):
+                if flags[path + bit_suffix] or counters[path + count_suffix] > 0:
+                    expected_tags.append(label + " " + tag)
+        for key, tag in (("genericGeometryDraws", "generic geometry"), ("smoothResampleDraws", "smooth resample"),
+                         ("copyRectPlanHandled", "draw handled"), ("copyRectPlanFallbacks", "draw fallback")):
+            if counters[key] > 0:
+                expected_tags.append(tag)
+        if counters["copyRectPlanAttempts"] == 0:
+            expected_tags.append("no copyRect plan attempt")
+        if sample["classification"] != expected_tags:
+            raise RunnerError("draw-path-probe classification does not match actual counters/status")
+    if aggregate["rowPaintCount"] != 6 or aggregate["imagePaintCount"] != 18:
+        raise RunnerError("draw-path-probe aggregate must paint six rows/eighteen images")
+    for index, sample in enumerate(controls):
+        if (sample["datasetIndex"] != index or sample["rowIndex"] != index // 3
+                or sample["imagePaintCount"] != 1 or sample["rowPaintCount"] != 0
+                or sample["copyRectAttemptsExceedOne"] is not (sample["counters"]["copyRectPlanAttempts"] > 1)):
+            raise RunnerError("draw-path-probe per-control viewport order or accounting is invalid")
+        if manifest_entries is not None and (sample["path"] != manifest_entries[index]["path"]
+                                             or sample["format"] != manifest_entries[index]["format"]):
+            raise RunnerError("draw-path-probe per-control path/format differs from manifest order")
+    times = [sample["imageControlPaintNs"] for sample in controls]
+    timing = measurements["individualTimingNs"]
+    expected_timing = {"min": min(times), "median": statistics.median(times), "max": max(times), "sum": sum(times)}
+    if timing != expected_timing:
+        raise RunnerError("draw-path-probe min/median/max/sum do not match individual paints")
+    if measurements["unexpectedDisabledPathActivity"] is not bool(unexpected):
+        raise RunnerError("draw-path-probe unexpected disabled-path activity flag is inconsistent")
+
+
 def dataset_info(cache: Path, dataset_ref: str) -> dict[str, Any] | None:
     if not dataset_ref:
         return None
@@ -715,7 +794,7 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
     if child.returncode:
         raise RunnerError("child exited with status %d" % child.returncode)
     scroll_driver = getattr(arguments, "scroll_driver", "fixed-step")
-    if scroll_driver in ("paint-split-probe", "paint-preparation-probe"):
+    if scroll_driver in ("paint-split-probe", "paint-preparation-probe", "draw-path-probe"):
         preflight = parse_preflight(child.stdout, arguments.family, cell["workload"], cell["profile"])
         if (preflight.get("runtimeSourceCommit") != runtime_commit
                 or preflight.get("benchmarkSourceCommit") != benchmark_commit):
@@ -750,6 +829,9 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
         validate_paint_split_result(run, arguments.width, arguments.height)
     elif arguments.family == "scroll" and scroll_driver == "paint-preparation-probe":
         validate_paint_preparation_result(run, arguments.width, arguments.height)
+    elif arguments.family == "scroll" and scroll_driver == "draw-path-probe":
+        validate_draw_path_result(run, arguments.width, arguments.height,
+                                  read_json(arguments.dataset_cache / "objects/manifest.json")["files"])
     elif getattr(arguments, "require_default_scroll_preflight", False):
         measurements = run.get("measurements", {})
         logical = run.get("logicalDimensions")
@@ -1020,7 +1102,7 @@ def execute(arguments) -> int:
             arguments.runtime_identity = "github-artifact:%s;sha256:%s;runtime-files-sha256:%s" % (
                 official_provenance["artifactName"], official_provenance["outerArtifactSha256"], runtime_hash)
         if getattr(arguments, "scroll_driver", "fixed-step") not in (
-                "paint-split-probe", "paint-preparation-probe"):
+                "paint-split-probe", "paint-preparation-probe", "draw-path-probe"):
             process_index += 1
             try:
                 launch_preflight(arguments, cell, process_index, dataset, runtime_commit, benchmark_commit,
@@ -1097,7 +1179,7 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--height", type=int, default=960)
     render.add_argument("--diagnostics", action="store_true")
     render.add_argument("--scroll-driver", choices=("fixed-step", "historical-driver", "paint-split-probe",
-                                                     "paint-preparation-probe"), default="fixed-step",
+                                                     "paint-preparation-probe", "draw-path-probe"), default="fixed-step",
                         help="scroll cadence and position driver; probe modes are one-round investigations")
     render.add_argument("--fail-fast", action="store_true")
     render.add_argument("--runtime-source", type=Path,

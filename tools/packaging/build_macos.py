@@ -183,6 +183,8 @@ def parse_profiles(raw: str | None) -> tuple[str, ...]:
 def selected_java_sources(source_root: Path, profiles: tuple[str, ...]) -> list[Path]:
     profile_root = source_root / "profiles"
     shared = sorted(path for path in source_root.rglob("*.java") if profile_root not in path.parents)
+    # Package-private SDK accounting is accessed only by this benchmark source.
+    shared += sorted((source_root.parents[1] / "ui/image").glob("ImageDrawPathProbeAccess.java"))
     selected = []
     for profile in profiles:
         entry = profile_root / (PROFILE_CLASSES[profile] + ".java")

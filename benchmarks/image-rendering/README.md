@@ -84,3 +84,34 @@ revision, build mode, dimensions, renderer/session, and measurement protocol.
 The report presents per-run tail statistics and failure counts; it does not
 produce a synthetic performance score or recommend the combined profiles for
 production.
+
+
+## Static native draw-path probe
+
+`draw-path-probe` is a focused default-only scroll mode at 540x960, with inline
+RASTER/STANDARD preflight and diagnostics disabled. It performs one ordinary
+untimed stabilization repaint at position 0, resets existing SDK test accounting,
+and measures one direct paint-tree call. It then resets accounting and paints
+each of the same eighteen visible ImageControls exactly once in manifest order,
+without preparation, scrolling, another stabilization paint or Image replacement.
+
+The benchmark-only `totalcross.ui.image.ImageDrawPathProbeAccess` source accesses
+package-private accounting already present in the SDK. It is included in the
+application JAR/TCZ and does not modify or replace SDK classes. Result counters,
+raw status integer/hex, decoded status flags, classifications and per-control
+timings are checked with `schemas/image-draw-path-probe-v1.schema.json` and the
+runner's consistency checks. A status describes the last plan attempt; controls
+with multiple attempts are explicitly marked. Physical-copy accounting exposes
+hits only; physical-copy attempt/fallback counters are unavailable.
+
+Use a package built from committed benchmark tooling and the validated official
+runtime, then launch one measured process with no warmups:
+
+```sh
+python3 runners/run.py image-rendering scroll --profile default   --scroll-driver draw-path-probe --rounds 1 --warmups 0   --timeout-seconds 180 --width 540 --height 960   --dataset-cache .local-data/datasets/p12-final/image-scroll/v1   --package-manifest /path/to/package-manifest.json   --results-dir .local-data/results/image-rendering-draw-path-probe   --require-default-scroll-preflight --fail-fast
+```
+
+This mode does not run the scrolling workload or call `prepareForDisplay`.
+Target-color/physical-variant activity under the default policy is recorded as
+unexpected rather than hidden or forced to zero. The materialized cache-admission
+policy remains a separate unresolved question; this probe changes no policy.

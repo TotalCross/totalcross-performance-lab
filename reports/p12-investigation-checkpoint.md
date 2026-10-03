@@ -557,5 +557,5 @@ the latest snapshot also records the feature commit and post-commit repository
 state.
 
 Latest ignored evidence bundle: `artifacts/p12-checkpoint.tar.gz`, SHA-256
-`cc40f97294bf42d73fd848756ba8ac5727cf958e5fa47f625c2de77618882903`.
+`1a17f6c1d0aae2b52ba3eff2fcb4b367465d518769554d58741486395c63bff0`.
 `artifacts/p12-checkpoint/SHA256SUMS` covers the preserved bundle contents.

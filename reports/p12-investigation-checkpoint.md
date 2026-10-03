@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2026 Amalgam Solucoes em TI Ltda
+
+SPDX-License-Identifier: LGPL-2.1-only
+-->
+
 # P12 investigation checkpoint — execution paused
 
 **Status:** benchmark execution is paused pending investigation. P12 is not
@@ -855,3 +861,138 @@ outside Git at
 `.local-data/results/image-rendering-paint-preparation-official/run-20261003T015757Z-45068/`.
 No second probe, fixed-step benchmark, historical driver, profile variant,
 matrix, SIGBUS, or Windows run was started.
+
+
+## Open follow-up: materialized cache admission policy
+
+The historical `f5dad132cafea5c9086f6f946a6f44ca5bcb5f76`
+implementation in `Image.resolveForDrawing` cached the resolved representation
+immediately (presentation-state synchronization omitted here):
+
+```java
+Image resolved = resolvePipeline(...);
+deferred.cacheMaterializedVariant(...);
+return resolved;
+```
+
+Current master `5a44f503bf6fa1bec350f1218f4d501a70fc4812` uses
+second-observation admission (presentation-state synchronization and generation
+refresh omitted here):
+
+```java
+Image resolved = resolvePipeline(...);
+
+boolean admitted =
+    deferred.observeMaterializedVariant(
+        scaleBits,
+        sourceDecodeGeneration);
+
+if (admitted) {
+    deferred.cacheMaterializedVariant(
+        scaleBits,
+        resolved,
+        sourceDecodeGeneration);
+}
+```
+
+**This change is NOT considered an accepted final design decision.**
+
+The user recalls that this tradeoff was explicitly discussed during the
+original optimization work and that the conclusion favored immediate
+admission.
+
+After the historical performance comparison is complete, revisit the original
+rationale, measurements, memory behavior and cache policy before proceeding
+with a production fix.
+
+This task does not change cache admission behavior or any TotalCross source.
+The source difference is an unresolved follow-up, not proof of the cause of
+any observed timing difference.
+
+
+## Historical static probe: pre-measurement setup failure (2026-10-03)
+
+The benchmark branch and remote both started at
+`5a081100c6b1fb51e4ff382cfd164f9b85e5a6cc`. The existing separate historical
+checkout `/Users/flsobral/repos/totalcross-history-f5dad132` was verified clean
+at `f5dad132cafea5c9086f6f946a6f44ca5bcb5f76`, the requested historical
+`codex/scroll-raster-reuse-windows-package` revision. No TotalCross source was
+changed or committed; it remained clean after builds and the launch.
+
+The historical SDK was rebuilt with `--rerun-tasks`, and `tcvm` and `Launcher`
+were compiled in a fresh ARM64 Release native directory. The initial dependency
+fetch hit a QR-code asset HTTP 404. The successful configure used an existing
+prebuilt dependency cache at the exact historical depot-tools pin
+`0ebff1d7202fab6e61758344219f60fa757fe6ce`, with the QR-code and SQLite release
+tags used by the current comparison build. This reuses dependency prebuilts,
+not current-master runtime binaries or SDK outputs. The CMake configuration
+selected the software surface, Skia and SDL.
+
+The isolated historical package compiled and deployed using the historical
+SDK and the freshly built Launcher/library. Package validation checked that
+both deployed native hashes matched their build outputs. The original shared
+ScrollWorkload and manifest loader supplied the UI and measurement methods;
+only diagnostic imports in staging and an untimed instance-identity helper
+were added. Normal P12 runtime validation was not changed.
+
+One application process was launched from tooling commit
+`66c3e47b26dc11e8fb8d67769295c8859f0e1330`. Its inline preflight reported and
+accepted configured/effective masks `32799/32799`. It then exited with code 1
+while logging dataset identity at the end of UI construction:
+
+```text
+totalcross.json.JSONException: JSONObject["id"] not found.
+totalcross.bench.imagerendering.ScrollWorkload.<C> 227
+```
+
+This was a benchmark tooling error: the generated config passed dataset
+verification fields but omitted `id` and `version`. **No Phase A sample or
+Phase B preparation request ran. There are no historical timing results from
+this attempt and no performance conclusion can be drawn from it.** The process
+also logged a resource-cache write warning (`Error Code: 30 - Read-only file
+system`); execution continued past that warning to the configuration error.
+
+Tooling commit `219c33e` fixes dataset metadata and adds a regression test. It
+also handles native builds that echo the same protocol records to stdout and
+DebugConsole, without counting duplicates as additional measured runs. The
+launch-attempt guard and all first-attempt evidence are retained. A replacement
+application process requires user authorization because the original instruction
+limits this session to one process.
+
+Historical artifact SHA-256 values:
+
+| Artifact | SHA-256 |
+|---|---|
+| SDK JAR | `44d20645746cad03fdac67e757e6b088eb4a3082a2ecd9abea0c8d6e20451ef8` |
+| Launcher | `a417b281f35ca00701977a60b420c3d50a5ef90f1176a52bcb3c4962756c8133` |
+| libtcvm.dylib | `efd6b0e86146a32e9b3376b312728f1b0eea198d7b47f67b2616d99a2dae74ae` |
+
+Exact successful build/deploy and first-attempt launch commands follow.
+Benchmark commands use `/Users/flsobral/repos/totalcross-performance-lab` as
+their working directory; deployment uses the staged historical runtime home.
+
+```sh
+cd /Users/flsobral/repos/totalcross-history-f5dad132/TotalCrossSDK && ./gradlew-agent dist -x test --rerun-tasks
+cmake -S /Users/flsobral/repos/totalcross-history-f5dad132/TotalCrossVM -B /Users/flsobral/repos/totalcross-performance-lab/.local-data/historical-static-f5dad132/native-pinned -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DTCVM_DEPOT_TOOLS_DIR=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools -DSQLITE3_RELEASE_TAG=sqlite3-3.32.3-r2 -DQRCODEGEN_RELEASE_TAG=qrcodegen-20250123-r2
+cmake --build /Users/flsobral/repos/totalcross-performance-lab/.local-data/historical-static-f5dad132/native-pinned --target tcvm Launcher -j 8
+python3 tools/packaging/historical_paint_probe.py build --runtime-source /Users/flsobral/repos/totalcross-history-f5dad132 --native-build .local-data/historical-static-f5dad132/native-pinned --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 --output .local-data/historical-static-f5dad132/probe-final
+python3 tools/packaging/historical_paint_probe.py run --package .local-data/historical-static-f5dad132/probe-final
+/usr/bin/java -cp '/Users/flsobral/repos/totalcross-performance-lab/.local-data/historical-static-f5dad132/probe-final/classes:/Users/flsobral/repos/totalcross-history-f5dad132/TotalCrossSDK/dist/totalcross-sdk.jar:/Users/flsobral/repos/totalcross-history-f5dad132/TotalCrossSDK/dist/libs/*' tc.Deploy /Users/flsobral/repos/totalcross-performance-lab/.local-data/historical-static-f5dad132/probe-final/Default.jar -macos /p /n historical-static-paint /o /Users/flsobral/repos/totalcross-performance-lab/.local-data/historical-static-f5dad132/probe-final/deploy/
+/Users/flsobral/repos/totalcross-performance-lab/.local-data/historical-static-f5dad132/probe-final/deploy/install/macos/historical-static-paint /scr -2,-2,540,960
+```
+
+Full expanded javac/deploy commands, source fingerprints, dataset identity,
+CMake configuration and deployed hashes are in the ignored
+`.local-data/historical-static-f5dad132/probe-final/package.json`. The local
+`.local-data/historical-static-f5dad132/evidence.json` indexes commands, failure
+state and artifact hashes. Logs remain in its `logs/` directory and the
+`probe-final/` package. SDK full/agent logs remain in the historical checkout's
+ignored `TotalCrossSDK/agent-logs/` directory.
+
+`python3 -m unittest discover -s tests` passed all 59 tests after the fix;
+`git diff --check` passed. The initial SDK build and forced SDK rebuild passed;
+ARM64 Release configure/native build and final benchmark compile/deploy passed;
+the application setup attempt failed as described above. No current-master
+measurement was rerun. No scrolling driver, profile matrix, Windows build,
+sanitizer matrix or full scrolling benchmark was executed: those are outside
+this static-probe task.

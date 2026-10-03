@@ -42,6 +42,32 @@ public final class ImageDrawPathProbeAccess {
     return result;
   }
 
+  /** Supplied only by the experiment-local entry class; normal SDK builds need no experimental fields. */
+  public interface CausalHooks {
+    void start();
+    void finish();
+    JSONObject snapshot() throws JSONException;
+  }
+
+  private static CausalHooks causalHooks;
+
+  public static void installCausalHooks(CausalHooks hooks) {
+    causalHooks = hooks;
+  }
+
+  public static void startCausalExperiment() {
+    if (causalHooks == null) throw new IllegalStateException("causal probe needs its experimental package");
+    causalHooks.start();
+  }
+
+  public static void finishCausalExperiment() {
+    causalHooks.finish();
+  }
+
+  public static JSONObject causalSnapshot() throws JSONException {
+    return causalHooks.snapshot();
+  }
+
   public static JSONObject decodeStatus(int status) throws JSONException {
     JSONObject result = new JSONObject();
     result.put("handled", (status & ImageRasterDiagnostics.DRAW_HANDLED) != 0);

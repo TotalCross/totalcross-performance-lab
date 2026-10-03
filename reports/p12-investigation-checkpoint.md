@@ -1591,3 +1591,43 @@ one successful record, and verified preserved artifact hashes. No SDK compilatio
 deployment, platform build, sanitizer or further runtime validation was needed.
 The **Open follow-up: materialized cache admission policy** section is preserved
 verbatim and remains explicitly unresolved and out of scope.
+
+
+## copyRect causal experiment: implementation checkpoint (2026-10-03)
+
+The next authorized experiment isolates whether current copyRect draw-plan generic
+smooth handling prevents the existing resolveForDrawing/materialized-raster path.
+An experiment-only runtime based on `5a44f503bf6fa1bec350f1218f4d501a70fc4812`
+is committed locally as `fc08c39499dead73b327ad259a992ab34ec42870`.
+Its canonical reproducible patch, ExecPlan and build provenance/hash index are
+under `experiments/p12-copyrect-causal/`. Apply the zero-context patch with
+`git apply --unidiff-zero runtime.patch` to the exact base. No runtime changes
+are proposed as production architecture or cache-admission fixes.
+
+A test-only field remains disabled during normal startup, then enables only the
+explicit stabilization and five samples. Native copyRect keeps unchanged physical
+copy/identity eligibility and returns unhandled on rejection before generic or
+variant drawing, allowing unchanged Java copyRect to reach resolveForDrawing.
+The production second-observation implementation in ImagePipeline is byte-identical
+to the base. Counters observe cached-final probes/hits/misses, copy/identity routing,
+direct generic/smooth draw, resolve calls, observations/admissions and native
+geometry materializations. The full stabilization accounting is captured untimed;
+exactly five whole-tree paints then retain six rows/eighteen ImageControls and
+same Images at position zero, without preparation or movement.
+
+The normal benchmark still compiles against the official SDK; experimental hook
+classes and entry are selected only by `--copyrect-causal-experiment`. The causal
+runner accepts only the exact custom runtime SHA and matching canonical patch,
+default-only experiment entry, inline preflight and verified dataset. The runtime
+uses typed policy defaults, not the retired raw optimization-mask API; preflight
+and equal before/after configuration reports verify unchanged defaults.
+
+Pre-measurement checks passed: 90 Python tests (eight new causal contracts),
+focused native physical-copy routing tests, current-year header validation,
+Release macOS arm64 tcvm/Launcher build, custom SDK distribution and benchmark
+Java compilation against both official and experimental SDKs. Configuration
+initially needed the existing SQLite tag and canonical SDL dependency path;
+these were resolved without source changes. All normal build artifacts and logs
+remain local. No measured native application process has run at this checkpoint.
+The source/tooling checkpoint is committed before packaging/sole launch. The
+cache-admission follow-up section remains unchanged and explicitly unresolved.

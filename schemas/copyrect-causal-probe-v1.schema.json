@@ -1,0 +1,517 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "copyrect-causal-probe-v1.schema.json",
+  "title": "P12 physical-only copyRect causal probe",
+  "type": "object",
+  "required": [
+    "scrollDriver",
+    "imageControls",
+    "rows",
+    "columns",
+    "tileWidth",
+    "scrollPosition",
+    "stabilizationRepaints",
+    "samplesPerMeasurement",
+    "prepareRequests",
+    "preparation",
+    "sameImageInstances",
+    "sameControlInstances",
+    "sameRowInstances",
+    "stabilization",
+    "samples",
+    "viewportOrder",
+    "axes",
+    "runtimeDefaultsUnchanged",
+    "runtimeConfigurationBefore",
+    "runtimeConfigurationAfter"
+  ],
+  "properties": {
+    "scrollDriver": {
+      "const": "copyrect-causal-probe"
+    },
+    "imageControls": {
+      "const": 663
+    },
+    "rows": {
+      "const": 221
+    },
+    "columns": {
+      "const": 3
+    },
+    "tileWidth": {
+      "const": 179
+    },
+    "scrollPosition": {
+      "const": 0
+    },
+    "stabilizationRepaints": {
+      "const": 1
+    },
+    "samplesPerMeasurement": {
+      "const": 5
+    },
+    "prepareRequests": {
+      "const": 0
+    },
+    "preparation": {
+      "const": false
+    },
+    "sameImageInstances": {
+      "const": true
+    },
+    "sameControlInstances": {
+      "const": true
+    },
+    "sameRowInstances": {
+      "const": true
+    },
+    "stabilization": {
+      "type": "object",
+      "required": [
+        "sample",
+        "timed",
+        "paintTreeNs",
+        "rowPaintCount",
+        "imagePaintCount",
+        "rowPaintNs",
+        "imagePaintNs",
+        "scrollPosition",
+        "counters"
+      ],
+      "properties": {
+        "sample": {
+          "type": "integer"
+        },
+        "timed": {
+          "type": "boolean"
+        },
+        "paintTreeNs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "rowPaintCount": {
+          "const": 6
+        },
+        "imagePaintCount": {
+          "const": 18
+        },
+        "rowPaintNs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "imagePaintNs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scrollPosition": {
+          "const": 0
+        },
+        "counters": {
+          "type": "object",
+          "required": [
+            "copyRectPlanAttempts",
+            "copyRectPlanHandled",
+            "copyRectPlanFallbacks",
+            "copyRectPlanLastStatus",
+            "cachedFinalRasterProbes",
+            "cachedFinalRasterHits",
+            "cachedFinalRasterMisses",
+            "identityAttempts",
+            "identityHits",
+            "identityFallbacks",
+            "physicalCopyHits",
+            "genericGeometryDraws",
+            "smoothResampleDraws",
+            "directDrawPlanExecutions",
+            "targetColorHits",
+            "targetColorMaterializations",
+            "targetColorFallbacks",
+            "physicalVariantHits",
+            "physicalVariantMaterializations",
+            "physicalVariantFallbacks",
+            "physicalOnlyEnabled",
+            "physicalCopyAttempts",
+            "physicalCopyFallbacks",
+            "resolveForDrawingCalls",
+            "resolveForDrawingCacheHits",
+            "materializedVariantObservations",
+            "materializedVariantAdmissions",
+            "nativeGeometryMaterializations"
+          ],
+          "properties": {
+            "copyRectPlanAttempts": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "copyRectPlanHandled": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "copyRectPlanFallbacks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "copyRectPlanLastStatus": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cachedFinalRasterProbes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cachedFinalRasterHits": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cachedFinalRasterMisses": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "identityAttempts": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "identityHits": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "identityFallbacks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "physicalCopyHits": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "genericGeometryDraws": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "smoothResampleDraws": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "directDrawPlanExecutions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "targetColorHits": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "targetColorMaterializations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "targetColorFallbacks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "physicalVariantHits": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "physicalVariantMaterializations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "physicalVariantFallbacks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "physicalOnlyEnabled": {
+              "type": "boolean",
+              "const": true
+            },
+            "physicalCopyAttempts": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "physicalCopyFallbacks": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "resolveForDrawingCalls": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "resolveForDrawingCacheHits": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "materializedVariantObservations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "materializedVariantAdmissions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nativeGeometryMaterializations": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "sample",
+          "timed",
+          "paintTreeNs",
+          "rowPaintCount",
+          "imagePaintCount",
+          "rowPaintNs",
+          "imagePaintNs",
+          "scrollPosition",
+          "counters"
+        ],
+        "properties": {
+          "sample": {
+            "type": "integer"
+          },
+          "timed": {
+            "type": "boolean"
+          },
+          "paintTreeNs": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "rowPaintCount": {
+            "const": 6
+          },
+          "imagePaintCount": {
+            "const": 18
+          },
+          "rowPaintNs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "imagePaintNs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "scrollPosition": {
+            "const": 0
+          },
+          "counters": {
+            "type": "object",
+            "required": [
+              "copyRectPlanAttempts",
+              "copyRectPlanHandled",
+              "copyRectPlanFallbacks",
+              "copyRectPlanLastStatus",
+              "cachedFinalRasterProbes",
+              "cachedFinalRasterHits",
+              "cachedFinalRasterMisses",
+              "identityAttempts",
+              "identityHits",
+              "identityFallbacks",
+              "physicalCopyHits",
+              "genericGeometryDraws",
+              "smoothResampleDraws",
+              "directDrawPlanExecutions",
+              "targetColorHits",
+              "targetColorMaterializations",
+              "targetColorFallbacks",
+              "physicalVariantHits",
+              "physicalVariantMaterializations",
+              "physicalVariantFallbacks",
+              "physicalOnlyEnabled",
+              "physicalCopyAttempts",
+              "physicalCopyFallbacks",
+              "resolveForDrawingCalls",
+              "resolveForDrawingCacheHits",
+              "materializedVariantObservations",
+              "materializedVariantAdmissions",
+              "nativeGeometryMaterializations"
+            ],
+            "properties": {
+              "copyRectPlanAttempts": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "copyRectPlanHandled": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "copyRectPlanFallbacks": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "copyRectPlanLastStatus": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cachedFinalRasterProbes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cachedFinalRasterHits": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cachedFinalRasterMisses": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "identityAttempts": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "identityHits": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "identityFallbacks": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "physicalCopyHits": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "genericGeometryDraws": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "smoothResampleDraws": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "directDrawPlanExecutions": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "targetColorHits": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "targetColorMaterializations": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "targetColorFallbacks": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "physicalVariantHits": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "physicalVariantMaterializations": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "physicalVariantFallbacks": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "physicalOnlyEnabled": {
+                "type": "boolean",
+                "const": true
+              },
+              "physicalCopyAttempts": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "physicalCopyFallbacks": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "resolveForDrawingCalls": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "resolveForDrawingCacheHits": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "materializedVariantObservations": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "materializedVariantAdmissions": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "nativeGeometryMaterializations": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "viewportOrder": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "items": {
+        "type": "object",
+        "required": [
+          "datasetIndex",
+          "path"
+        ],
+        "properties": {
+          "datasetIndex": {
+            "type": "integer"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "axes": {
+      "type": "object",
+      "required": [
+        "logicalViewportWidth",
+        "logicalViewportHeight",
+        "displayScale"
+      ],
+      "properties": {
+        "logicalViewportWidth": {
+          "const": 540
+        },
+        "logicalViewportHeight": {
+          "const": 910
+        },
+        "displayScale": {
+          "const": 2
+        }
+      },
+      "additionalProperties": false
+    },
+    "runtimeDefaultsUnchanged": {
+      "const": true
+    },
+    "runtimeConfigurationBefore": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtimeConfigurationAfter": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

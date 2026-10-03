@@ -180,11 +180,15 @@ def parse_profiles(raw: str | None) -> tuple[str, ...]:
     return values
 
 
-def selected_java_sources(source_root: Path, profiles: tuple[str, ...]) -> list[Path]:
+def selected_java_sources(source_root: Path, profiles: tuple[str, ...], causal_experiment: bool = False) -> list[Path]:
     profile_root = source_root / "profiles"
     shared = sorted(path for path in source_root.rglob("*.java") if profile_root not in path.parents)
     # Package-private SDK accounting is accessed only by this benchmark source.
     shared += sorted((source_root.parents[1] / "ui/image").glob("ImageDrawPathProbeAccess.java"))
+    if causal_experiment:
+        if profiles != ("default",):
+            raise PackageError("causal experiment requires only default")
+        return shared + sorted((ROOT / "experiments/p12-copyrect-causal/src").rglob("*.java"))
     selected = []
     for profile in profiles:
         entry = profile_root / (PROFILE_CLASSES[profile] + ".java")
@@ -265,8 +269,13 @@ def build(arguments) -> Path:
     if not java or not javac:
         raise PackageError("a JDK with java and javac is required")
     selected_profiles = parse_profiles(arguments.profiles)
+    causal_experiment = getattr(arguments, "copyrect_causal_experiment", False)
+    if causal_experiment:
+        from tools.copyrect_causal import EXPERIMENT_RUNTIME
+        if official_mode or source_commit != EXPERIMENT_RUNTIME:
+            raise PackageError("causal experiment requires its pinned custom SDK/native source")
     sources = selected_java_sources(ROOT / "benchmarks/image-rendering/src/totalcross/bench/imagerendering",
-                                    selected_profiles)
+                                    selected_profiles, causal_experiment)
     output.parent.mkdir(parents=True, exist_ok=True)
     log_path = output.with_name(output.name + ".build.log")
     if log_path.exists():
@@ -366,7 +375,7 @@ def build(arguments) -> Path:
             else:
                 official_runtime_provenance = None
             for profile in selected_profiles:
-                entry = PROFILE_CLASSES[profile]
+                entry = "CausalDefault" if causal_experiment else PROFILE_CLASSES[profile]
                 prefix = "image-rendering-" + profile
                 jar_path = stage / "inputs" / profile / (entry + ".jar")
                 jar_path.parent.mkdir(parents=True)
@@ -491,6 +500,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="raw GitHub artifact metadata JSON")
     parser.add_argument("--official-workflow-run", type=Path,
                         help="raw GitHub workflow run JSON")
+    parser.add_argument("--copyrect-causal-experiment", action="store_true",
+                        help="include only the pinned P12 experimental hooks/default entry")
     parser.add_argument("--profiles", help="comma-separated profile names; defaults to all")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--build-sdk", action="store_true", help="run the SDK dist build before deploying apps")

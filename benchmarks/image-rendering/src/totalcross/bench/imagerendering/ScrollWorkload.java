@@ -34,6 +34,7 @@ final class ScrollWorkload implements TimerListener {
   private static final String DRIVER_PAINT_SPLIT = "paint-split-probe";
   private static final String DRIVER_PAINT_PREPARATION = "paint-preparation-probe";
   private static final String DRIVER_PHYSICAL_MAPPING = "physical-mapping-probe";
+  private static final String DRIVER_COPYRECT_CAUSAL = "copyrect-causal-probe";
   private static final String DRIVER_DRAW_PATH = "draw-path-probe";
   private static final int PAINT_SPLIT_SAMPLE_COUNT = 5;
   private static final int PAINT_PREPARATION_NOT_STARTED = 0;
@@ -101,16 +102,18 @@ final class ScrollWorkload implements TimerListener {
     scrollDriver = config.getString("scrollDriver");
     if (!DRIVER_FIXED_STEP.equals(scrollDriver) && !DRIVER_HISTORICAL.equals(scrollDriver)
         && !DRIVER_PAINT_SPLIT.equals(scrollDriver) && !DRIVER_PAINT_PREPARATION.equals(scrollDriver)
-        && !DRIVER_DRAW_PATH.equals(scrollDriver) && !DRIVER_PHYSICAL_MAPPING.equals(scrollDriver)) {
+        && !DRIVER_DRAW_PATH.equals(scrollDriver) && !DRIVER_PHYSICAL_MAPPING.equals(scrollDriver)
+        && !DRIVER_COPYRECT_CAUSAL.equals(scrollDriver)) {
       throw new IllegalArgumentException("unsupported scroll driver: " + scrollDriver);
     }
     if ((DRIVER_HISTORICAL.equals(scrollDriver) || DRIVER_PAINT_SPLIT.equals(scrollDriver)
-        || DRIVER_PAINT_PREPARATION.equals(scrollDriver) || DRIVER_DRAW_PATH.equals(scrollDriver) || DRIVER_PHYSICAL_MAPPING.equals(scrollDriver))
+        || DRIVER_PAINT_PREPARATION.equals(scrollDriver) || DRIVER_DRAW_PATH.equals(scrollDriver)
+        || DRIVER_PHYSICAL_MAPPING.equals(scrollDriver) || DRIVER_COPYRECT_CAUSAL.equals(scrollDriver))
         && (!"default".equals(profile) || preparation)) {
       throw new IllegalArgumentException(scrollDriver + " requires the default profile");
     }
     paintProbeCounters = DRIVER_PAINT_SPLIT.equals(scrollDriver) || DRIVER_PAINT_PREPARATION.equals(scrollDriver)
-        || DRIVER_DRAW_PATH.equals(scrollDriver)
+        || DRIVER_DRAW_PATH.equals(scrollDriver) || DRIVER_COPYRECT_CAUSAL.equals(scrollDriver)
         ? new PaintProbeCounters() : null;
     entries = BenchSupport.readDataset(config);
     if (entries.length != BenchSupport.EXPECTED_FILE_COUNT || entries.length % COLUMNS != 0) {
@@ -225,6 +228,10 @@ final class ScrollWorkload implements TimerListener {
     app.removeTimer(timer);
     timer = null;
     try {
+      if (DRIVER_COPYRECT_CAUSAL.equals(scrollDriver)) {
+        runCopyRectCausalProbe();
+        return;
+      }
       if (DRIVER_PHYSICAL_MAPPING.equals(scrollDriver)) {
         runPhysicalMappingProbe();
         return;
@@ -487,6 +494,79 @@ final class ScrollWorkload implements TimerListener {
     app.emit(app.runRecord(measurements, durations, config.getInt("round"),
         config.getString("phase"), config.getString("family")));
     app.exit(0);
+  }
+
+  private void runCopyRectCausalProbe() throws Exception {
+    if (paintProbeCounters == null || !(scroll instanceof MeasuredScrollContainer)
+        || scrollMinimum != 0 || countVisibleImageControls(0) != 18) {
+      throw new IllegalStateException("causal probe requires the top six rows/eighteen controls");
+    }
+    requirePaintProbePosition(0);
+    ImageControl[] retainedControls = new ImageControl[18];
+    Image[] retainedImages = new Image[18];
+    Container[] retainedRows = new Container[6];
+    JSONArray viewportOrder = new JSONArray();
+    for (int i = 0; i < 18; i++) {
+      retainedControls[i] = controls[i];
+      retainedImages[i] = controls[i].getImage();
+      if (i % COLUMNS == 0) retainedRows[i / COLUMNS] = rows[i / COLUMNS];
+      viewportOrder.put(BenchSupport.object("datasetIndex", i, "path", entries[i].path));
+    }
+    String runtimeConfigurationBefore = totalcross.sys.runtime.RuntimeConfigurationReport.describe();
+    long probeStartedNs = System.nanoTime();
+    // Startup paints used production routing. Enable only this fixed probe.
+    ImageDrawPathProbeAccess.startCausalExperiment();
+    paintProbeCounters.reset();
+    scroll.repaintNow(); // one untimed stabilization; counters but no whole-tree timing
+    JSONObject stabilization = causalPaintSnapshot(0, 0L, false);
+    JSONArray samples = new JSONArray();
+    for (int sample = 1; sample <= 5; sample++) {
+      requirePaintProbePosition(0);
+      ImageDrawPathProbeAccess.reset();
+      paintProbeCounters.reset();
+      long startedNs = System.nanoTime();
+      ((MeasuredScrollContainer) scroll).paintTreeOnly();
+      long paintTreeNs = System.nanoTime() - startedNs;
+      samples.put(causalPaintSnapshot(sample, paintTreeNs, true));
+    }
+    for (int i = 0; i < 18; i++) {
+      if (controls[i] != retainedControls[i] || controls[i].getImage() != retainedImages[i]
+          || rows[i / COLUMNS] != retainedRows[i / COLUMNS]) {
+        throw new IllegalStateException("causal probe replaced a retained control/Image/row");
+      }
+    }
+    requirePaintProbePosition(0);
+    ImageDrawPathProbeAccess.finishCausalExperiment();
+    String runtimeConfigurationAfter = totalcross.sys.runtime.RuntimeConfigurationReport.describe();
+    if (!runtimeConfigurationBefore.equals(runtimeConfigurationAfter)) {
+      throw new IllegalStateException("causal probe changed the production runtime configuration");
+    }
+    app.removeTimerListener(this);
+    JSONObject measurements = BenchSupport.object("scrollDriver", DRIVER_COPYRECT_CAUSAL,
+        "imageControls", controls.length, "rows", rows.length, "columns", COLUMNS, "tileWidth", tileWidth,
+        "scrollPosition", 0, "stabilizationRepaints", 1, "samplesPerMeasurement", 5,
+        "prepareRequests", 0, "preparation", false, "sameImageInstances", true,
+        "sameControlInstances", true, "sameRowInstances", true, "runtimeDefaultsUnchanged", true,
+        "runtimeConfigurationBefore", runtimeConfigurationBefore,
+        "runtimeConfigurationAfter", runtimeConfigurationAfter, "viewportOrder", viewportOrder,
+        "stabilization", stabilization, "samples", samples,
+        "axes", BenchSupport.object("logicalViewportWidth", scroll.getRect().width,
+            "logicalViewportHeight", scroll.getRect().height, "displayScale", getDisplayScale()));
+    app.emit(app.runRecord(measurements, BenchSupport.object("wallTime", System.nanoTime() - probeStartedNs),
+        config.getInt("round"), config.getString("phase"), config.getString("family")));
+    app.exit(0);
+  }
+
+  private JSONObject causalPaintSnapshot(int sample, long paintTreeNs, boolean timed) throws Exception {
+    requirePaintProbePosition(0);
+    if (paintProbeCounters.rowPaintCount != 6 || paintProbeCounters.imagePaintCount != 18) {
+      throw new IllegalStateException("causal probe paint changed visible row/Image counts");
+    }
+    return BenchSupport.object("sample", sample, "timed", timed,
+        "paintTreeNs", timed ? Long.valueOf(paintTreeNs) : JSONObject.NULL,
+        "rowPaintCount", paintProbeCounters.rowPaintCount, "imagePaintCount", paintProbeCounters.imagePaintCount,
+        "rowPaintNs", paintProbeCounters.rowPaintNs, "imagePaintNs", paintProbeCounters.imagePaintNs,
+        "scrollPosition", scroll.sbV.getValue(), "counters", ImageDrawPathProbeAccess.causalSnapshot());
   }
 
   private void runPhysicalMappingProbe() throws Exception {

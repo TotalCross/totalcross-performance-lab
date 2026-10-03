@@ -10,6 +10,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from runners import run
+from tools import analyze_draw_path_probe
 from tools.packaging import build_macos, build_windows
 
 ROOT = Path(__file__).parents[1]
@@ -109,6 +110,46 @@ class DrawPathProbeTests(unittest.TestCase):
             mutate(record["measurements"])
             with self.assertRaises(run.RunnerError):
                 run.validate_draw_path_result(record, 540, 960)
+
+    def test_native_identity_fallback_is_classified_with_zero_image_getters(self):
+        record = draw_path_record()
+        for sample in [record["measurements"]["aggregate"], *record["measurements"]["perControl"]]:
+            sample["counters"]["identityFallbacks"] = 0
+        run.validate_draw_path_result(record, 540, 960)
+        self.assertEqual(0, record["measurements"]["aggregate"]["counters"]["identityFallbacks"])
+
+    def test_saved_native_output_recovery_preserves_original_and_measurements(self):
+        record = draw_path_record()
+        record["benchmarkSourceCommit"] = analyze_draw_path_probe.LEGACY_PROBE_COMMIT
+        for sample in [record["measurements"]["aggregate"], *record["measurements"]["perControl"]]:
+            sample["counters"].update(identityFallbacks=0, copyRectPlanLastStatus=217099)
+            sample.update(rawStatus=217099, statusHex="0x500B")
+            sample["classification"].remove("identity fallback")
+        original = copy.deepcopy(record)
+        recovered = analyze_draw_path_probe.recover_legacy_record(record)
+        run.validate_draw_path_result(recovered, 540, 960)
+        self.assertEqual(original, record)
+        sample = recovered["measurements"]["perControl"][0]
+        self.assertEqual("0x3500b", sample["statusHex"])
+        self.assertEqual("0x500B", sample["emittedStatusHex"])
+        self.assertIn("identity fallback", sample["classification"])
+        self.assertNotIn("identity fallback", sample["emittedClassification"])
+        self.assertEqual(original["measurements"]["individualTimingNs"], recovered["measurements"]["individualTimingNs"])
+        self.assertEqual(0, sample["counters"]["identityFallbacks"])
+
+    def test_recovery_rejects_other_commits_or_unexplained_output_changes(self):
+        for changes in ({"benchmarkSourceCommit": "other"}, {"statusHex": "0x3500b"},
+                        {"classification": ["identity hit"]}):
+            record = draw_path_record()
+            record["benchmarkSourceCommit"] = analyze_draw_path_probe.LEGACY_PROBE_COMMIT
+            for sample in [record["measurements"]["aggregate"], *record["measurements"]["perControl"]]:
+                sample["statusHex"] = "0x000B"
+            if "benchmarkSourceCommit" in changes:
+                record.update(changes)
+            else:
+                record["measurements"]["aggregate"].update(changes)
+            with self.subTest(changes=changes), self.assertRaises(run.RunnerError):
+                analyze_draw_path_probe.recover_legacy_record(record)
 
     def test_unexpected_disabled_feature_attempt_is_reported_not_forced_away(self):
         record = draw_path_record()

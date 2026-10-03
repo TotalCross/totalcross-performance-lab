@@ -103,15 +103,44 @@ timings are checked with `schemas/image-draw-path-probe-v1.schema.json` and the
 runner's consistency checks. A status describes the last plan attempt; controls
 with multiple attempts are explicitly marked. Physical-copy accounting exposes
 hits only; physical-copy attempt/fallback counters are unavailable.
+Native identity status flags also participate in classification: the Image
+identity hit/fallback getters stay zero on the copyRect native entry point.
+The raw getters remain separate counters and are never replaced with inferred
+counts. Hex formatting preserves the full status instead of using native
+`Integer4D.toHexString`, which emits only four uppercase digits.
 
 Use a package built from committed benchmark tooling and the validated official
 runtime, then launch one measured process with no warmups:
 
 ```sh
-python3 runners/run.py image-rendering scroll --profile default   --scroll-driver draw-path-probe --rounds 1 --warmups 0   --timeout-seconds 180 --width 540 --height 960   --dataset-cache .local-data/datasets/p12-final/image-scroll/v1   --package-manifest /path/to/package-manifest.json   --results-dir .local-data/results/image-rendering-draw-path-probe   --require-default-scroll-preflight --fail-fast
+python3 runners/run.py image-rendering scroll --profile default \
+  --scroll-driver draw-path-probe --rounds 1 --warmups 0 \
+  --timeout-seconds 180 --width 540 --height 960 \
+  --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 \
+  --package-manifest /path/to/package-manifest.json \
+  --results-dir .local-data/results/image-rendering-draw-path-probe \
+  --require-default-scroll-preflight --fail-fast
 ```
 
 This mode does not run the scrolling workload or call `prepareForDisplay`.
 Target-color/physical-variant activity under the default policy is recorded as
 unexpected rather than hidden or forced to zero. The materialized cache-admission
 policy remains a separate unresolved question; this probe changes no policy.
+
+For the original probe at benchmark commit `b9506e8`, saved stdout contains a
+complete measurement but its hex string is truncated and its classification
+omits native identity fallback when the Image getter is zero. Recover only those
+two presentation fields offline; preserve the emitted fields, counters and
+timings, and do not launch another process:
+
+```sh
+python3 tools/analyze_draw_path_probe.py --stdout /path/to/stdout.log \
+  --package-manifest /path/to/package-manifest.json \
+  --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 \
+  --output /path/to/analysis.json --recover-legacy-status
+```
+
+Recovery requires that exact benchmark commit and the known original encoding
+and classification. The analyzer checks package hashes, preflight, the protocol,
+manifest order and the same result contract as the runner. Ordinary runner
+validation remains strict.

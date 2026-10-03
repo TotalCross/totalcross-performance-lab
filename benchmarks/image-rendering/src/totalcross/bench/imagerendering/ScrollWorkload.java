@@ -581,7 +581,7 @@ final class ScrollWorkload implements TimerListener {
     requirePaintProbePosition(0);
     int status = accounting.getInt("copyRectPlanLastStatus");
     return BenchSupport.object(timingKey, elapsedNs, "counters", accounting,
-        "rawStatus", status, "statusHex", "0x" + Integer.toHexString(status),
+        "rawStatus", status, "statusHex", ImageDrawPathProbeAccess.statusHex(status),
         "statusFlags", ImageDrawPathProbeAccess.decodeStatus(status),
         "classification", ImageDrawPathProbeAccess.classify(accounting),
         "rowPaintCount", paintProbeCounters.rowPaintCount, "rowPaintNs", paintProbeCounters.rowPaintNs,

@@ -62,14 +62,26 @@ public final class ImageDrawPathProbeAccess {
     return result;
   }
 
+  public static String statusHex(int status) {
+    // Integer4D.toHexString truncates to four uppercase digits on the native VM.
+    String digits = "0123456789abcdef";
+    String hex = "";
+    do {
+      hex = digits.charAt(status & 15) + hex;
+      status >>>= 4;
+    } while (status != 0);
+    return "0x" + hex;
+  }
+
   public static JSONArray classify(JSONObject counters) throws JSONException {
     JSONObject flags = decodeStatus(counters.getInt("copyRectPlanLastStatus"));
     JSONArray tags = new JSONArray();
     add(tags, counters.getInt("cachedFinalRasterHits") > 0, "cached-final hit");
     add(tags, counters.getInt("cachedFinalRasterMisses") > 0, "cached-final miss");
-    add(tags, counters.getInt("identityAttempts") > 0, "identity attempted");
-    add(tags, counters.getInt("identityHits") > 0, "identity hit");
-    add(tags, counters.getInt("identityFallbacks") > 0, "identity fallback");
+    // Native status records identity outcomes even when Image's getters stay zero.
+    add(tags, flags.getBoolean("identityAttempted") || counters.getInt("identityAttempts") > 0, "identity attempted");
+    add(tags, flags.getBoolean("identityHit") || counters.getInt("identityHits") > 0, "identity hit");
+    add(tags, flags.getBoolean("identityFallback") || counters.getInt("identityFallbacks") > 0, "identity fallback");
     tags.put(counters.getInt("physicalCopyHits") > 0 ? "physical-copy hit" : "physical-copy no hit");
     for (String path : new String[] {"targetColor", "physicalVariant"}) {
       String label = "targetColor".equals(path) ? "target-color" : "physical-variant";

@@ -1352,3 +1352,110 @@ The offline analyzer passed the complete result contract against the verified
 manifest and package. The original runner validation failure remains recorded.
 No platform matrix, sanitizer, scrolling benchmark or extra performance sample
 was run because this task is restricted to the single static draw-path process.
+
+
+## Physical mapping metadata probe: read-only capture failure (2026-10-03)
+
+Exactly one application process was launched from benchmark commit
+`3ac6d5b019a0fdc079952ce8329d5aa1b485c791` on
+`perf/image-rendering-benchmarks`. The package used the previously validated
+official TotalCross 7.2.2 runtime, workflow 37076804175, artifact 11256633898,
+source `5a44f503bf6fa1bec350f1218f4d501a70fc4812`. Package/source/deployed hashes
+and helper inclusion were verified before launch. No SDK/native runtime rebuild
+or TotalCross source modification occurred.
+
+The inline preflight emitted default RASTER/STANDARD, macOS ARM64, diagnostics
+disabled, all optional image variants/scroll reuse/automatic preparation disabled,
+logical 540x960, 663 images, 221 rows, 3 columns and 179-pixel tiles. The mode
+uses normal uninstrumented controls, one untimed stabilization repaint at top 0,
+and no timed painting, preparation or scrolling. The capture helper obtains the
+normal draw plan at each control's Graphics contentScale and is designed to
+record all requested plan/backing/Graphics metadata. The host evaluator covers
+the exact scale/smooth-scale chain, clipping and fifteen ordered gates for both
+allowSmooth=true and false. Unsupported chains are rejected, not approximated.
+
+### Exact execution failure
+
+The child exited 1 before the first metadata sample was emitted:
+
+```text
+java.lang.IllegalStateException:
+read-only Image generation capture requires zero backing generation
+ImageDrawPathProbeAccess.mappingMetadata:126
+ScrollWorkload.runPhysicalMappingProbe:509
+```
+
+The helper observed a **nonzero backing mutation generation**. Its numerical
+value was not emitted and must not be inferred. The raw Image generation field
+is private; deployed reflection explicitly rejects private-field access. The
+existing package-private `backingMutationGenerationForP2()` accessor assigns
+`max(Image generation, backing generation)` to the Image field. To honor the
+explicit prohibition on mutating Images during inspection, the helper requires
+zero backing generation before invoking that accessor: with nonnegative Image
+generation, its assignment cannot change the value. This restrictive benchmark
+precondition was disproved by execution and stopped capture before the accessor.
+
+This is **not** a measured first failing gate of native
+`physicalIdentityMapping()`. No run record or final summary was emitted, and no
+per-control plan metadata, derived a/d, canvas/drawable scale, ordered native gate
+results or root-size correlation was obtained. The prior draw-path results
+remain valid, but they do not supply this missing metadata. No 18-control mapping
+table or gate distribution can honestly be reported from this process.
+
+The earlier conclusion remains: all 18 prior draws used identity/copy fallback,
+generic geometry and smooth resampling. The source predicate
+`transform.a/d == canvasScaleX/Y` remains a candidate, **not a confirmed rejecting
+condition**. Historical `buildRasterPhysicalPlan` constructs a general
+canvas-to-root mapping, inverts it and derives root-to-device scale; the current
+predicate instead requires one-to-one source/device extents. This source
+difference alone does not establish this process's native rejection or support a
+production fix. The previous ~19 ms versus ~0.4 ms root/resampling-ratio correlation
+is likewise unresolved without the missing root/backing values and actual clip.
+
+Exact runner command:
+
+```sh
+python3 runners/run.py image-rendering scroll --profile default \
+  --scroll-driver physical-mapping-probe --rounds 1 --warmups 0 \
+  --timeout-seconds 180 --width 540 --height 960 \
+  --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 \
+  --package-manifest .local-data/packages/image-rendering-macos-official-physical-mapping-probe/package-manifest.json \
+  --results-dir .local-data/results/image-rendering-physical-mapping-probe \
+  --require-default-scroll-preflight --fail-fast
+```
+
+Sole native child command:
+
+```sh
+/Users/flsobral/repos/totalcross-performance-lab/.local-data/packages/image-rendering-macos-official-physical-mapping-probe/profiles/default/image-rendering-default /scr -2,-2,540,960
+```
+
+Raw failure/preflight/stdout/stderr/config remain outside Git in
+`.local-data/results/image-rendering-physical-mapping-probe/run-20261003T052210Z-73701/`.
+The exclusive launch guard and evidence index remain under
+`.local-data/physical-mapping-probe/`. There is exactly one process directory,
+zero metadata records and zero preparation requests; no second process, historical
+runtime, additional performance benchmark, alternate profile/mask, Windows, P12
+matrix, cache experiment or production fix was attempted. The authorized process
+allowance is consumed. Additional runtime evidence requires a separately
+authorized process after resolving the read-only capture constraint, or externally
+provided equivalent metadata. This task's measurement objective remains incomplete.
+
+The **Open follow-up: materialized cache admission policy** section is unchanged
+and remains explicitly unresolved and out of scope.
+
+Post-run validation: `python3 -m unittest discover -s tests` passed all 79 tests;
+`git diff --check` passed. The nine new focused contracts cover metadata, exact
+composition, ordered failures, clipping, unsupported chains, default-only/no-
+preparation restrictions and read-only guards. The benchmark compiled/deployed
+against the official SDK without a runtime rebuild. Those green contracts do
+not prove the missing native rejection measurements; the runtime capture failed.
+Expensive platform, sanitizer and benchmark validation was omitted because it
+is outside the authorized single metadata process.
+
+The manifest confirms that the three previously fast files
+`-1096038007.jpg`, `-111131558.jpg` and `-1111384947.jpg` are each 1000x1000,
+the same intrinsic size as fourteen of the fifteen slower files;
+`-1042033183.jpg` is 1024x1024. Intrinsic size therefore does not distinguish the
+fast group. Root/backing sizes and actual clipping remain unmeasured here, so
+this cannot determine the requested root-size or resampling-ratio correlation.

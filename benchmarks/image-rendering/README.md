@@ -158,13 +158,24 @@ before each draw, so the host evaluator derives that matrix from captured runtim
 values. `tools/physical_mapping.py` reproduces the actual scale/smooth-scale
 chain's double composition, float rectangles, normal copyRect clipping and the
 fifteen ordered predicates. Unknown chains require exact additional semantics
-and are rejected rather than approximated. Gates after the first failure are
-marked unreached, with their independently computed counterfactual results.
+and are rejected rather than approximated. Gate `pass` and `reached` use true,
+false and null (unknown). Later predicates are computed independently even when
+an earlier gate is unknown or false. `firstFailingGate` is definitive only when
+all preceding gates are known true; `earliestKnownFailingGate` and
+`unresolvedEarlierGates` distinguish a known rejection from unresolved earlier
+predicates. `allGatesPass` is false for any known rejection, null when unknown
+predicates remain without a known rejection, and true only when all gates pass.
 Both allowSmooth=true (physical copy) and false (physical identity draw) are
 reported. Raw metadata stays separate from these source-derived evaluations.
 
-The backing-generation guard requires zero before reading Image's generation
-getter, ensuring its max-assignment cannot change the nonnegative Image value.
+Backing mutation generation is captured even when nonzero. The raw Image-side
+generation is unavailable through read-only APIs: `sourceMutationGeneration`
+is null and `sourceMutationGenerationAvailable` is false. The helper never calls
+the synchronizing Image generation getter. `mutationGenerationsEqual` is therefore
+unknown, while scale equality, source bounds/integrality, device integrality and
+extent equality still receive independently computed results.
+`inspectionObservableStateUnchanged` checks only backing reference identity and
+its read-only generation; it cannot prove an unobserved private Image field.
 No pixels, mutable storage, setters or private reflection bypass are used.
 The result contract is `schemas/physical-mapping-probe-v1.schema.json`. Use the
 same sole-process command as draw-path-probe with

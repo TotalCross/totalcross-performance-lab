@@ -119,13 +119,8 @@ public final class ImageDrawPathProbeAccess {
     }
     ImageBacking backing = plan.root.backing;
     long backingGeneration = backing.mutationGeneration();
-    // This getter assigns max(Image generation, backing generation). With backing
-    // generation zero, nonnegative Image generation cannot change. Never sync a
-    // nonzero generation during read-only inspection.
-    if (backingGeneration != 0) {
-      throw new IllegalStateException("read-only Image generation capture requires zero backing generation");
-    }
-    long imageGeneration = plan.root.backingMutationGenerationForP2();
+    // The Image generation accessor synchronizes a private field. Its raw
+    // value is unavailable to read-only inspection; do not infer it from backing.
     JSONObject result = new JSONObject();
     result.put("operationCount", plan.operations.length);
     result.put("operations", integers(plan.operations));
@@ -156,7 +151,8 @@ public final class ImageDrawPathProbeAccess {
     result.put("backingWidth", backing.width());
     result.put("backingHeight", backing.height());
     result.put("sourceBackingStable", backing.backingIdentityStableForCaching());
-    result.put("sourceMutationGeneration", imageGeneration);
+    result.put("sourceMutationGeneration", JSONObject.NULL);
+    result.put("sourceMutationGenerationAvailable", false);
     result.put("backingMutationGeneration", backingGeneration);
     result.put("sourceOpacityState", backing.opacityState());
     result.put("graphicsContentScale", graphics.getContentScale());
@@ -170,12 +166,10 @@ public final class ImageDrawPathProbeAccess {
     result.put("clipY", clip.y);
     result.put("clipWidth", clip.width);
     result.put("clipHeight", clip.height);
-    if (plan.root.backing != backing || backing.mutationGeneration() != backingGeneration
-        || plan.root.backingMutationGenerationForP2() != imageGeneration
-        || image.drawPlanForDrawing(graphics.getContentScale()) != plan) {
-      throw new IllegalStateException("mapping inspection changed Image/backing/plan identity");
+    if (plan.root.backing != backing || backing.mutationGeneration() != backingGeneration) {
+      throw new IllegalStateException("mapping inspection observed changed backing identity/generation");
     }
-    result.put("inspectionMutationFree", true);
+    result.put("inspectionObservableStateUnchanged", true);
     return result;
   }
 

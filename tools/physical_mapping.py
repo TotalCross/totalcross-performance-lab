@@ -82,7 +82,8 @@ def evaluate(p, allow_smooth=True):
     sx = sy = f32(p["graphicsContentScale"])
     values = [None] * 15
     values[0] = p["sourceBackingStable"]
-    values[1] = p["sourceMutationGeneration"] == p["backingMutationGeneration"]
+    values[1] = (p["sourceMutationGeneration"] == p["backingMutationGeneration"]
+                 if p["sourceMutationGenerationAvailable"] and p["sourceMutationGeneration"] is not None else None)
     values[2] = t is not None
     source = device = None
     if t is not None:
@@ -108,13 +109,28 @@ def evaluate(p, allow_smooth=True):
         values[12] = all(integer(v) for v in device)
         values[13] = f32(device[2] - device[0]) == source[2] - source[0]
         values[14] = f32(device[3] - device[1]) == source[3] - source[1]
-    first = next((i + 1 for i, value in enumerate(values) if value is False), None)
-    gates = [{"number": i + 1, "name": name, "pass": values[i],
-              "reached": first is None or i + 1 <= first} for i, name in enumerate(GATES)]
+    known_failure = next((i + 1 for i, value in enumerate(values) if value is False), None)
+    unknown = [i + 1 for i, value in enumerate(values) if value is None]
+    unresolved = [i for i in unknown if known_failure is None or i < known_failure]
+    first = known_failure if not unresolved else None
+    gates = []
+    reached = True
+    for i, name in enumerate(GATES):
+        gates.append({"number": i + 1, "name": name, "pass": values[i], "reached": reached})
+        # A known rejection prevents all subsequent gates being reached even if
+        # an earlier unknown predicate might have rejected sooner.
+        if values[i] is False:
+            reached = False
+        elif values[i] is None and reached is True:
+            reached = None
     return {"allowSmooth": allow_smooth, "transform": t, "canvasScaleX": sx, "canvasScaleY": sy,
             "copyRect": rect, "mappedSource": source, "deviceDestination": device,
             "gates": gates, "firstFailingGate": first,
-            "firstFailingGateName": GATES[first - 1] if first else None}
+            "firstFailingGateName": GATES[first - 1] if first else None,
+            "earliestKnownFailingGate": known_failure,
+            "earliestKnownFailingGateName": GATES[known_failure - 1] if known_failure else None,
+            "unresolvedEarlierGates": unresolved,
+            "allGatesPass": False if known_failure else (None if unknown else True)}
 
 
 def validate_result(record, entries):
@@ -136,6 +152,8 @@ def validate_result(record, entries):
         if (len(p["operations"]) != p["operationCount"] or len(p["dimensions"]) != 2 * p["operationCount"]
                 or len(p["parameters"]) != 4 * p["operationCount"]):
             raise run.RunnerError("physical mapping operation arrays are inconsistent")
+        if p["sourceMutationGenerationAvailable"] != (p["sourceMutationGeneration"] is not None):
+            raise run.RunnerError("Image generation availability disagrees with captured value")
         if not p["backingNative"] or not p["backingValid"] or p["backingWidth"] <= 0 or p["backingHeight"] <= 0:
             raise run.RunnerError("native source backing unavailable before compileGeometry")
         if p["hwScaleW"] != 1 or p["hwScaleH"] != 1:

@@ -222,6 +222,69 @@ def validate_scroll_driver_arguments(arguments) -> None:
         raise RunnerError("historical-driver requires one default scroll round at 540x960 with no warmup or diagnostics")
 
 
+def validate_historical_scroll_result(record: dict[str, Any], width: int, height: int) -> None:
+    measurements = record.get("measurements")
+    if not isinstance(measurements, dict):
+        raise RunnerError("historical scroll result is missing measurements")
+    if (record.get("family") != "scroll" or record.get("profile") != "default"
+            or measurements.get("scrollDriver") != "historical-driver"):
+        raise RunnerError("historical scroll result identity does not match the requested probe")
+    if (record.get("logicalDimensions") != {"width": width, "height": height}
+            or record.get("renderer") != "RASTER" or record.get("diagnosticsEnabled") is not False):
+        raise RunnerError("historical scroll result dimensions or runtime mode are invalid")
+    if (measurements.get("passDirection") != "top-to-bottom" or measurements.get("passCount") != 1
+            or measurements.get("targetDurationNs") != 3000000000
+            or measurements.get("targetCadenceNs") != 16000000):
+        raise RunnerError("historical scroll result does not describe the required single-pass schedule")
+
+    frame_fields = ("frameIndex", "elapsedNs", "targetScroll", "actualScroll", "requestedDelta",
+                    "frameIntervalNs", "scrollWorkNs", "paintWorkNs", "workTimeNs")
+    frames = measurements.get("frameSamples")
+    frame_count = measurements.get("frameCount")
+    if not isinstance(frames, list) or not isinstance(frame_count, int) or frame_count < 2 or len(frames) != frame_count:
+        raise RunnerError("historical scroll result frame count does not match its per-frame samples")
+    previous_elapsed = None
+    previous_position = None
+    for index, frame in enumerate(frames):
+        if not isinstance(frame, dict) or any(type(frame.get(field)) is not int for field in frame_fields):
+            raise RunnerError("historical scroll result has an incomplete per-frame sample")
+        if frame["frameIndex"] != index:
+            raise RunnerError("historical scroll result frame indexes are not contiguous")
+        if frame["targetScroll"] != frame["actualScroll"]:
+            raise RunnerError("historical scroll frame did not reach its requested position")
+        if previous_position is not None and frame["requestedDelta"] != frame["targetScroll"] - previous_position:
+            raise RunnerError("historical scroll frame delta does not match its target position")
+        if previous_elapsed is None:
+            if frame["frameIntervalNs"] != 0:
+                raise RunnerError("first historical scroll frame interval must be zero")
+        elif frame["frameIntervalNs"] != frame["elapsedNs"] - previous_elapsed:
+            raise RunnerError("historical scroll frame interval does not match frame start times")
+        if any(frame[field] < 0 for field in frame_fields if field != "requestedDelta"):
+            raise RunnerError("historical scroll result contains a negative duration or position")
+        previous_elapsed = frame["elapsedNs"]
+        previous_position = frame["actualScroll"]
+
+    if (measurements.get("finalScrollPosition") != measurements.get("scrollEndpoint")
+            or previous_position != measurements.get("scrollEndpoint")):
+        raise RunnerError("historical scroll result did not reach the full scrollbar endpoint")
+    wall = measurements.get("totalPassWallTimeNs")
+    durations = record.get("durationsNs")
+    if type(wall) is not int or wall <= 0 or not isinstance(durations, dict) or durations.get("wallTime") != wall:
+        raise RunnerError("historical scroll result wall time is missing or inconsistent")
+    expected_counts = {
+        "frameIntervalStatistics": frame_count - 1,
+        "scrollWorkStatistics": frame_count,
+        "paintWorkStatistics": frame_count,
+        "workTimeStatistics": frame_count,
+    }
+    for name, expected_count in expected_counts.items():
+        stats = measurements.get(name)
+        if (not isinstance(stats, dict) or stats.get("sampleCount") != expected_count
+                or any(type(stats.get(field)) not in (int, float)
+                       for field in ("p50Ns", "p95Ns", "p99Ns", "maxNs"))):
+            raise RunnerError("historical scroll result has invalid " + name)
+
+
 def dataset_info(cache: Path, dataset_ref: str) -> dict[str, Any] | None:
     if not dataset_ref:
         return None
@@ -427,7 +490,10 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
     run["runnerRuntimeFiles"] = runtime_files
     if getattr(arguments, "runtime_provenance", None) is not None:
         run["runtimeProvenance"] = arguments.runtime_provenance
-    if getattr(arguments, "require_default_scroll_preflight", False):
+    if (arguments.family == "scroll"
+            and getattr(arguments, "scroll_driver", "fixed-step") == "historical-driver"):
+        validate_historical_scroll_result(run, arguments.width, arguments.height)
+    elif getattr(arguments, "require_default_scroll_preflight", False):
         measurements = run.get("measurements", {})
         logical = run.get("logicalDimensions")
         measured_fixture = {

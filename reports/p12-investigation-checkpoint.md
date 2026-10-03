@@ -955,9 +955,11 @@ system`); execution continued past that warning to the configuration error.
 Tooling commit `219c33e` fixes dataset metadata and adds a regression test. It
 also handles native builds that echo the same protocol records to stdout and
 DebugConsole, without counting duplicates as additional measured runs. The
-launch-attempt guard and all first-attempt evidence are retained. A replacement
-application process requires user authorization because the original instruction
-limits this session to one process.
+launch-attempt guard and all first-attempt evidence are retained. The user
+subsequently authorized exactly one replacement application process;
+its completed measured run is documented below. The first failed process does
+not count as the measured historical probe because it produced no samples or
+preparation request.
 
 Historical artifact SHA-256 values:
 
@@ -996,3 +998,150 @@ the application setup attempt failed as described above. No current-master
 measurement was rerun. No scrolling driver, profile matrix, Windows build,
 sanitizer matrix or full scrolling benchmark was executed: those are outside
 this static-probe task.
+
+
+## Historical static preparation paint comparison (2026-10-03)
+
+The user authorized exactly one replacement application process after the
+pre-measurement setup failure. That replacement **completed successfully**, exit
+code 0, using the already corrected and verified package. No SDK/native rebuild
+or tooling modification preceded this replacement launch, and no third process
+was launched. Benchmark HEAD at measurement was
+`9582e247a153cd6afb5827f361eae6dfe1d38dd5`; the branch and remote matched that
+SHA before measurement. Historical TotalCross HEAD remained clean and unchanged
+at `f5dad132cafea5c9086f6f946a6f44ca5bcb5f76`.
+
+The inline preflight emitted and accepted both
+`ImageOptimizationSettings.getMask() == 32799` and
+`ImageOptimizationSettings.getEffectiveMask() == 32799` before measurement.
+Both remained 32799 after measurement. No mask was set, no alternate profile or
+prefetch mode was selected, and public runtime diagnostics were unavailable.
+The native build provenance is the fresh ARM64 Release historical build and
+artifact hashes recorded in the preceding section, not an official-package
+runtime or current-master binary. Renderer metadata comes from the verified
+native build configuration (software surface, Skia, SDL).
+
+The shared manifest loader used image-scroll/v1 in its current manifest order:
+663 images, 660 JPEG and 3 PNG, 221 rows, 3 columns, 179x179 tiles, and logical
+resolution 540x960. The nested ScrollContainers, `new Image(File)` loading and
+`getSmoothScaledInstance(179,179)` calls are the same shared workload code.
+The measured inner viewport was 540x910, display scale 2, at position 0.
+After one untimed stabilization repaint, Phase A collected exactly five
+paint-tree samples. Phase B issued exactly one
+`scroll.prepareForDisplay(callback)` and waited for one callback. Phase C
+collected exactly five samples with no UI rebuild, Image replacement or scroll
+movement. Every sample painted six rows and eighteen ImageControls; scrollbar
+and content positions were 0 throughout. Reference snapshots checked the same
+row, control and Image instances, and the result validator confirmed the same
+18 visible manifest entries.
+
+All five individual samples are below. Timings are in milliseconds; the raw
+nanosecond values remain in the indexed result. Each row has counts 6/18 and
+position 0 for both phases. Row time and ImageControl time are separately timed
+callbacks, not disjoint components to add to the enclosing paint-tree time.
+
+| Sample | Before paintTree | Before rowPaint | Before ImageControl | After paintTree | After rowPaint | After ImageControl |
+|---|---:|---:|---:|---:|---:|---:|
+| 1 | 1.296500 | 0.234583 | 0.914624 | 7.722042 | 3.544958 | 3.902876 |
+| 2 | 1.022375 | 0.211000 | 0.714042 | 0.924708 | 0.207583 | 0.652624 |
+| 3 | 1.016875 | 0.207876 | 0.712380 | 0.913375 | 0.206084 | 0.643878 |
+| 4 | 1.011292 | 0.207959 | 0.707416 | 0.943750 | 0.205875 | 0.668794 |
+| 5 | 1.001375 | 0.208167 | 0.699208 | 0.983208 | 0.206709 | 0.708627 |
+
+| Historical phase | p50 (ms) | p95 (ms) | p99 (ms) | max (ms) | ImageControl.onPaint p50/sample (ms) | Rows/images per sample |
+|---|---:|---:|---:|---:|---:|---:|
+| Unprepared | 1.016875 | 1.241675 | 1.285535 | 1.296500 | 0.712380 | 6 / 18 |
+| Prepared | 0.943750 | 6.374275 | 7.452489 | 7.722042 | 0.668794 | 6 / 18 |
+
+The preparation call started at `1208026483388958 ns`; the callback
+completed at `1208040867705375 ns`. Wait: **14384.316417 ms**
+(14.384316 s), with one request, one callback, eighteen visible
+controls at request time, and status `callback-completed`. These visible counts
+are benchmark geometry/count checks, not internal ready/adopted/cache counters.
+The first prepared sample was **7.722042 ms**,
+slower than every unprepared sample; the remaining four prepared samples were
+0.913375–0.983208 ms.
+
+| Metric | Historical f5dad132 (ms) | Current master 5a44f503 (ms) |
+|---|---:|---:|
+| Unprepared paintTree p50 | 1.016875 | 278.192 |
+| Prepared paintTree p50 | 0.943750 | 3.532 |
+| ImageControl.onPaint before p50/sample | 0.712380 | 277.762 |
+| ImageControl.onPaint after p50/sample | 0.668794 | 3.255 |
+| Preparation wait | 14384.316417 | 706.576 |
+
+The current-master column is the previously completed reference supplied by the
+user, not a rerun. The measured protocol has the same workload, manifest order,
+stabilization and timed calls. The historical unprepared p50 was
+277.175125 ms lower, about
+273.58 times faster than the current reference.
+
+The recurring expensive ~278 ms unprepared behavior **was not reproduced** in
+the historical stabilized samples: historical painting was already fast before
+any explicit preparation request. This is evidence of materially different
+repeated-paint behavior. It does not measure the first-ever/cold paint or the
+untimed stabilization repaint, so it cannot establish whether those historical
+paints were expensive. It also does not establish that the cost of executing an
+identical uncached internal path increased: the historical process may already
+have been using a reusable representation or native fast path. Historical
+warm-cache/reuse behavior remains a necessary investigation, not a proven
+cache-hit mechanism or a production regression attribution.
+
+Preparation did **not** produce a comparable collapse in historical median
+paint cost: the decrease was only 0.073125 ms
+(7.19%), versus the reference's 274.660 ms (98.73%).
+The historical prepared median was also lower than the current reference;
+preparation itself took substantially longer. The first prepared sample and
+five-sample scope should remain visible when interpreting these percentiles.
+No conclusion about cache-admission causality follows from this probe.
+
+The historical `drawableDimensions` metadata is 0x0. Source inspection explains
+this getter limitation: historical `Graphics.getSurfacePixelWidth/Height`
+reads simulator-only static backing dimensions for control surfaces, whereas
+native `tugG_create_g` / `tugG_refresh_iiiiiif` use native screen/control fields
+and `screen.contentScale`. Current getters add a native pitch/scale fallback.
+Thus 0x0 is not direct evidence of a zero-size native drawable. Logical geometry,
+paint counts and display scale 2 were measured, but actual native drawable
+pixel dimensions were not directly captured by this historical probe. This
+metadata limitation is retained rather than silently replacing it with an
+inferred drawable size.
+
+Visible paths/formats, in manifest order (all eighteen are JPEG):
+
+| Row index | Manifest indices | Paths | Format |
+|---|---|---|---|
+| 0 | 0–2 | `-1009782731.jpg`, `-1012043485.jpg`, `-1013143947.jpg` | jpeg |
+| 1 | 3–5 | `-1015024107.jpg`, `-1026010547.jpg`, `-1028874041.jpg` | jpeg |
+| 2 | 6–8 | `-1038926037.jpg`, `-104018500.jpg`, `-1040544427.jpg` | jpeg |
+| 3 | 9–11 | `-1042033183.jpg`, `-1042180667.jpg`, `-1043960095.jpg` | jpeg |
+| 4 | 12–14 | `-1056468936.jpg`, `-1059601584.jpg`, `-108958495.jpg` | jpeg |
+| 5 | 15–17 | `-1096038007.jpg`, `-111131558.jpg`, `-1111384947.jpg` | jpeg |
+
+The exact replacement invocation, from the performance-lab root, was:
+
+```sh
+python3 tools/packaging/historical_paint_probe.py run --package .local-data/historical-static-f5dad132/probe-replacement
+```
+
+Its native child command was:
+
+```sh
+/Users/flsobral/repos/totalcross-performance-lab/.local-data/historical-static-f5dad132/probe-replacement/deploy/install/macos/historical-static-paint /scr -2,-2,540,960
+```
+
+Raw result, stdout/stderr, DebugConsole, launch guard, process exit record and
+package provenance remain outside Git under
+`.local-data/historical-static-f5dad132/probe-replacement/`. The local
+`evidence.json` indexes this successful replacement and the distinct failed
+setup attempt. The unresolved **Open follow-up: materialized cache admission
+policy** section above is preserved verbatim. No cache-admission implementation
+or other TotalCross source was changed. No current-master run, scrolling driver,
+additional profile/mask, third process, extra preparation request, Windows or
+P12 matrix was executed.
+
+
+Post-run validation: `python3 -m unittest discover -s tests` passed all 59 tests;
+`git diff --check` passed. Only this checkpoint documentation changed after the
+run. No expensive platform, sanitizer or benchmark matrix was run, as the user
+restricted this task to one historical static probe. No runtime/source rebuild
+was needed for the replacement. PR #1 is not merged.

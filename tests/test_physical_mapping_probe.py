@@ -20,10 +20,10 @@ def plan():
                 alphaMask=255, materializeAlphaMask=255, outputAlphaMask=255,
                 backingType="totalcross.ui.image.NativeImageBacking", backingNative=True, backingValid=True,
                 backingWidth=1000, backingHeight=1000, sourceBackingStable=True,
-                sourceMutationGeneration=0, backingMutationGeneration=0, sourceOpacityState=1,
+                sourceMutationGeneration=0, sourceMutationGenerationAvailable=True, backingMutationGeneration=0, sourceOpacityState=1,
                 graphicsContentScale=2, drawableWidth=1080, drawableHeight=1920,
                 graphicsTranslationX=1, graphicsTranslationY=40, clipX=0, clipY=0,
-                clipWidth=179, clipHeight=179, drawX=0, drawY=0, inspectionMutationFree=True)
+                clipWidth=179, clipHeight=179, drawX=0, drawY=0, inspectionObservableStateUnchanged=True)
 
 
 def fixture():
@@ -74,6 +74,7 @@ class PhysicalMappingTests(unittest.TestCase):
         p = plan(); p.update(rootWidth=358, rootHeight=358, rootLogicalWidth=358, rootLogicalHeight=358,
                             backingWidth=358, backingHeight=358)
         self.assertIsNone(mapping.evaluate(p)["firstFailingGate"])
+        self.assertTrue(mapping.evaluate(p)["allGatesPass"])
         p["rootLogicalHeight"] = 716
         e = mapping.evaluate(p)
         self.assertEqual(10, e["firstFailingGate"])
@@ -100,11 +101,58 @@ class PhysicalMappingTests(unittest.TestCase):
                        lambda r: r.update(profile="other"),
                        lambda r: r["measurements"]["perControl"].pop(),
                        lambda r: r["measurements"]["perControl"][0]["plan"].pop("rootHwScaleW"),
-                       lambda r: r["measurements"]["perControl"][0]["plan"].update(inspectionMutationFree=False),
+                       lambda r: r["measurements"]["perControl"][0]["plan"].update(inspectionObservableStateUnchanged=False),
                        lambda r: r["measurements"]["perControl"][0].update(datasetIndex=1),
                        lambda r: r["measurements"]["perControl"][0]["evaluation"].update(firstFailingGate=1)):
             bad = copy.deepcopy(record); change(bad)
             with self.assertRaises(run.RunnerError): mapping.validate_result(bad, entries)
+
+    def test_nonzero_backing_generation_preserves_all_independent_metadata(self):
+        record, entries = fixture()
+        for control in record["measurements"]["perControl"]:
+            control["plan"].update(backingMutationGeneration=7, sourceMutationGeneration=None,
+                                   sourceMutationGenerationAvailable=False)
+        before = copy.deepcopy(record["measurements"]["perControl"])
+        mapping.validate_result(record, entries)
+        for original, control in zip(before, record["measurements"]["perControl"]):
+            self.assertEqual(original["plan"], control["plan"])
+            for name, failure in (("evaluation", 9), ("identityDrawEvaluation", 5)):
+                e = control[name]
+                self.assertIsNone(e["gates"][1]["pass"])
+                self.assertIsNone(e["firstFailingGate"])
+                self.assertIsNone(e["firstFailingGateName"])
+                self.assertEqual(failure, e["earliestKnownFailingGate"])
+                self.assertEqual([2], e["unresolvedEarlierGates"])
+                self.assertIsNone(e["gates"][failure - 1]["reached"])
+                self.assertFalse(e["gates"][failure]["reached"])
+                self.assertFalse(e["gates"][8]["pass"])
+                self.assertFalse(e["gates"][9]["pass"])
+                self.assertTrue(all(isinstance(g["pass"], bool) for g in e["gates"][10:]))
+                self.assertFalse(e["allGatesPass"])
+
+    def test_unknown_generation_with_matching_scale_and_extents(self):
+        p = plan()
+        p.update(sourceMutationGeneration=None, sourceMutationGenerationAvailable=False,
+                 backingMutationGeneration=7, rootWidth=358, rootHeight=358,
+                 rootLogicalWidth=358, rootLogicalHeight=358, backingWidth=358, backingHeight=358)
+        e = mapping.evaluate(p)
+        self.assertIsNone(e["firstFailingGate"])
+        self.assertIsNone(e["earliestKnownFailingGate"])
+        self.assertIsNone(e["allGatesPass"])
+        self.assertEqual([2], e["unresolvedEarlierGates"])
+        self.assertTrue(all(g["pass"] for g in e["gates"][8:]))
+        self.assertTrue(all(g["reached"] is None for g in e["gates"][2:]))
+        self.assertEqual(5, mapping.evaluate(p, False)["earliestKnownFailingGate"])
+        p["sourceBackingStable"] = False
+        self.assertEqual(1, mapping.evaluate(p)["firstFailingGate"])
+
+    def test_generation_availability_must_match_value(self):
+        for available, generation in ((True, None), (False, 0)):
+            record, entries = fixture()
+            record["measurements"]["perControl"][0]["plan"].update(
+                sourceMutationGenerationAvailable=available, sourceMutationGeneration=generation)
+            with self.assertRaisesRegex(run.RunnerError, "availability"):
+                mapping.validate_result(record, entries)
 
     def test_default_only_single_process_mode(self):
         args = dict(scroll_driver="physical-mapping-probe", family="scroll", profiles="default", rounds=1,
@@ -127,7 +175,11 @@ class PhysicalMappingTests(unittest.TestCase):
         self.assertNotIn("readPixels", capture)
         self.assertNotIn("resolveForDrawing", capture)
         self.assertNotIn("setAccessible", capture)
-        self.assertIn("backingGeneration != 0", capture)
+        self.assertNotIn("backingGeneration != 0", capture)
+        self.assertNotIn("backingMutationGenerationForP2", helper)
+        self.assertEqual(1, capture.count("drawPlanForDrawing("))
+        self.assertIn('result.put("sourceMutationGeneration", JSONObject.NULL)', capture)
+        self.assertIn('result.put("sourceMutationGenerationAvailable", false)', capture)
 
 
 if __name__ == "__main__":

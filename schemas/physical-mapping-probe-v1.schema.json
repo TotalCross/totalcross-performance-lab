@@ -158,11 +158,12 @@
               "backingNative",
               "backingValid",
               "sourceBackingStable",
-              "inspectionMutationFree",
+              "inspectionObservableStateUnchanged",
               "backingType",
               "operations",
               "parameters",
-              "dimensions"
+              "dimensions",
+              "sourceMutationGenerationAvailable"
             ],
             "properties": {
               "operationCount": {
@@ -211,7 +212,11 @@
                 "type": "integer"
               },
               "sourceMutationGeneration": {
-                "type": "integer"
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "Raw Image generation; null when unavailable. Never synchronized for inspection."
               },
               "backingMutationGeneration": {
                 "type": "integer"
@@ -282,10 +287,6 @@
               "sourceBackingStable": {
                 "type": "boolean"
               },
-              "inspectionMutationFree": {
-                "const": true,
-                "type": "boolean"
-              },
               "backingType": {
                 "type": "string",
                 "minLength": 1
@@ -307,15 +308,192 @@
                 "items": {
                   "type": "integer"
                 }
+              },
+              "sourceMutationGenerationAvailable": {
+                "type": "boolean",
+                "description": "False requires a null sourceMutationGeneration; true requires an integer."
+              },
+              "inspectionObservableStateUnchanged": {
+                "const": true,
+                "type": "boolean",
+                "description": "Read-only backing identity and backing generation remained unchanged; does not observe the private Image generation."
               }
             },
             "additionalProperties": false
           },
           "evaluation": {
-            "type": "object"
+            "type": "object",
+            "required": [
+              "gates",
+              "firstFailingGate",
+              "firstFailingGateName",
+              "earliestKnownFailingGate",
+              "earliestKnownFailingGateName",
+              "unresolvedEarlierGates",
+              "allGatesPass"
+            ],
+            "properties": {
+              "gates": {
+                "type": "array",
+                "minItems": 15,
+                "maxItems": 15,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "number",
+                    "name",
+                    "pass",
+                    "reached"
+                  ],
+                  "properties": {
+                    "number": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "pass": {
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "reached": {
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "firstFailingGate": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "Definitive ordered first failure only when every preceding gate is known true."
+              },
+              "firstFailingGateName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "earliestKnownFailingGate": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "earliestKnownFailingGateName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unresolvedEarlierGates": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "Unknown gates preceding the earliest known failure, or all unknown gates if no failure is known."
+              },
+              "allGatesPass": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
           },
           "identityDrawEvaluation": {
-            "type": "object"
+            "type": "object",
+            "required": [
+              "gates",
+              "firstFailingGate",
+              "firstFailingGateName",
+              "earliestKnownFailingGate",
+              "earliestKnownFailingGateName",
+              "unresolvedEarlierGates",
+              "allGatesPass"
+            ],
+            "properties": {
+              "gates": {
+                "type": "array",
+                "minItems": 15,
+                "maxItems": 15,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "number",
+                    "name",
+                    "pass",
+                    "reached"
+                  ],
+                  "properties": {
+                    "number": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "pass": {
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "reached": {
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "firstFailingGate": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "Definitive ordered first failure only when every preceding gate is known true."
+              },
+              "firstFailingGateName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "earliestKnownFailingGate": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "earliestKnownFailingGateName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unresolvedEarlierGates": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "Unknown gates preceding the earliest known failure, or all unknown gates if no failure is known."
+              },
+              "allGatesPass": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
           }
         },
         "additionalProperties": false

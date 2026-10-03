@@ -1459,3 +1459,58 @@ the same intrinsic size as fourteen of the fifteen slower files;
 `-1042033183.jpg` is 1024x1024. Intrinsic size therefore does not distinguish the
 fast group. Root/backing sizes and actual clipping remain unmeasured here, so
 this cannot determine the requested root-size or resampling-ratio correlation.
+
+
+## Physical mapping probe: offline read-only capture repair (2026-10-03)
+
+The benchmark-only helper now captures nonzero backing mutation generations and
+all independently readable plan, dimensions, scales, backing and Graphics
+metadata. It never calls the synchronizing Image mutation-generation accessor.
+The raw Image generation is explicitly unavailable: `sourceMutationGeneration`
+is null and `sourceMutationGenerationAvailable` is false. The schema also accepts
+an integer with availability true for evaluator fixtures; those fixtures are not
+new runtime evidence. Inconsistent availability/value pairs are rejected.
+
+The former zero-generation precondition is removed. The final observation checks
+only backing reference identity and the pure backing-generation getter, reported
+as `inspectionObservableStateUnchanged`. It does not assert that the unobservable
+Image generation was checked. The repeated draw-plan request is also removed.
+
+Both smooth-eligible and strict identity evaluations preserve all fifteen ordered
+predicates. `pass` and `reached` are true/false/null, with null meaning unknown.
+`mutationGenerationsEqual` is unknown when the raw Image generation is unavailable.
+Scale equality, source bounds/integer coordinates, device destination integers
+and extent predicates remain independently evaluated. A later known failure is
+reported by `earliestKnownFailingGate`; `unresolvedEarlierGates` lists unknown
+predicates before it (or all unknown predicates if no failure is known).
+`firstFailingGate` and its name stay null across an earlier unknown. A known
+failure before any unknown remains definitive. `allGatesPass` is false for any
+known failure, null if only uncertainty remains, and true only for all true gates.
+
+Validation: `python3 -m unittest discover -s tests` passed all 82 tests and
+`git diff --check` passed. Eight benchmark Java sources compiled with
+`javac --release 8` against the official TotalCross 7.2.2 SDK. Full platform,
+sanitizer and benchmark validations are omitted because this change is offline
+benchmark tooling and no runtime process is authorized.
+
+Offline validation covers nonzero backing metadata with unavailable Image
+generation, both known true and false later scale predicates, ordered uncertainty,
+clipping, transform composition, unsupported chains and the absence of the
+synchronizing accessor in probe source. Official-SDK compilation/deployment
+prepares a replacement package only; no generated application is executed.
+No TotalCross runtime/SDK source is changed and no new runtime evidence is claimed.
+The failed capture above remains the last actual measurement attempt. A future
+process requires separate authorization. The materialized cache admission policy
+section remains unchanged and explicitly unresolved.
+
+Proposed future command (not executed; exactly one process after authorization):
+
+```sh
+python3 runners/run.py image-rendering scroll --profile default \
+  --scroll-driver physical-mapping-probe --rounds 1 --warmups 0 \
+  --timeout-seconds 180 --width 540 --height 960 \
+  --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 \
+  --package-manifest .local-data/packages/image-rendering-macos-official-physical-mapping-readonly-probe/package-manifest.json \
+  --results-dir .local-data/results/image-rendering-physical-mapping-readonly-probe \
+  --require-default-scroll-preflight --fail-fast
+```

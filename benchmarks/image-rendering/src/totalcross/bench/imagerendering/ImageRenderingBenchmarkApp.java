@@ -91,6 +91,7 @@ public final class ImageRenderingBenchmarkApp {
         "family", family,
         "workload", config.getString("workload"),
         "profile", profile,
+        "scrollDriver", config.getString("scrollDriver"),
         "runtimeSourceCommit", config.getString("runtimeSourceCommit"),
         "benchmarkSourceCommit", config.getString("benchmarkSourceCommit"),
         "runtimeIdentity", config.getString("runtimeIdentity"),

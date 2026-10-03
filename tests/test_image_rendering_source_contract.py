@@ -96,6 +96,31 @@ class ImageRenderingSourceContractTests(unittest.TestCase):
         self.assertNotIn("PacingDriver", pacing)
         self.assertNotIn("updateListenerTriggered", pacing)
 
+    def test_historical_scroll_probe_keeps_fixed_step_default_and_records_explicit_work(self):
+        app = (SOURCE / "ImageRenderingBenchmarkApp.java").read_text(encoding="utf-8")
+        scroll = (SOURCE / "ScrollWorkload.java").read_text(encoding="utf-8")
+        timing = (SOURCE / "ScrollTiming.java").read_text(encoding="utf-8")
+        runner = (ROOT / "runners/run.py").read_text(encoding="utf-8")
+        self.assertIn('"historical-driver"', scroll)
+        self.assertIn('"fixed-step"', scroll)
+        self.assertIn("DRIVER_HISTORICAL.equals(scrollDriver)", scroll)
+        self.assertIn("runHistoricalPass();", scroll)
+        self.assertIn('"passCount", 1', scroll)
+        self.assertIn('"passDirection", "top-to-bottom"', scroll)
+        self.assertIn("ScrollTiming.historicalTarget(minimum, endpoint, elapsedNs)", scroll)
+        self.assertIn("scroll.scrollContent(0, requestedDelta, true)", scroll)
+        self.assertIn("scroll.repaintNow();", scroll)
+        for field in ("frameIndex", "elapsedNs", "targetScroll", "actualScroll", "requestedDelta",
+                      "frameIntervalNs", "scrollWorkNs", "paintWorkNs", "workTimeNs",
+                      "frameCount", "totalPassWallTimeNs", "frameIntervalStatistics",
+                      "scrollWorkStatistics", "paintWorkStatistics", "workTimeStatistics",
+                      "finalScrollPosition"):
+            self.assertIn('"' + field + '"', scroll)
+        self.assertIn("HISTORICAL_DURATION_NS = 3000000000L", timing)
+        self.assertIn("HISTORICAL_CADENCE_NS = 16000000L", timing)
+        self.assertIn('"--scroll-driver"', runner)
+        self.assertIn('"scrollDriver", config.getString("scrollDriver")', app)
+
     def test_active_benchmark_sources_do_not_reintroduce_raw_masks(self):
         active_paths = [ROOT / "runners/run.py", ROOT / "tools/packaging/build_windows.py"]
         active_paths.extend(SOURCE.rglob("*.java"))

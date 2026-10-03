@@ -134,6 +134,7 @@ class RunnerContractTests(unittest.TestCase):
                          "r={'recordType':'preflight','family':c['family'],'workload':c['workload'],"
                          "'profile':c['profile'],'runtimeSourceCommit':c['runtimeSourceCommit'],"
                          "'benchmarkSourceCommit':c['benchmarkSourceCommit'],"
+                         "'scrollDriver':c['scrollDriver'],"
                          "'runtimeIdentity':c['runtimeIdentity'],'renderer':'RASTER',"
                          "'diagnosticsRequested':False,'diagnosticsEnabled':False,"
                          "'runtimeConfigurationReport':'Runtime configuration test',"
@@ -149,7 +150,8 @@ class RunnerContractTests(unittest.TestCase):
     def test_default_scroll_preflight_requires_the_production_runtime_policy(self):
         dataset = {"id": "image-scroll", "version": "v1", "manifestSha256": "a" * 64}
         record = {
-            "profile": "default", "renderer": "RASTER", "diagnosticsRequested": False,
+            "profile": "default", "renderer": "RASTER", "scrollDriver": "fixed-step",
+            "diagnosticsRequested": False,
             "diagnosticsEnabled": False,
             "runtimeConfigurationReport": (
                 "storage:\n  effective: STANDARD\n"
@@ -195,6 +197,26 @@ class RunnerContractTests(unittest.TestCase):
         pacing = run.build_cells(SimpleNamespace(family="pacing", profiles=None, workloads=None))
         self.assertEqual(["flick-40", "flick-60", "synthetic-16ms", "synthetic-16.667ms"],
                          [cell["workload"] for cell in pacing])
+
+    def test_historical_scroll_driver_is_limited_to_one_default_pass(self):
+        valid = SimpleNamespace(
+            scroll_driver="historical-driver", family="scroll", profiles="default",
+            rounds=1, warmups=0, diagnostics=False, width=540, height=960,
+        )
+        run.validate_scroll_driver_arguments(valid)
+        invalid = (
+            {"family": "preparation"}, {"profiles": "compact"}, {"rounds": 2},
+            {"warmups": 1}, {"diagnostics": True}, {"width": 480}, {"height": 720},
+        )
+        for change in invalid:
+            with self.subTest(change=change):
+                candidate = SimpleNamespace(**{**vars(valid), **change})
+                with self.assertRaisesRegex(run.RunnerError, "historical-driver requires"):
+                    run.validate_scroll_driver_arguments(candidate)
+        run.validate_scroll_driver_arguments(SimpleNamespace(
+            scroll_driver="fixed-step", family="scroll", profiles="compact",
+            rounds=3, warmups=1, diagnostics=False, width=540, height=960,
+        ))
 
     def test_direct_launcher_templates_expand_profile_and_workload(self):
         self.assertEqual("/bench/profiles/default/image-rendering-default-flick-60",
@@ -315,6 +337,12 @@ class RunnerContractTests(unittest.TestCase):
                 )
                 self.assertEqual((1980, 1, 1, 0, 0, 0), archive.getinfo(archive.namelist()[0]).date_time)
                 self.assertEqual(b"image payload", archive.read("image-scroll/photo.jpg"))
+
+    def test_macos_builder_compiles_only_the_selected_profile_source(self):
+        source_root = Path(__file__).parents[1] / "benchmarks/image-rendering/src/totalcross/bench/imagerendering"
+        sources = build_macos.selected_java_sources(source_root, ("default",))
+        profile_sources = [path for path in sources if source_root / "profiles" in path.parents]
+        self.assertEqual([source_root / "profiles/Default.java"], profile_sources)
 
 
 if __name__ == "__main__":

@@ -180,6 +180,18 @@ def parse_profiles(raw: str | None) -> tuple[str, ...]:
     return values
 
 
+def selected_java_sources(source_root: Path, profiles: tuple[str, ...]) -> list[Path]:
+    profile_root = source_root / "profiles"
+    shared = sorted(path for path in source_root.rglob("*.java") if profile_root not in path.parents)
+    selected = []
+    for profile in profiles:
+        entry = profile_root / (PROFILE_CLASSES[profile] + ".java")
+        if not entry.is_file():
+            raise PackageError("selected profile source is missing: " + str(entry))
+        selected.append(entry)
+    return shared + selected
+
+
 def build(arguments) -> Path:
     if sys.platform != "darwin":
         raise PackageError("the macOS package must be built on macOS")
@@ -250,7 +262,9 @@ def build(arguments) -> Path:
     javac = shutil.which("javac")
     if not java or not javac:
         raise PackageError("a JDK with java and javac is required")
-    sources = sorted((ROOT / "benchmarks/image-rendering/src").rglob("*.java"))
+    selected_profiles = parse_profiles(arguments.profiles)
+    sources = selected_java_sources(ROOT / "benchmarks/image-rendering/src/totalcross/bench/imagerendering",
+                                    selected_profiles)
     output.parent.mkdir(parents=True, exist_ok=True)
     log_path = output.with_name(output.name + ".build.log")
     if log_path.exists():
@@ -269,7 +283,6 @@ def build(arguments) -> Path:
             env.pop("DYLD_FALLBACK_LIBRARY_PATH", None)
         profile_manifest = {}
         binary_manifest = {}
-        selected_profiles = parse_profiles(arguments.profiles)
         with log_path.open("x", encoding="utf-8") as log:
             if arguments.build_sdk:
                 run_logged([str(wrapper), "dist", "-x", "test"], sdk_home, env, log)

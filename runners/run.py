@@ -525,6 +525,34 @@ def validate_paint_preparation_result(record: dict[str, Any], width: int, height
         raise RunnerError("paint-preparation improvement must be omitted when comparison is invalid")
 
 
+def draw_path_classification(counters: dict, flags: dict) -> list[str]:
+    expected_tags = []
+    for key, tag in (("cachedFinalRasterHits", "cached-final hit"), ("cachedFinalRasterMisses", "cached-final miss")):
+        if counters[key] > 0:
+            expected_tags.append(tag)
+    # Native status is authoritative for its last draw; Image's getters may stay zero.
+    for flag, counter, tag in (("identityAttempted", "identityAttempts", "identity attempted"),
+                               ("identityHit", "identityHits", "identity hit"),
+                               ("identityFallback", "identityFallbacks", "identity fallback")):
+        if flags[flag] or counters[counter] > 0:
+            expected_tags.append(tag)
+    expected_tags.append("physical-copy hit" if counters["physicalCopyHits"] > 0 else "physical-copy no hit")
+    for path, label in (("targetColor", "target-color"), ("physicalVariant", "physical-variant")):
+        if flags[path + "Attempted"]:
+            expected_tags.append(label + " attempted")
+        for bit_suffix, count_suffix, tag in (("Hit", "Hits", "hit"), ("Materialized", "Materializations", "materialized"),
+                                             ("Fallback", "Fallbacks", "fallback")):
+            if flags[path + bit_suffix] or counters[path + count_suffix] > 0:
+                expected_tags.append(label + " " + tag)
+    for key, tag in (("genericGeometryDraws", "generic geometry"), ("smoothResampleDraws", "smooth resample"),
+                     ("copyRectPlanHandled", "draw handled"), ("copyRectPlanFallbacks", "draw fallback")):
+        if counters[key] > 0:
+            expected_tags.append(tag)
+    if counters["copyRectPlanAttempts"] == 0:
+        expected_tags.append("no copyRect plan attempt")
+    return expected_tags
+
+
 def validate_draw_path_result(record: dict[str, Any], width: int, height: int,
                               manifest_entries: list[dict] | None = None) -> None:
     if (record.get("family") != "scroll" or record.get("profile") != "default"
@@ -563,26 +591,7 @@ def validate_draw_path_result(record: dict[str, Any], width: int, height: int,
         for path in ("targetColor", "physicalVariant"):
             unexpected |= (any(flags[path + event] for event in ("Attempted", "Hit", "Materialized", "Fallback"))
                            or any(counters[path + event] > 0 for event in ("Hits", "Materializations", "Fallbacks")))
-        expected_tags = []
-        for key, tag in (("cachedFinalRasterHits", "cached-final hit"), ("cachedFinalRasterMisses", "cached-final miss"),
-                         ("identityAttempts", "identity attempted"), ("identityHits", "identity hit"),
-                         ("identityFallbacks", "identity fallback")):
-            if counters[key] > 0:
-                expected_tags.append(tag)
-        expected_tags.append("physical-copy hit" if counters["physicalCopyHits"] > 0 else "physical-copy no hit")
-        for path, label in (("targetColor", "target-color"), ("physicalVariant", "physical-variant")):
-            if flags[path + "Attempted"]:
-                expected_tags.append(label + " attempted")
-            for bit_suffix, count_suffix, tag in (("Hit", "Hits", "hit"), ("Materialized", "Materializations", "materialized"),
-                                                 ("Fallback", "Fallbacks", "fallback")):
-                if flags[path + bit_suffix] or counters[path + count_suffix] > 0:
-                    expected_tags.append(label + " " + tag)
-        for key, tag in (("genericGeometryDraws", "generic geometry"), ("smoothResampleDraws", "smooth resample"),
-                         ("copyRectPlanHandled", "draw handled"), ("copyRectPlanFallbacks", "draw fallback")):
-            if counters[key] > 0:
-                expected_tags.append(tag)
-        if counters["copyRectPlanAttempts"] == 0:
-            expected_tags.append("no copyRect plan attempt")
+        expected_tags = draw_path_classification(counters, flags)
         if sample["classification"] != expected_tags:
             raise RunnerError("draw-path-probe classification does not match actual counters/status")
     if aggregate["rowPaintCount"] != 6 or aggregate["imagePaintCount"] != 18:

@@ -23,8 +23,9 @@ reports/p12-copyrect-causal-probe.md supplies the final interpretation.
 ## Progress
 - [x] Current routing, native predicates and admission implementation inspected.
 - [x] Runtime switch/counters and isolated hooks implemented; 90 Python tests, native routing tests, header checks and both SDK compilations passed.
-- [ ] Commit implementation, build consistent custom SDK/native artifacts and verify hashes.
-- [ ] Sole runtime process, five-sample analysis, documentation commit and push.
+- [x] Implementation e9cb47b committed; consistent custom SDK/native/package hashes and offline protocol checked.
+- [x] Sole native process and runner exited 0; five-sample sequence proves observation/admission then cached reuse.
+- [x] Final report/checkpoint/provenance verified and prepared for the publication commit.
 
 ## Current Architecture and Scope
 Production copyRect probes existing cached-final state before draw-plan execution.
@@ -69,4 +70,7 @@ after any valid sample. Preserve first evidence and analyze offline after failur
 No build/cache cleanup or unrelated source edits. Do not merge any PR.
 
 ## Outcomes & Retrospective
-Pending measurement. Immediate-vs-second-observation admission remains unresolved.
+Measured tree samples: expensive first measured admission paint then four ~3.57 ms cached paints.
+The routing hypothesis is supported with high confidence for this configuration;
+absolute historical cost is not restored. Read reports/p12-copyrect-causal-probe.md
+for counters, scope and limitations. Admission choice remains unresolved.

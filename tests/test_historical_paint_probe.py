@@ -37,6 +37,20 @@ class HistoricalPaintProbeTests(unittest.TestCase):
     def test_valid_like_for_like_result(self):
         probe.validate_historical_result(self.record, self.manifest)
 
+    def test_dataset_metadata_includes_shared_workload_logging_fields(self):
+        verification = {"fileCount": 663, "formatCounts": {"jpeg": 660, "png": 3},
+                        "manifestSha256": "a" * 64}
+        dataset = probe.dataset_metadata({"id": "image-scroll", "version": "v1"}, verification)
+        self.assertEqual("image-scroll/v1", dataset["id"] + "/" + dataset["version"])
+        self.assertEqual(663, dataset["fileCount"])
+        self.assertEqual(verification, {k: dataset[k] for k in verification})
+
+    def test_duplicate_console_channels_do_not_count_as_multiple_runs(self):
+        text = 'TCBENCH_PREFLIGHT_JSON {"configuredMask":32799}\nTCBENCH_JSON {"recordType":"run"}\n'
+        self.assertEqual(([{"recordType": "run"}], [{"configuredMask": 32799}]),
+                         probe.protocol_records(text, text))
+        self.assertEqual(probe.protocol_records(text, ""), probe.protocol_records("", text))
+
     def test_configuration_and_instance_changes_reject_comparison(self):
         for key, value in (("runtimeSourceCommit", "a" * 40), ("configuredMask", 31), ("effectiveMask", 31)):
             record = copy.deepcopy(self.record)

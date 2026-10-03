@@ -99,6 +99,21 @@ def write_json(path: Path, value: dict) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def dataset_metadata(descriptor: dict, verification: dict) -> dict:
+    return {**verification, "id": descriptor["id"], "version": descriptor["version"]}
+
+
+def protocol_records(stdout: str, debug: str) -> tuple[list[dict], list[dict]]:
+    # Some native builds echo the same Java output to both channels. Use one
+    # complete stream rather than counting duplicated records as extra runs.
+    text = stdout if any(line.startswith("TCBENCH_JSON ") for line in stdout.splitlines()) else debug
+    records = [json.loads(line.split("TCBENCH_JSON ", 1)[1]) for line in text.splitlines()
+               if line.startswith("TCBENCH_JSON ")]
+    preflights = [json.loads(line.split("TCBENCH_PREFLIGHT_JSON ", 1)[1]) for line in text.splitlines()
+                  if line.startswith("TCBENCH_PREFLIGHT_JSON ")]
+    return records, preflights
+
+
 def build(args) -> None:
     source = args.runtime_source.resolve()
     native = args.native_build.resolve()
@@ -117,6 +132,7 @@ def build(args) -> None:
     if git(depot, "rev-parse", "HEAD") != pin:
         raise PackageError("dependency checkout differs from historical depot-tools pin")
     descriptor, dataset, files = verified_dataset_cache(args.dataset_cache.resolve())
+    dataset = dataset_metadata(descriptor, dataset)
     sdk = source / "TotalCrossSDK"
     sdk_jar = sdk / "dist/totalcross-sdk.jar"
     if not sdk_jar.is_file():
@@ -251,13 +267,11 @@ def run(args) -> None:
     stdout_text = (output / "stdout.log").read_text()
     # SDL builds can direct Java output to DebugConsole rather than stdout.
     debug = Path(manifest["workingDirectory"]) / "DebugConsole.txt"
+    debug_text = ""
     if debug.exists():
         shutil.copy2(debug, output / "DebugConsole.txt")
-        stdout_text += "\n" + debug.read_text()
-    records = [json.loads(line.split("TCBENCH_JSON ", 1)[1]) for line in stdout_text.splitlines()
-               if line.startswith("TCBENCH_JSON ")]
-    preflights = [json.loads(line.split("TCBENCH_PREFLIGHT_JSON ", 1)[1]) for line in stdout_text.splitlines()
-                  if line.startswith("TCBENCH_PREFLIGHT_JSON ")]
+        debug_text = debug.read_text()
+    records, preflights = protocol_records(stdout_text, debug_text)
     if (len(records) != 1 or len(preflights) != 1
             or preflights[0].get("configuredMask") != 32799 or preflights[0].get("effectiveMask") != 32799):
         raise PackageError("expected one measured result and one inline historical default check")

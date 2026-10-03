@@ -1734,3 +1734,28 @@ Launcher are built and hashed. Source patches and build evidence are indexed in
 `experiments/p12-immediate-admission/provenance.json`. Packaging and the sole
 measurement remain pending. This is experimental evidence gathering; production
 admission policy and the historical warm-path residual remain unresolved.
+
+
+## Immediate-admission comparison — one successful process
+
+Implementation `b62be52e0c4e079938a8acb0553cbb91c25dd17a`; isolated runtime
+`f95c280db3d6856d17582ea31d47aaded6a0e492`. Sole runner/native exits: 0/0;
+one complete record. Stabilization: cache probes/hits/misses 18/0/18, physical
+attempts/hits/fallbacks 18/0/18, resolve calls/cache hits 20/0, observations/
+admissions 18/18, offscreen geometry materializations 18. Every sample: cache
+18/18/0, zero physical/identity/copyRect attempts, resolve 2/0, zero observations/
+admissions/materializations. Direct generic/smooth rendering was zero throughout.
+
+PaintTree ms: 3.650708, 3.569500, 3.750875, 3.675917, 3.606417.
+ImageControl totals ms: 3.312753, 3.266665, 3.389623, 3.353957, 3.300168.
+Median 3.650708 ms. Sample 1 used 18 cached-final hits, versus 349.357 ms under
+second observation. High-confidence evidence that immediate admission eliminates
+that additional expensive measured paint for this workload; production policy
+remains unresolved. Prior warm 3.573729 ms/current prepared 3.532 ms have similar
+magnitude. The historical 1.016875 ms residual remains separate and unexplained.
+
+`reports/p12-immediate-admission-probe.md` gives timing/counter details and
+interpretation; `experiments/p12-immediate-admission/provenance.json` indexes
+source patches, artifacts and original process evidence. 97 lab tests and cheap
+offline checks passed. No second process, production change, alternate experiment,
+historical run or P12 matrix followed. The open cache-policy section is unchanged.

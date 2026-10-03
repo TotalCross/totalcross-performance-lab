@@ -26,8 +26,9 @@ final interpretation. Raw output and normal artifacts stay local, never committe
 ## Progress
 - [x] Prior measured routing and current scale/generation/backing checks inspected.
 - [x] Narrow hook, SDK failure/default/cache-validity tests and lab protocol contracts.
-- [ ] Exact SDK/tcvm/Launcher built and hashed; commit tooling and package before launch.
-- [ ] One runner/application process, offline analysis, report/checkpoint and push.
+- [x] Source/tooling committed; exact SDK/tcvm/Launcher packaged and hashes verified.
+- [x] Sole runner/application exited 0/0; complete record analyzed and reported.
+- [x] Final offline validation passed; report/checkpoint/provenance publication checkpoint.
 
 ## Current Architecture and Scope
 Image.resolveForDrawing validates destination scale, probes the existing exact
@@ -74,5 +75,6 @@ replace/relaunch. Preserve a pre-sample tooling failure and fix offline first;
 no silent retry. Leave previous artifacts/processes and production branches intact.
 
 ## Outcomes & Retrospective
-Pending. Admission as production policy remains unresolved. Preserve the checkpoint
-Open follow-up: materialized cache admission policy section and append evidence only.
+All 18 stabilization admissions were immediately reusable; all five samples were
+cached-final hits (median 3.650708 ms). Production policy and historical residual
+remain unresolved. See dedicated report and indexed original evidence.

@@ -69,11 +69,391 @@
     "nativeRoutingTest": "passed",
     "officialBenchmarkCompile": "passed (8 sources)",
     "customBenchmarkCompile": "passed (10 sources)",
-    "headers": "passed"
+    "headers": "passed",
+    "offlineProtocolParser": "valid immediate run/summary accepted; truncated and duplicate summaries rejected",
+    "postRunAudit": "passed: schema/protocol/preflight; six exact events; one runner/process exit 0; hashes; unchanged original runtime and open policy section"
   },
   "runtimePatchSha256": "1658523230bb6aed0866985680ea9adb5c3f24ac2019dce38bccb4155b619e6b",
   "admissionPatchSha256": "b7c9d03ad60be50c12b3af7d97cd67a5b34cf7bd65dcc30f934958e0a6caf1a5",
-  "measurementStatus": "not launched",
-  "runnerProcesses": 0,
-  "measuredNativeProcesses": 0
+  "measurementStatus": "completed; no replacement",
+  "runnerProcesses": 1,
+  "measuredNativeProcesses": 1,
+  "benchmarkSourceCommit": "b62be52e0c4e079938a8acb0553cbb91c25dd17a",
+  "runnerExitCode": 0,
+  "nativeExitCode": 0,
+  "validRecords": 1,
+  "processDirectory": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-immediate-admission-probe/run-20261003T074828Z-52199/processes/0001-default-measured-1",
+  "dataset": {
+    "id": "image-scroll",
+    "manifestSha256": "4dac75139e4e7095f5843a696f5fcd84055bf798e90b49614d6e4243120f5dbe",
+    "version": "v1"
+  },
+  "runnerCommand": [
+    "python3",
+    "runners/run.py",
+    "image-rendering",
+    "scroll",
+    "--profile",
+    "default",
+    "--scroll-driver",
+    "immediate-admission-probe",
+    "--rounds",
+    "1",
+    "--warmups",
+    "0",
+    "--timeout-seconds",
+    "180",
+    "--width",
+    "540",
+    "--height",
+    "960",
+    "--dataset-cache",
+    ".local-data/datasets/p12-final/image-scroll/v1",
+    "--package-manifest",
+    ".local-data/packages/image-rendering-macos-immediate-admission/package-manifest.json",
+    "--runtime-source",
+    ".local-data/runtime-immediate-admission",
+    "--results-dir",
+    ".local-data/results/image-rendering-immediate-admission-probe",
+    "--require-default-scroll-preflight",
+    "--fail-fast"
+  ],
+  "evidenceFiles": [
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-immediate-admission-probe/run-20261003T074828Z-52199/runs.jsonl",
+      "sha256": "75f6dbc9b66b6e8c21a790b88517b78a34a28ab5a61134d5250cdc98bc1628f2"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-immediate-admission-probe/run-20261003T074828Z-52199/failures.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-immediate-admission-probe/run-20261003T074828Z-52199/processes/0001-default-measured-1/DebugConsole.txt",
+      "sha256": "9e5f2f6d390e90d5528e218219e0ca9d75ed25509dc98bc4a0e1ffa3eac4ed5f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-immediate-admission-probe/run-20261003T074828Z-52199/processes/0001-default-measured-1/exit-status.json",
+      "sha256": "c318cf55da97febed7c4d5419856d3cc820e00a2088ef3026ef6ffe3cc4d5ac2"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-immediate-admission-probe/run-20261003T074828Z-52199/processes/0001-default-measured-1/preflight.json",
+      "sha256": "6efd43a3a8fb8292cc74af3686cdda238ecd87f31211ef2effbceb6da5545aac"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-immediate-admission-probe/run-20261003T074828Z-52199/processes/0001-default-measured-1/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-immediate-admission-probe/run-20261003T074828Z-52199/processes/0001-default-measured-1/stdout.log",
+      "sha256": "a21a582eccefb4690753adba6132758c866f6a9d12bda9dd522aa9aa82c8dd02"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-immediate-admission-probe/run-20261003T074828Z-52199/processes/0001-default-measured-1/tcbench-run.json",
+      "sha256": "2d2133d6872d468e1fd9ad2f0a645c6ddfa0da2395ad5bcf80eaaa4254001573"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/packages/image-rendering-macos-immediate-admission/package-manifest.json",
+      "sha256": "1ac32cab2ccb9df6af5ee7abc02b20471260e615646aef87acce437b59675eaf"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/launch-authorized.json",
+      "sha256": "a9c80881fb9c104e0fa679c7164b3ae917a80f56b9a182a67f5b9702ec78362b"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/runner-exit-status.txt",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/cmake.log",
+      "sha256": "6f187540d24dd5ea406bbae1c3f52473283f2d1a7796cc1e60209377584eb8a3"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/javac-immediate.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/javac-official.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/lab-tests.log",
+      "sha256": "c94beb81938ec0047a14c689bc9548da16cb3e255e5b7731a1bfdc608463d072"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/native-build-final.log",
+      "sha256": "c809637a2fb559d966f7fc5a783993cc8adafbef8321f24f7bc0d4ead2e84d2b"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/native-build.log",
+      "sha256": "f93137c57b4ef8b0603a4db9c107a4c2abd4cee6e22d4708c827df419277e583"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/native-routing-tests.log",
+      "sha256": "c91d43e411d5baab8929c8e065a056003c16bd405369f0d81e683f1ef9a0b1ec"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/package.log",
+      "sha256": "54602150b043704628e0fb2d1fe3c0bfa0c45ff82018d4b0102335e43b2595de"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/runner.log",
+      "sha256": "50b5900cfb8e026ba64a0deffe1065c3824c967f1828957cc13a3092b4dae02c"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/sdk-tests-build.log",
+      "sha256": "fa79cb330e47fec9f1746b998037c9468634fa50630301eecadbc9a3cfd1402f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/immediate-admission/logs/lab-tests-final.log",
+      "sha256": "b4ec0126f8f841e11e130c04ee51d838e291a5c438831239e5cc48f92ff5bafc"
+    }
+  ],
+  "samples": [
+    {
+      "counters": {
+        "cachedFinalRasterHits": 0,
+        "cachedFinalRasterMisses": 18,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 18,
+        "copyRectPlanFallbacks": 18,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 20490,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 18,
+        "identityFallbacks": 18,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 18,
+        "materializedVariantObservations": 18,
+        "nativeGeometryMaterializations": 18,
+        "physicalCopyAttempts": 18,
+        "physicalCopyFallbacks": 18,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 20,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 350628374,
+      "paintTreeNs": null,
+      "rowPaintCount": 6,
+      "rowPaintNs": 238585,
+      "sample": 0,
+      "scrollPosition": 0,
+      "timed": false
+    },
+    {
+      "counters": {
+        "cachedFinalRasterHits": 18,
+        "cachedFinalRasterMisses": 0,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 0,
+        "copyRectPlanFallbacks": 0,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 0,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 0,
+        "identityFallbacks": 0,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 0,
+        "materializedVariantObservations": 0,
+        "nativeGeometryMaterializations": 0,
+        "physicalCopyAttempts": 0,
+        "physicalCopyFallbacks": 0,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 2,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 3312753,
+      "paintTreeNs": 3650708,
+      "rowPaintCount": 6,
+      "rowPaintNs": 218126,
+      "sample": 1,
+      "scrollPosition": 0,
+      "timed": true
+    },
+    {
+      "counters": {
+        "cachedFinalRasterHits": 18,
+        "cachedFinalRasterMisses": 0,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 0,
+        "copyRectPlanFallbacks": 0,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 0,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 0,
+        "identityFallbacks": 0,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 0,
+        "materializedVariantObservations": 0,
+        "nativeGeometryMaterializations": 0,
+        "physicalCopyAttempts": 0,
+        "physicalCopyFallbacks": 0,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 2,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 3266665,
+      "paintTreeNs": 3569500,
+      "rowPaintCount": 6,
+      "rowPaintNs": 208042,
+      "sample": 2,
+      "scrollPosition": 0,
+      "timed": true
+    },
+    {
+      "counters": {
+        "cachedFinalRasterHits": 18,
+        "cachedFinalRasterMisses": 0,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 0,
+        "copyRectPlanFallbacks": 0,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 0,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 0,
+        "identityFallbacks": 0,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 0,
+        "materializedVariantObservations": 0,
+        "nativeGeometryMaterializations": 0,
+        "physicalCopyAttempts": 0,
+        "physicalCopyFallbacks": 0,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 2,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 3389623,
+      "paintTreeNs": 3750875,
+      "rowPaintCount": 6,
+      "rowPaintNs": 208625,
+      "sample": 3,
+      "scrollPosition": 0,
+      "timed": true
+    },
+    {
+      "counters": {
+        "cachedFinalRasterHits": 18,
+        "cachedFinalRasterMisses": 0,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 0,
+        "copyRectPlanFallbacks": 0,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 0,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 0,
+        "identityFallbacks": 0,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 0,
+        "materializedVariantObservations": 0,
+        "nativeGeometryMaterializations": 0,
+        "physicalCopyAttempts": 0,
+        "physicalCopyFallbacks": 0,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 2,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 3353957,
+      "paintTreeNs": 3675917,
+      "rowPaintCount": 6,
+      "rowPaintNs": 207792,
+      "sample": 4,
+      "scrollPosition": 0,
+      "timed": true
+    },
+    {
+      "counters": {
+        "cachedFinalRasterHits": 18,
+        "cachedFinalRasterMisses": 0,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 0,
+        "copyRectPlanFallbacks": 0,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 0,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 0,
+        "identityFallbacks": 0,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 0,
+        "materializedVariantObservations": 0,
+        "nativeGeometryMaterializations": 0,
+        "physicalCopyAttempts": 0,
+        "physicalCopyFallbacks": 0,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 2,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 3300168,
+      "paintTreeNs": 3606417,
+      "rowPaintCount": 6,
+      "rowPaintNs": 208082,
+      "sample": 5,
+      "scrollPosition": 0,
+      "timed": true
+    }
+  ]
 }

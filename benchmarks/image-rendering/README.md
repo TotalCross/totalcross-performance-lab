@@ -144,3 +144,29 @@ Recovery requires that exact benchmark commit and the known original encoding
 and classification. The analyzer checks package hashes, preflight, the protocol,
 manifest order and the same result contract as the runner. Ordinary runner
 validation remains strict.
+
+## Physical mapping metadata probe
+
+`physical-mapping-probe` uses the same default-only inline preflight and top
+viewport. One stabilization repaint creates normal draw plans; the helper then
+reads the eighteen retained Images at each control's actual Graphics scale. It
+records immutable plan fields, backing metadata, public Graphics translation
+and clip, and drawable dimensions. It performs no timed paint or preparation.
+
+The native source resets the canvas matrix and applies Graphics contentScale
+before each draw, so the host evaluator derives that matrix from captured runtime
+values. `tools/physical_mapping.py` reproduces the actual scale/smooth-scale
+chain's double composition, float rectangles, normal copyRect clipping and the
+fifteen ordered predicates. Unknown chains require exact additional semantics
+and are rejected rather than approximated. Gates after the first failure are
+marked unreached, with their independently computed counterfactual results.
+Both allowSmooth=true (physical copy) and false (physical identity draw) are
+reported. Raw metadata stays separate from these source-derived evaluations.
+
+The backing-generation guard requires zero before reading Image's generation
+getter, ensuring its max-assignment cannot change the nonnegative Image value.
+No pixels, mutable storage, setters or private reflection bypass are used.
+The result contract is `schemas/physical-mapping-probe-v1.schema.json`. Use the
+same sole-process command as draw-path-probe with
+`--scroll-driver physical-mapping-probe`; reuse previous paint timings for cost
+correlation instead of measuring performance again.

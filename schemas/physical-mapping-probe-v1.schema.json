@@ -1,0 +1,349 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Copyright (C) 2026 Amalgam Solucoes em TI Ltda; SPDX-License-Identifier: LGPL-2.1-only",
+  "title": "Physical mapping metadata probe v1",
+  "type": "object",
+  "required": [
+    "scrollDriver",
+    "imageControls",
+    "rows",
+    "columns",
+    "tileWidth",
+    "scrollPosition",
+    "stabilizationRepaints",
+    "perControlSamples",
+    "prepareRequests",
+    "preparation",
+    "timedPaintSamples",
+    "sameImageInstances",
+    "sameControlInstances",
+    "sameRowInstances",
+    "perControl",
+    "canvasMatrixEvidence",
+    "axes"
+  ],
+  "properties": {
+    "scrollDriver": {
+      "const": "physical-mapping-probe",
+      "type": "string"
+    },
+    "imageControls": {
+      "const": 663,
+      "type": "integer"
+    },
+    "rows": {
+      "const": 221,
+      "type": "integer"
+    },
+    "columns": {
+      "const": 3,
+      "type": "integer"
+    },
+    "tileWidth": {
+      "const": 179,
+      "type": "integer"
+    },
+    "scrollPosition": {
+      "const": 0,
+      "type": "integer"
+    },
+    "stabilizationRepaints": {
+      "const": 1,
+      "type": "integer"
+    },
+    "perControlSamples": {
+      "const": 18,
+      "type": "integer"
+    },
+    "prepareRequests": {
+      "const": 0,
+      "type": "integer"
+    },
+    "preparation": {
+      "const": false,
+      "type": "boolean"
+    },
+    "timedPaintSamples": {
+      "const": 0,
+      "type": "integer"
+    },
+    "sameImageInstances": {
+      "const": true,
+      "type": "boolean"
+    },
+    "sameControlInstances": {
+      "const": true,
+      "type": "boolean"
+    },
+    "sameRowInstances": {
+      "const": true,
+      "type": "boolean"
+    },
+    "perControl": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "items": {
+        "type": "object",
+        "required": [
+          "datasetIndex",
+          "rowIndex",
+          "path",
+          "format",
+          "intrinsicWidth",
+          "intrinsicHeight",
+          "plan"
+        ],
+        "properties": {
+          "datasetIndex": {
+            "type": "integer"
+          },
+          "rowIndex": {
+            "type": "integer"
+          },
+          "path": {
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "jpeg",
+              "png"
+            ]
+          },
+          "intrinsicWidth": {
+            "type": "integer"
+          },
+          "intrinsicHeight": {
+            "type": "integer"
+          },
+          "plan": {
+            "type": "object",
+            "required": [
+              "operationCount",
+              "rootWidth",
+              "rootHeight",
+              "rootLogicalWidth",
+              "rootLogicalHeight",
+              "rootFrameCount",
+              "rootWidthOfAllFrames",
+              "currentFrame",
+              "outputWidth",
+              "outputHeight",
+              "alphaMask",
+              "materializeAlphaMask",
+              "outputAlphaMask",
+              "backingWidth",
+              "backingHeight",
+              "sourceMutationGeneration",
+              "backingMutationGeneration",
+              "sourceOpacityState",
+              "drawableWidth",
+              "drawableHeight",
+              "graphicsTranslationX",
+              "graphicsTranslationY",
+              "clipX",
+              "clipY",
+              "clipWidth",
+              "clipHeight",
+              "drawX",
+              "drawY",
+              "rootContentScale",
+              "rootHwScaleW",
+              "rootHwScaleH",
+              "destinationScale",
+              "outputContentScale",
+              "hwScaleW",
+              "hwScaleH",
+              "graphicsContentScale",
+              "backingNative",
+              "backingValid",
+              "sourceBackingStable",
+              "inspectionMutationFree",
+              "backingType",
+              "operations",
+              "parameters",
+              "dimensions"
+            ],
+            "properties": {
+              "operationCount": {
+                "type": "integer"
+              },
+              "rootWidth": {
+                "type": "integer"
+              },
+              "rootHeight": {
+                "type": "integer"
+              },
+              "rootLogicalWidth": {
+                "type": "integer"
+              },
+              "rootLogicalHeight": {
+                "type": "integer"
+              },
+              "rootFrameCount": {
+                "type": "integer"
+              },
+              "rootWidthOfAllFrames": {
+                "type": "integer"
+              },
+              "currentFrame": {
+                "type": "integer"
+              },
+              "outputWidth": {
+                "type": "integer"
+              },
+              "outputHeight": {
+                "type": "integer"
+              },
+              "alphaMask": {
+                "type": "integer"
+              },
+              "materializeAlphaMask": {
+                "type": "integer"
+              },
+              "outputAlphaMask": {
+                "type": "integer"
+              },
+              "backingWidth": {
+                "type": "integer"
+              },
+              "backingHeight": {
+                "type": "integer"
+              },
+              "sourceMutationGeneration": {
+                "type": "integer"
+              },
+              "backingMutationGeneration": {
+                "type": "integer"
+              },
+              "sourceOpacityState": {
+                "type": "integer"
+              },
+              "drawableWidth": {
+                "type": "integer"
+              },
+              "drawableHeight": {
+                "type": "integer"
+              },
+              "graphicsTranslationX": {
+                "type": "integer"
+              },
+              "graphicsTranslationY": {
+                "type": "integer"
+              },
+              "clipX": {
+                "type": "integer"
+              },
+              "clipY": {
+                "type": "integer"
+              },
+              "clipWidth": {
+                "type": "integer"
+              },
+              "clipHeight": {
+                "type": "integer"
+              },
+              "drawX": {
+                "type": "integer"
+              },
+              "drawY": {
+                "type": "integer"
+              },
+              "rootContentScale": {
+                "type": "number"
+              },
+              "rootHwScaleW": {
+                "type": "number"
+              },
+              "rootHwScaleH": {
+                "type": "number"
+              },
+              "destinationScale": {
+                "type": "number"
+              },
+              "outputContentScale": {
+                "type": "number"
+              },
+              "hwScaleW": {
+                "type": "number"
+              },
+              "hwScaleH": {
+                "type": "number"
+              },
+              "graphicsContentScale": {
+                "type": "number"
+              },
+              "backingNative": {
+                "type": "boolean"
+              },
+              "backingValid": {
+                "type": "boolean"
+              },
+              "sourceBackingStable": {
+                "type": "boolean"
+              },
+              "inspectionMutationFree": {
+                "const": true,
+                "type": "boolean"
+              },
+              "backingType": {
+                "type": "string",
+                "minLength": 1
+              },
+              "operations": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "parameters": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "dimensions": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "evaluation": {
+            "type": "object"
+          },
+          "identityDrawEvaluation": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "canvasMatrixEvidence": {
+      "const": "native skia_setSurfaceScale resets matrix then scales by Graphics.getContentScale",
+      "type": "string"
+    },
+    "axes": {
+      "type": "object",
+      "required": [
+        "logicalViewportWidth",
+        "logicalViewportHeight",
+        "displayScale"
+      ],
+      "properties": {
+        "logicalViewportWidth": {
+          "type": "integer"
+        },
+        "logicalViewportHeight": {
+          "type": "integer"
+        },
+        "displayScale": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

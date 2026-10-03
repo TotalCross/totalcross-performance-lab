@@ -213,7 +213,7 @@ def validate_scroll_driver_arguments(arguments) -> None:
     driver = getattr(arguments, "scroll_driver", "fixed-step")
     if driver == "fixed-step":
         return
-    probe_drivers = ("paint-split-probe", "paint-preparation-probe", "draw-path-probe")
+    probe_drivers = ("paint-split-probe", "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe")
     if driver not in ("historical-driver",) + probe_drivers:
         raise RunnerError("invalid scroll driver")
     profiles = comma_values(arguments.profiles, DEFAULT_PROFILES[arguments.family], PROFILES, "profile")
@@ -803,7 +803,7 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
     if child.returncode:
         raise RunnerError("child exited with status %d" % child.returncode)
     scroll_driver = getattr(arguments, "scroll_driver", "fixed-step")
-    if scroll_driver in ("paint-split-probe", "paint-preparation-probe", "draw-path-probe"):
+    if scroll_driver in ("paint-split-probe", "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe"):
         preflight = parse_preflight(child.stdout, arguments.family, cell["workload"], cell["profile"])
         if (preflight.get("runtimeSourceCommit") != runtime_commit
                 or preflight.get("benchmarkSourceCommit") != benchmark_commit):
@@ -838,6 +838,9 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
         validate_paint_split_result(run, arguments.width, arguments.height)
     elif arguments.family == "scroll" and scroll_driver == "paint-preparation-probe":
         validate_paint_preparation_result(run, arguments.width, arguments.height)
+    elif arguments.family == "scroll" and scroll_driver == "physical-mapping-probe":
+        from tools.physical_mapping import validate_result
+        validate_result(run, read_json(arguments.dataset_cache / "objects/manifest.json")["files"])
     elif arguments.family == "scroll" and scroll_driver == "draw-path-probe":
         validate_draw_path_result(run, arguments.width, arguments.height,
                                   read_json(arguments.dataset_cache / "objects/manifest.json")["files"])
@@ -1111,7 +1114,7 @@ def execute(arguments) -> int:
             arguments.runtime_identity = "github-artifact:%s;sha256:%s;runtime-files-sha256:%s" % (
                 official_provenance["artifactName"], official_provenance["outerArtifactSha256"], runtime_hash)
         if getattr(arguments, "scroll_driver", "fixed-step") not in (
-                "paint-split-probe", "paint-preparation-probe", "draw-path-probe"):
+                "paint-split-probe", "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe"):
             process_index += 1
             try:
                 launch_preflight(arguments, cell, process_index, dataset, runtime_commit, benchmark_commit,
@@ -1188,7 +1191,7 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--height", type=int, default=960)
     render.add_argument("--diagnostics", action="store_true")
     render.add_argument("--scroll-driver", choices=("fixed-step", "historical-driver", "paint-split-probe",
-                                                     "paint-preparation-probe", "draw-path-probe"), default="fixed-step",
+                                                     "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe"), default="fixed-step",
                         help="scroll cadence and position driver; probe modes are one-round investigations")
     render.add_argument("--fail-fast", action="store_true")
     render.add_argument("--runtime-source", type=Path,

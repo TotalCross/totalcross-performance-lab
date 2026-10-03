@@ -33,6 +33,7 @@ final class ScrollWorkload implements TimerListener {
   private static final String DRIVER_HISTORICAL = "historical-driver";
   private static final String DRIVER_PAINT_SPLIT = "paint-split-probe";
   private static final String DRIVER_PAINT_PREPARATION = "paint-preparation-probe";
+  private static final String DRIVER_PHYSICAL_MAPPING = "physical-mapping-probe";
   private static final String DRIVER_DRAW_PATH = "draw-path-probe";
   private static final int PAINT_SPLIT_SAMPLE_COUNT = 5;
   private static final int PAINT_PREPARATION_NOT_STARTED = 0;
@@ -100,11 +101,11 @@ final class ScrollWorkload implements TimerListener {
     scrollDriver = config.getString("scrollDriver");
     if (!DRIVER_FIXED_STEP.equals(scrollDriver) && !DRIVER_HISTORICAL.equals(scrollDriver)
         && !DRIVER_PAINT_SPLIT.equals(scrollDriver) && !DRIVER_PAINT_PREPARATION.equals(scrollDriver)
-        && !DRIVER_DRAW_PATH.equals(scrollDriver)) {
+        && !DRIVER_DRAW_PATH.equals(scrollDriver) && !DRIVER_PHYSICAL_MAPPING.equals(scrollDriver)) {
       throw new IllegalArgumentException("unsupported scroll driver: " + scrollDriver);
     }
     if ((DRIVER_HISTORICAL.equals(scrollDriver) || DRIVER_PAINT_SPLIT.equals(scrollDriver)
-        || DRIVER_PAINT_PREPARATION.equals(scrollDriver) || DRIVER_DRAW_PATH.equals(scrollDriver))
+        || DRIVER_PAINT_PREPARATION.equals(scrollDriver) || DRIVER_DRAW_PATH.equals(scrollDriver) || DRIVER_PHYSICAL_MAPPING.equals(scrollDriver))
         && (!"default".equals(profile) || preparation)) {
       throw new IllegalArgumentException(scrollDriver + " requires the default profile");
     }
@@ -224,6 +225,10 @@ final class ScrollWorkload implements TimerListener {
     app.removeTimer(timer);
     timer = null;
     try {
+      if (DRIVER_PHYSICAL_MAPPING.equals(scrollDriver)) {
+        runPhysicalMappingProbe();
+        return;
+      }
       if (DRIVER_DRAW_PATH.equals(scrollDriver)) {
         runDrawPathProbe();
         return;
@@ -481,6 +486,47 @@ final class ScrollWorkload implements TimerListener {
     JSONObject durations = BenchSupport.object("wallTime", totalPassWallTimeNs);
     app.emit(app.runRecord(measurements, durations, config.getInt("round"),
         config.getString("phase"), config.getString("family")));
+    app.exit(0);
+  }
+
+  private void runPhysicalMappingProbe() throws Exception {
+    moveToPaintProbePosition(0);
+    if (countVisibleImageControls(0) != 18) {
+      throw new IllegalStateException("physical mapping probe requires eighteen visible controls");
+    }
+    Image[] retainedImages = new Image[18];
+    ImageControl[] retainedControls = new ImageControl[18];
+    for (int i = 0; i < 18; i++) {
+      retainedImages[i] = controls[i].getImage();
+      retainedControls[i] = controls[i];
+    }
+    scroll.repaintNow();
+    requirePaintProbePosition(0);
+    JSONArray individual = new JSONArray();
+    for (int i = 0; i < 18; i++) {
+      requireDrawPathIdentity(i, retainedControls[i], retainedImages[i], rows[i / COLUMNS]);
+      Graphics graphics = controls[i].getGraphics();
+      JSONObject metadata = ImageDrawPathProbeAccess.mappingMetadata(retainedImages[i], graphics);
+      BenchSupport.put(metadata, "drawX", controls[i].lastX);
+      BenchSupport.put(metadata, "drawY", controls[i].lastY);
+      individual.put(BenchSupport.object("datasetIndex", i, "rowIndex", i / COLUMNS,
+          "path", entries[i].path, "format", entries[i].format,
+          "intrinsicWidth", entries[i].width, "intrinsicHeight", entries[i].height,
+          "plan", metadata));
+      requireDrawPathIdentity(i, retainedControls[i], retainedImages[i], rows[i / COLUMNS]);
+    }
+    app.removeTimerListener(this);
+    JSONObject measurements = BenchSupport.object("scrollDriver", DRIVER_PHYSICAL_MAPPING,
+        "imageControls", controls.length, "rows", rows.length, "columns", COLUMNS, "tileWidth", tileWidth,
+        "scrollPosition", 0, "stabilizationRepaints", 1, "perControlSamples", 18,
+        "prepareRequests", 0, "preparation", false, "timedPaintSamples", 0,
+        "sameImageInstances", true, "sameControlInstances", true, "sameRowInstances", true,
+        "perControl", individual,
+        "canvasMatrixEvidence", "native skia_setSurfaceScale resets matrix then scales by Graphics.getContentScale",
+        "axes", BenchSupport.object("logicalViewportWidth", scroll.getRect().width,
+            "logicalViewportHeight", scroll.getRect().height, "displayScale", getDisplayScale()));
+    app.emit(app.runRecord(measurements, BenchSupport.object("wallTime", 0L),
+        config.getInt("round"), config.getString("phase"), config.getString("family")));
     app.exit(0);
   }
 

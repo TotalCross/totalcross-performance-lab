@@ -112,6 +112,81 @@ public final class ImageDrawPathProbeAccess {
     return false;
   }
 
+  public static JSONObject mappingMetadata(Image image, totalcross.ui.gfx.Graphics graphics) throws Exception {
+    ImageDrawPlan plan = (ImageDrawPlan) image.drawPlanForDrawing(graphics.getContentScale());
+    if (plan == null || plan.root.backing == null) {
+      throw new IllegalStateException("physical mapping probe requires a normal native draw plan");
+    }
+    ImageBacking backing = plan.root.backing;
+    long backingGeneration = backing.mutationGeneration();
+    // This getter assigns max(Image generation, backing generation). With backing
+    // generation zero, nonnegative Image generation cannot change. Never sync a
+    // nonzero generation during read-only inspection.
+    if (backingGeneration != 0) {
+      throw new IllegalStateException("read-only Image generation capture requires zero backing generation");
+    }
+    long imageGeneration = plan.root.backingMutationGenerationForP2();
+    JSONObject result = new JSONObject();
+    result.put("operationCount", plan.operations.length);
+    result.put("operations", integers(plan.operations));
+    result.put("parameters", integers(plan.parameters));
+    result.put("dimensions", integers(plan.dimensions));
+    result.put("rootWidth", plan.rootWidth);
+    result.put("rootHeight", plan.rootHeight);
+    result.put("rootLogicalWidth", plan.rootLogicalWidth);
+    result.put("rootLogicalHeight", plan.rootLogicalHeight);
+    result.put("rootFrameCount", plan.rootFrameCount);
+    result.put("rootWidthOfAllFrames", plan.rootWidthOfAllFrames);
+    result.put("currentFrame", plan.currentFrame);
+    result.put("rootContentScale", plan.rootContentScale);
+    result.put("rootHwScaleW", plan.rootHwScaleW);
+    result.put("rootHwScaleH", plan.rootHwScaleH);
+    result.put("outputWidth", plan.outputWidth);
+    result.put("outputHeight", plan.outputHeight);
+    result.put("destinationScale", plan.destinationScale);
+    result.put("outputContentScale", plan.outputContentScale);
+    result.put("hwScaleW", plan.hwScaleW);
+    result.put("hwScaleH", plan.hwScaleH);
+    result.put("alphaMask", plan.alphaMask);
+    result.put("materializeAlphaMask", plan.materializeAlphaMask);
+    result.put("outputAlphaMask", plan.outputAlphaMask);
+    result.put("backingType", backing.getClass().getName());
+    result.put("backingNative", backing.isNative());
+    result.put("backingValid", backing.isValid());
+    result.put("backingWidth", backing.width());
+    result.put("backingHeight", backing.height());
+    result.put("sourceBackingStable", backing.backingIdentityStableForCaching());
+    result.put("sourceMutationGeneration", imageGeneration);
+    result.put("backingMutationGeneration", backingGeneration);
+    result.put("sourceOpacityState", backing.opacityState());
+    result.put("graphicsContentScale", graphics.getContentScale());
+    result.put("drawableWidth", graphics.getSurfacePixelWidth());
+    result.put("drawableHeight", graphics.getSurfacePixelHeight());
+    totalcross.ui.gfx.Coord translation = graphics.getTranslation();
+    totalcross.ui.gfx.Rect clip = graphics.getClip(new totalcross.ui.gfx.Rect());
+    result.put("graphicsTranslationX", translation.x);
+    result.put("graphicsTranslationY", translation.y);
+    result.put("clipX", clip.x);
+    result.put("clipY", clip.y);
+    result.put("clipWidth", clip.width);
+    result.put("clipHeight", clip.height);
+    if (plan.root.backing != backing || backing.mutationGeneration() != backingGeneration
+        || plan.root.backingMutationGenerationForP2() != imageGeneration
+        || image.drawPlanForDrawing(graphics.getContentScale()) != plan) {
+      throw new IllegalStateException("mapping inspection changed Image/backing/plan identity");
+    }
+    result.put("inspectionMutationFree", true);
+    return result;
+  }
+
+  private static JSONArray integers(int[] values) {
+    JSONArray result = new JSONArray();
+    for (int value : values) {
+      result.put(value);
+    }
+    return result;
+  }
+
   private static void add(JSONArray tags, boolean present, String tag) {
     if (present) tags.put(tag);
   }

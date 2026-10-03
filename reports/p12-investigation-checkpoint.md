@@ -1781,3 +1781,37 @@ stale-counter fixture failures were corrected offline and indexed. ARM64
 Release artifacts and source patches are indexed in the new provenance file.
 Package/hash checks and the sole measured process remain pending. No production
 cache-policy decision or runtime performance claim follows from these tests.
+
+
+## Historical writePixels comparison — one successful process
+
+Implementation `1f326e833882e9a9299ad74c57b2486f27bc5c5a`; isolated runtime
+`18baece1f199ab5d2e7cad6d864c40c188bd1bab`; historical source reference `f5dad132`.
+Sole runner/native application exited0/0 with one complete valid record. All
+five samples have18 cached-final hits and18 native writePixels hits, zero
+physical/draw-plan attempts and new observations/admissions/materializations.
+Stabilization cache18/0/18, physical18/0/18, resolve20/0, observations/admissions18/18,
+offscreen materializations18. Direct generic/smooth destination draws remain0.
+Each event has20 native attempts:18 viewport hits and2 additional scaled backing
+draws rejected on sizeMismatch. Copies total7,715,616 bytes; three bottom controls
+copy358×6 due prior logical clipping. Helper-clipped hits0; opacity18 full scans
+during stabilization, none in timed samples. Viewport sources are358×358 RGBA8888
+with proven opaque alpha, canvas scale2 and matching physical device extents.
+
+PaintTree ms: 1.310291, 1.153792, 1.156541, 1.156250, 1.150959.
+ImageControl totals ms: 0.950206, 0.841623, 0.845332, 0.840083, 0.837458.
+Median1.156250 ms versus immediate3.650708 and historical1.016875 ms.
+Recovered2.494458 ms /94.708283% of the2.633833 ms residual gap; remaining
+0.139375 ms remains unexplained. Case A: native hits plus isolated timing collapse
+support high confidence that removing the historical opaque device-1:1 path
+explains a substantial part of the warm regression for this workload. This does
+not prove all historical controls hit or restore the production architecture.
+Earlier routing/admission conclusions remain intact; production policy unresolved.
+
+`reports/p12-writepixels-warm-path-probe.md` provides complete counters, actual
+physical rectangles, proof/format/timing evidence and limitations.
+`experiments/p12-writepixels-warm/provenance.json` indexes source/build/package
+commands and hashes, exact historical blobs, first-process evidence and validation.
+105 lab tests,58 SDK tests, focused native parity/eligibility and cheap post-run
+audits passed. No replacement, historical run, production change, alternate
+experiment or matrix followed; the open cache-policy section remains unchanged.

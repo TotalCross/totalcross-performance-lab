@@ -80,75 +80,596 @@
     "javaCompile": "official 8 sources/custom 11 sources passed",
     "headers": "3 changed runtime files passed",
     "initialNativeBuildFailure": "direct SkCanvas test include required newer C++ than existing test target; removed include and used preexisting skew test bridge",
-    "initialNativeTestFixtureFailure": "disabled-case assertion saw preceding clipped-case counters; test now explicitly clears prior event evidence before disabling; no eligibility change"
+    "initialNativeTestFixtureFailure": "disabled-case assertion saw preceding clipped-case counters; test now explicitly clears prior event evidence before disabling; no eligibility change",
+    "prelaunch": "clean exact sources; complete package schema/hashes; 3 build artifacts; full dataset; exact historical planner; offline valid/truncated/duplicate protocol checks; fresh launch marker",
+    "postRun": "passed: complete protocol/schema/preflight, one runner/native exit0, six event counters/geometry/format/proofs/bytes, all source/artifact/evidence hashes, 105 Python tests, unchanged original runtime/policy section"
   },
-  "measurementStatus": "not launched",
-  "runnerProcesses": 0,
-  "measuredNativeProcesses": 0,
+  "measurementStatus": "completed; no replacement",
+  "runnerProcesses": 1,
+  "measuredNativeProcesses": 1,
   "evidenceFiles": [
     {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-committed.log",
-      "sha256": "ebbf5658f86612981a11e9c2aede02d7aad10b510d16ff926dbe6a743433759f"
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-writepixels-warm-probe/run-20261003T192855Z-96759/runs.jsonl",
+      "sha256": "ca9a09a0c215566fd889845aa444de34896b3e3a518d7a2228fee78cd57b972f"
     },
     {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests-final.log",
-      "sha256": "dc41aad9a03b6e62ff436e6b173ed32a75b5a7f9b40c7efdcf9fbbeee3c7036d"
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-writepixels-warm-probe/run-20261003T192855Z-96759/failures.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
     },
     {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/javac-official.log",
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-writepixels-warm-probe/run-20261003T192855Z-96759/processes/0001-default-measured-1/DebugConsole.txt",
+      "sha256": "520595fbd4a38c0449395d9e64590a8ef4f799a6f6a85ca7f57828fce8059f1a"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-writepixels-warm-probe/run-20261003T192855Z-96759/processes/0001-default-measured-1/exit-status.json",
+      "sha256": "f0399b687da10f4a16de7cef599262805d106cf41d3f8428abebe05ec9c18093"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-writepixels-warm-probe/run-20261003T192855Z-96759/processes/0001-default-measured-1/preflight.json",
+      "sha256": "ada4d120dfdc5ad6934f69c33ec14d37db550df2fb2c83bd8581410cacfb7714"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-writepixels-warm-probe/run-20261003T192855Z-96759/processes/0001-default-measured-1/stderr.log",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests-debug.log",
-      "sha256": "60357122a90eecad7001df94ad99f44352063af353c7108bbb6366d91823b444"
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-writepixels-warm-probe/run-20261003T192855Z-96759/processes/0001-default-measured-1/stdout.log",
+      "sha256": "8645c445cde2cd7f045c4ec9c4e5004e0f0fb5f108544e4282345502ff903ef3"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-writepixels-warm-probe/run-20261003T192855Z-96759/processes/0001-default-measured-1/tcbench-run.json",
+      "sha256": "08b7902c3f4370d3275404278fbbbda4b3c3a34590f2f9b912e5c94172ed3ead"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/packages/image-rendering-macos-writepixels-warm/package-manifest.json",
+      "sha256": "b2bdad47ac644415566901ae52f91b9b547f7eca1de2e10c44090921a26a20a5"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/packages/image-rendering-macos-writepixels-warm.build.log",
+      "sha256": "0a8e926317ac47fc12b625cb8de48181c4f2a6aa074b436805688cf40d338b36"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/launch-authorized.json",
+      "sha256": "f678f7eea04d018cbe1c5a05a230583879a5e3be6272a7e03c241573c4e9c311"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/runner-exit-status.txt",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
     },
     {
       "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/cmake.log",
       "sha256": "8b5638b53092ea88eaf433f2424876d4cb42b35fff0a9ccb0fe5810a2671d343"
     },
     {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-debug.log",
-      "sha256": "06e6ac174cb53c0832ad299548f91846528820c877a0fb08cbabeed26ca68779"
-    },
-    {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/sdk-tests-build.log",
-      "sha256": "6ada445e14cfef0e004351c41ebd925011e00bd75ee5750a8238cc0fa9fd2e11"
-    },
-    {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests-committed.log",
-      "sha256": "dc41aad9a03b6e62ff436e6b173ed32a75b5a7f9b40c7efdcf9fbbeee3c7036d"
-    },
-    {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/lab-tests-final.log",
-      "sha256": "1d58e70efb1226e97035e2474f0f976064673ce5b8b328371ef961275fbe1b2b"
-    },
-    {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests.log",
-      "sha256": "d926f8e7e251083121efe4572059593e06d464af314934e74b4e580af477b2b2"
-    },
-    {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/lab-tests.log",
-      "sha256": "2dee9f5eee47d3acbcd16cdd958112584d0943b14e1713e68238bf3c62f928f9"
-    },
-    {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-validation.log",
-      "sha256": "28be6c840bd9f4c99ce596d080eef1af46006dcb506f3befc1800eec833ad9b1"
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/javac-official.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/javac-writepixels.log",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build.log",
-      "sha256": "8cc6eef3cf0276b37cedcb12604975632348d04bb9b1f7299acb6e92ff3195bf"
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/lab-tests-final.log",
+      "sha256": "1d58e70efb1226e97035e2474f0f976064673ce5b8b328371ef961275fbe1b2b"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/lab-tests.log",
+      "sha256": "2dee9f5eee47d3acbcd16cdd958112584d0943b14e1713e68238bf3c62f928f9"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-committed.log",
+      "sha256": "ebbf5658f86612981a11e9c2aede02d7aad10b510d16ff926dbe6a743433759f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-debug.log",
+      "sha256": "06e6ac174cb53c0832ad299548f91846528820c877a0fb08cbabeed26ca68779"
     },
     {
       "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-final.log",
       "sha256": "06e6ac174cb53c0832ad299548f91846528820c877a0fb08cbabeed26ca68779"
     },
     {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-validation.log",
+      "sha256": "28be6c840bd9f4c99ce596d080eef1af46006dcb506f3befc1800eec833ad9b1"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build.log",
+      "sha256": "8cc6eef3cf0276b37cedcb12604975632348d04bb9b1f7299acb6e92ff3195bf"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests-committed.log",
+      "sha256": "dc41aad9a03b6e62ff436e6b173ed32a75b5a7f9b40c7efdcf9fbbeee3c7036d"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests-debug.log",
+      "sha256": "60357122a90eecad7001df94ad99f44352063af353c7108bbb6366d91823b444"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests-final.log",
+      "sha256": "dc41aad9a03b6e62ff436e6b173ed32a75b5a7f9b40c7efdcf9fbbeee3c7036d"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests.log",
+      "sha256": "d926f8e7e251083121efe4572059593e06d464af314934e74b4e580af477b2b2"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/package.log",
+      "sha256": "d607fb999d93edb78d5f1c71cf0bbc7c55f038d37c79021797a1b18df54ea809"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/runner.log",
+      "sha256": "cc12768ee0ef12c65208e5fe8ce31a2b1ca63447974aab6d308d66b3c0a07943"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/sdk-tests-build.log",
+      "sha256": "6ada445e14cfef0e004351c41ebd925011e00bd75ee5750a8238cc0fa9fd2e11"
+    },
+    {
       "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/sdk-tests-committed.log",
       "sha256": "0d70308cccd394e214020d0ab46fad175a47d24a4cc6d5b55e98c54162d96efb"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/lab-tests-postrun.log",
+      "sha256": "bcbb16766550278403abdebb52292c44b67655b9238a1115726dfd0c3c48be8e"
     }
-  ]
+  ],
+  "benchmarkSourceCommit": "1f326e833882e9a9299ad74c57b2486f27bc5c5a",
+  "runnerExitCode": 0,
+  "nativeExitCode": 0,
+  "validRecords": 1,
+  "processDirectory": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-writepixels-warm-probe/run-20261003T192855Z-96759/processes/0001-default-measured-1",
+  "dataset": {
+    "id": "image-scroll",
+    "manifestSha256": "4dac75139e4e7095f5843a696f5fcd84055bf798e90b49614d6e4243120f5dbe",
+    "version": "v1"
+  },
+  "runnerCommand": [
+    "python3",
+    "runners/run.py",
+    "image-rendering",
+    "scroll",
+    "--profile",
+    "default",
+    "--scroll-driver",
+    "writepixels-warm-path-probe",
+    "--rounds",
+    "1",
+    "--warmups",
+    "0",
+    "--timeout-seconds",
+    "180",
+    "--width",
+    "540",
+    "--height",
+    "960",
+    "--dataset-cache",
+    ".local-data/datasets/p12-final/image-scroll/v1",
+    "--package-manifest",
+    ".local-data/packages/image-rendering-macos-writepixels-warm/package-manifest.json",
+    "--runtime-source",
+    ".local-data/runtime-writepixels-warm",
+    "--results-dir",
+    ".local-data/results/image-rendering-writepixels-warm-probe",
+    "--require-default-scroll-preflight",
+    "--fail-fast"
+  ],
+  "events": [
+    {
+      "counters": {
+        "cachedFinalRasterHits": 0,
+        "cachedFinalRasterMisses": 18,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 18,
+        "copyRectPlanFallbacks": 18,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 20490,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 18,
+        "identityFallbacks": 18,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 18,
+        "materializedVariantObservations": 18,
+        "nativeGeometryMaterializations": 18,
+        "physicalCopyAttempts": 18,
+        "physicalCopyFallbacks": 18,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 20,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0,
+        "writePixels": {
+          "attemptNs": 2250957,
+          "attempts": 20,
+          "clippedHits": 0,
+          "copiedBytes": 7715616,
+          "enabled": true,
+          "fallbackDraws": 2,
+          "fallbackNs": 39584,
+          "fallbacks": 2,
+          "hits": 18,
+          "opacityScanPixels": 2306952,
+          "opacityScans": 18,
+          "rejections": {
+            "alphaMask": 0,
+            "destinationBounds": 0,
+            "fractionalDestination": 0,
+            "invalidTargetOrSource": 0,
+            "matrix": 0,
+            "opacity": 0,
+            "sizeMismatch": 2,
+            "sourcePixels": 0,
+            "sourceRect": 0,
+            "unsupportedFormat": 0,
+            "writeFailure": 0
+          },
+          "writeNs": 1105085
+        }
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 335948796,
+      "paintTreeNs": null,
+      "rowPaintCount": 6,
+      "rowPaintNs": 253624,
+      "sample": 0,
+      "scrollPosition": 0,
+      "timed": false
+    },
+    {
+      "counters": {
+        "cachedFinalRasterHits": 18,
+        "cachedFinalRasterMisses": 0,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 0,
+        "copyRectPlanFallbacks": 0,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 0,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 0,
+        "identityFallbacks": 0,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 0,
+        "materializedVariantObservations": 0,
+        "nativeGeometryMaterializations": 0,
+        "physicalCopyAttempts": 0,
+        "physicalCopyFallbacks": 0,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 2,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0,
+        "writePixels": {
+          "attemptNs": 532000,
+          "attempts": 20,
+          "clippedHits": 0,
+          "copiedBytes": 7715616,
+          "enabled": true,
+          "fallbackDraws": 2,
+          "fallbackNs": 37709,
+          "fallbacks": 2,
+          "hits": 18,
+          "opacityScanPixels": 0,
+          "opacityScans": 0,
+          "rejections": {
+            "alphaMask": 0,
+            "destinationBounds": 0,
+            "fractionalDestination": 0,
+            "invalidTargetOrSource": 0,
+            "matrix": 0,
+            "opacity": 0,
+            "sizeMismatch": 2,
+            "sourcePixels": 0,
+            "sourceRect": 0,
+            "unsupportedFormat": 0,
+            "writeFailure": 0
+          },
+          "writeNs": 525003
+        }
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 950206,
+      "paintTreeNs": 1310291,
+      "rowPaintCount": 6,
+      "rowPaintNs": 216249,
+      "sample": 1,
+      "scrollPosition": 0,
+      "timed": true
+    },
+    {
+      "counters": {
+        "cachedFinalRasterHits": 18,
+        "cachedFinalRasterMisses": 0,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 0,
+        "copyRectPlanFallbacks": 0,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 0,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 0,
+        "identityFallbacks": 0,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 0,
+        "materializedVariantObservations": 0,
+        "nativeGeometryMaterializations": 0,
+        "physicalCopyAttempts": 0,
+        "physicalCopyFallbacks": 0,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 2,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0,
+        "writePixels": {
+          "attemptNs": 450456,
+          "attempts": 20,
+          "clippedHits": 0,
+          "copiedBytes": 7715616,
+          "enabled": true,
+          "fallbackDraws": 2,
+          "fallbackNs": 28417,
+          "fallbacks": 2,
+          "hits": 18,
+          "opacityScanPixels": 0,
+          "opacityScans": 0,
+          "rejections": {
+            "alphaMask": 0,
+            "destinationBounds": 0,
+            "fractionalDestination": 0,
+            "invalidTargetOrSource": 0,
+            "matrix": 0,
+            "opacity": 0,
+            "sizeMismatch": 2,
+            "sourcePixels": 0,
+            "sourceRect": 0,
+            "unsupportedFormat": 0,
+            "writeFailure": 0
+          },
+          "writeNs": 446918
+        }
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 841623,
+      "paintTreeNs": 1153792,
+      "rowPaintCount": 6,
+      "rowPaintNs": 214125,
+      "sample": 2,
+      "scrollPosition": 0,
+      "timed": true
+    },
+    {
+      "counters": {
+        "cachedFinalRasterHits": 18,
+        "cachedFinalRasterMisses": 0,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 0,
+        "copyRectPlanFallbacks": 0,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 0,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 0,
+        "identityFallbacks": 0,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 0,
+        "materializedVariantObservations": 0,
+        "nativeGeometryMaterializations": 0,
+        "physicalCopyAttempts": 0,
+        "physicalCopyFallbacks": 0,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 2,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0,
+        "writePixels": {
+          "attemptNs": 455165,
+          "attempts": 20,
+          "clippedHits": 0,
+          "copiedBytes": 7715616,
+          "enabled": true,
+          "fallbackDraws": 2,
+          "fallbackNs": 29208,
+          "fallbacks": 2,
+          "hits": 18,
+          "opacityScanPixels": 0,
+          "opacityScans": 0,
+          "rejections": {
+            "alphaMask": 0,
+            "destinationBounds": 0,
+            "fractionalDestination": 0,
+            "invalidTargetOrSource": 0,
+            "matrix": 0,
+            "opacity": 0,
+            "sizeMismatch": 2,
+            "sourcePixels": 0,
+            "sourceRect": 0,
+            "unsupportedFormat": 0,
+            "writeFailure": 0
+          },
+          "writeNs": 451960
+        }
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 845332,
+      "paintTreeNs": 1156541,
+      "rowPaintCount": 6,
+      "rowPaintNs": 212373,
+      "sample": 3,
+      "scrollPosition": 0,
+      "timed": true
+    },
+    {
+      "counters": {
+        "cachedFinalRasterHits": 18,
+        "cachedFinalRasterMisses": 0,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 0,
+        "copyRectPlanFallbacks": 0,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 0,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 0,
+        "identityFallbacks": 0,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 0,
+        "materializedVariantObservations": 0,
+        "nativeGeometryMaterializations": 0,
+        "physicalCopyAttempts": 0,
+        "physicalCopyFallbacks": 0,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 2,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0,
+        "writePixels": {
+          "attemptNs": 453749,
+          "attempts": 20,
+          "clippedHits": 0,
+          "copiedBytes": 7715616,
+          "enabled": true,
+          "fallbackDraws": 2,
+          "fallbackNs": 28125,
+          "fallbacks": 2,
+          "hits": 18,
+          "opacityScanPixels": 0,
+          "opacityScans": 0,
+          "rejections": {
+            "alphaMask": 0,
+            "destinationBounds": 0,
+            "fractionalDestination": 0,
+            "invalidTargetOrSource": 0,
+            "matrix": 0,
+            "opacity": 0,
+            "sizeMismatch": 2,
+            "sourcePixels": 0,
+            "sourceRect": 0,
+            "unsupportedFormat": 0,
+            "writeFailure": 0
+          },
+          "writeNs": 450958
+        }
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 840083,
+      "paintTreeNs": 1156250,
+      "rowPaintCount": 6,
+      "rowPaintNs": 221332,
+      "sample": 4,
+      "scrollPosition": 0,
+      "timed": true
+    },
+    {
+      "counters": {
+        "cachedFinalRasterHits": 18,
+        "cachedFinalRasterMisses": 0,
+        "cachedFinalRasterProbes": 18,
+        "copyRectPlanAttempts": 0,
+        "copyRectPlanFallbacks": 0,
+        "copyRectPlanHandled": 0,
+        "copyRectPlanLastStatus": 0,
+        "directDrawPlanExecutions": 0,
+        "genericGeometryDraws": 0,
+        "identityAttempts": 0,
+        "identityFallbacks": 0,
+        "identityHits": 0,
+        "immediateAdmissionEnabled": true,
+        "materializedVariantAdmissions": 0,
+        "materializedVariantObservations": 0,
+        "nativeGeometryMaterializations": 0,
+        "physicalCopyAttempts": 0,
+        "physicalCopyFallbacks": 0,
+        "physicalCopyHits": 0,
+        "physicalOnlyEnabled": true,
+        "physicalVariantFallbacks": 0,
+        "physicalVariantHits": 0,
+        "physicalVariantMaterializations": 0,
+        "resolveForDrawingCacheHits": 0,
+        "resolveForDrawingCalls": 2,
+        "smoothResampleDraws": 0,
+        "targetColorFallbacks": 0,
+        "targetColorHits": 0,
+        "targetColorMaterializations": 0,
+        "writePixels": {
+          "attemptNs": 454542,
+          "attempts": 20,
+          "clippedHits": 0,
+          "copiedBytes": 7715616,
+          "enabled": true,
+          "fallbackDraws": 2,
+          "fallbackNs": 27958,
+          "fallbacks": 2,
+          "hits": 18,
+          "opacityScanPixels": 0,
+          "opacityScans": 0,
+          "rejections": {
+            "alphaMask": 0,
+            "destinationBounds": 0,
+            "fractionalDestination": 0,
+            "invalidTargetOrSource": 0,
+            "matrix": 0,
+            "opacity": 0,
+            "sizeMismatch": 2,
+            "sourcePixels": 0,
+            "sourceRect": 0,
+            "unsupportedFormat": 0,
+            "writeFailure": 0
+          },
+          "writeNs": 451626
+        }
+      },
+      "imagePaintCount": 18,
+      "imagePaintNs": 837458,
+      "paintTreeNs": 1150959,
+      "rowPaintCount": 6,
+      "rowPaintNs": 219292,
+      "sample": 5,
+      "scrollPosition": 0,
+      "timed": true
+    }
+  ],
+  "comparison": {
+    "newWarmMedianMs": 1.15625,
+    "priorImmediateWarmMedianMs": 3.650708,
+    "historicalWarmMedianMs": 1.016875,
+    "recoveredMs": 2.494458,
+    "originalResidualGapMs": 2.633833,
+    "residualGapRecoveredPercent": 94.70828256764949,
+    "remainingGapMs": 0.13937500000000003
+  }
 }

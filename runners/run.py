@@ -213,15 +213,16 @@ def validate_scroll_driver_arguments(arguments) -> None:
     driver = getattr(arguments, "scroll_driver", "fixed-step")
     if driver == "fixed-step":
         return
-    if driver not in ("historical-driver", "paint-split-probe"):
+    probe_drivers = ("paint-split-probe", "paint-preparation-probe")
+    if driver not in ("historical-driver",) + probe_drivers:
         raise RunnerError("invalid scroll driver")
     profiles = comma_values(arguments.profiles, DEFAULT_PROFILES[arguments.family], PROFILES, "profile")
     if (arguments.family != "scroll" or profiles != ("default",) or arguments.rounds != 1
             or arguments.warmups != 0 or arguments.diagnostics or arguments.width != 540
             or arguments.height != 960):
         raise RunnerError(driver + " requires one default scroll round at 540x960 with no warmup or diagnostics")
-    if driver == "paint-split-probe" and not getattr(arguments, "require_default_scroll_preflight", False):
-        raise RunnerError("paint-split-probe requires --require-default-scroll-preflight")
+    if driver in probe_drivers and not getattr(arguments, "require_default_scroll_preflight", False):
+        raise RunnerError(driver + " requires --require-default-scroll-preflight")
 
 
 def validate_historical_scroll_result(record: dict[str, Any], width: int, height: int) -> None:
@@ -392,6 +393,136 @@ def validate_paint_split_result(record: dict[str, Any], width: int, height: int)
             raise RunnerError("paint-split full-corpus detection flag is inconsistent")
     if measurements.get("fullCorpusPaintDetected") is not full_corpus_detected:
         raise RunnerError("paint-split overall full-corpus detection flag is inconsistent")
+
+
+def validate_paint_preparation_result(record: dict[str, Any], width: int, height: int) -> None:
+    measurements = record.get("measurements")
+    if not isinstance(measurements, dict):
+        raise RunnerError("paint-preparation result is missing measurements")
+    if (record.get("family") != "scroll" or record.get("profile") != "default"
+            or measurements.get("scrollDriver") != "paint-preparation-probe"):
+        raise RunnerError("paint-preparation result identity does not match the requested probe")
+    if (record.get("logicalDimensions") != {"width": width, "height": height}
+            or record.get("renderer") != "RASTER" or record.get("diagnosticsEnabled") is not False):
+        raise RunnerError("paint-preparation result dimensions or runtime mode are invalid")
+    if (measurements.get("imageControls") != 663 or measurements.get("rows") != 221
+            or measurements.get("columns") != 3 or measurements.get("tileWidth") != 179
+            or measurements.get("preparation") is not False
+            or measurements.get("explicitPreparationPerformed") is not True):
+        raise RunnerError("paint-preparation result fixture geometry or profile is invalid")
+    if (measurements.get("paintSamplesPerPhase") != 5 or measurements.get("prepareRequests") != 1
+            or measurements.get("callbackCompletions") != 1
+            or measurements.get("prepareStatus") != "callback-completed"):
+        raise RunnerError("paint-preparation result must contain five samples per phase and one callback")
+    expected_phase_order = ["A-unprepared", "B-prepareForDisplay-call", "B-callback-complete", "C-prepared"]
+    if measurements.get("phaseOrder") != expected_phase_order:
+        raise RunnerError("paint-preparation phases must run in A, preparation callback, C order")
+
+    time_fields = ("phaseAStartedNs", "phaseACompletedNs", "prepareCallStartNs", "prepareCallbackNs",
+                   "phaseCStartedNs", "phaseCCompletedNs")
+    if any(type(measurements.get(field)) is not int for field in time_fields):
+        raise RunnerError("paint-preparation result is missing phase timestamps")
+    (phase_a_start, phase_a_end, prepare_start, prepare_callback,
+     phase_c_start, phase_c_end) = (measurements[field] for field in time_fields)
+    if not (phase_a_start <= phase_a_end <= prepare_start <= prepare_callback <= phase_c_start <= phase_c_end):
+        raise RunnerError("paint-preparation timestamps violate A -> callback -> C phase ordering")
+    wait_ns = measurements.get("prepareWaitNs")
+    if type(wait_ns) is not int or wait_ns < 0 or wait_ns != prepare_callback - prepare_start:
+        raise RunnerError("paint-preparation wait time does not match its callback timestamps")
+
+    scroll_minimum = measurements.get("scrollMinimum")
+    before_position = measurements.get("scrollPositionBeforePreparation")
+    after_position = measurements.get("scrollPositionAfterPreparation")
+    visible_at_request = measurements.get("visibleImageControlsAtRequest")
+    if (type(scroll_minimum) is not int or type(before_position) is not int
+            or type(after_position) is not int or type(visible_at_request) is not int
+            or not 1 <= visible_at_request <= 663):
+        raise RunnerError("paint-preparation result position or visible-control count is invalid")
+
+    def validate_phase(name: str, timing_key: str, expected_position: int) -> tuple[list[int], list[int], dict[str, Any]]:
+        phase = measurements.get(name)
+        if not isinstance(phase, dict) or phase.get("sampleCount") != 5:
+            raise RunnerError("paint-preparation phase must contain exactly five samples: " + name)
+        samples = phase.get("samples")
+        if not isinstance(samples, list):
+            raise RunnerError("paint-preparation phase is missing per-sample data: " + name)
+        if len(samples) != 5:
+            raise RunnerError("paint-preparation phase must contain exactly five samples: " + name)
+        row_counts = []
+        image_counts = []
+        row_paint_ns = 0
+        image_paint_ns = 0
+        for sample_index, sample in enumerate(samples):
+            required_ints = (timing_key, "rowPaintCount", "rowPaintNs", "imagePaintCount", "imagePaintNs",
+                             "scrollPosition", "scrollbarPosition", "scrollContentPosition")
+            if (not isinstance(sample, dict) or sample.get("sampleIndex") != sample_index
+                    or any(type(sample.get(field)) is not int for field in required_ints)):
+                raise RunnerError("paint-preparation result contains an incomplete sample: " + name)
+            if (sample[timing_key] < 0 or sample["rowPaintNs"] < 0 or sample["imagePaintNs"] < 0
+                    or not 0 <= sample["rowPaintCount"] <= 221
+                    or not 0 <= sample["imagePaintCount"] <= 663
+                    or sample["scrollPosition"] != expected_position
+                    or sample["scrollbarPosition"] != expected_position
+                    or sample["scrollContentPosition"] != expected_position):
+                raise RunnerError("paint-preparation sample has invalid counts, times, or position: " + name)
+            row_counts.append(sample["rowPaintCount"])
+            image_counts.append(sample["imagePaintCount"])
+            row_paint_ns += sample["rowPaintNs"]
+            image_paint_ns += sample["imagePaintNs"]
+        if phase.get("rowPaintCounts") != row_counts or phase.get("imagePaintCounts") != image_counts:
+            raise RunnerError("paint-preparation count arrays do not match per-sample records: " + name)
+        if (phase.get("cumulativeRowPaintNs") != row_paint_ns
+                or phase.get("cumulativeImageControlPaintNs") != image_paint_ns):
+            raise RunnerError("paint-preparation cumulative paint times are inconsistent: " + name)
+        stats = phase.get("statistics")
+        elapsed = [sample[timing_key] for sample in samples]
+        if (not isinstance(stats, dict) or stats.get("sampleCount") != 5
+                or any(type(stats.get(field)) not in (int, float)
+                       for field in ("p50Ns", "p95Ns", "p99Ns", "maxNs"))):
+            raise RunnerError("paint-preparation phase has invalid timing statistics: " + name)
+        for field, expected in (("p50Ns", percentile(elapsed, 0.50)),
+                                ("p95Ns", percentile(elapsed, 0.95)),
+                                ("p99Ns", percentile(elapsed, 0.99)), ("maxNs", max(elapsed))):
+            if abs(stats[field] - expected) > 1.0:
+                raise RunnerError("paint-preparation statistics do not match the samples: " + name)
+        image_p50 = percentile([sample["imagePaintNs"] for sample in samples], 0.50)
+        reported_image_p50 = phase.get("imageControlPaintP50PerSampleNs")
+        if (type(reported_image_p50) not in (int, float)
+                or abs(reported_image_p50 - image_p50) > 1.0):
+            raise RunnerError("paint-preparation ImageControl p50/sample is inconsistent: " + name)
+        return row_counts, image_counts, stats
+
+    before_rows, before_images, before_stats = validate_phase(
+        "unpreparedPaintTree", "paintTreeNs", before_position)
+    after_rows, after_images, after_stats = validate_phase(
+        "preparedPaintTree", "paintTreeNs", after_position)
+    same_viewport = (before_position == scroll_minimum and after_position == scroll_minimum
+                     and before_position == after_position)
+    same_counts = before_rows == after_rows and before_images == after_images
+    request_matches_painted = all(count == visible_at_request for count in before_images + after_images)
+    comparison_valid = same_viewport and same_counts and request_matches_painted
+    if (measurements.get("sameViewport") is not same_viewport
+            or measurements.get("sameControlCounts") is not same_counts
+            or measurements.get("requestVisibilityMatchesPaint") is not request_matches_painted
+            or measurements.get("timingComparisonValid") is not comparison_valid):
+        raise RunnerError("paint-preparation comparison validity flags are inconsistent")
+    expected_status = ("invalid-position-mismatch" if not same_viewport else
+                       "invalid-visible-count-mismatch" if not same_counts else
+                       "invalid-request-visible-count-mismatch" if not request_matches_painted else "valid")
+    if measurements.get("comparisonStatus") != expected_status:
+        raise RunnerError("paint-preparation comparison status is inconsistent")
+
+    difference = measurements.get("absolutePaintTreeDifferenceNs")
+    reduction = measurements.get("paintTreeReductionPercent")
+    if comparison_valid:
+        expected_difference = before_stats["p50Ns"] - after_stats["p50Ns"]
+        expected_reduction = 100.0 * expected_difference / before_stats["p50Ns"] if before_stats["p50Ns"] else None
+        if (type(difference) not in (int, float) or abs(difference - expected_difference) > 1.0
+                or type(reduction) not in (int, float) or expected_reduction is None
+                or abs(reduction - expected_reduction) > 1e-6):
+            raise RunnerError("paint-preparation improvement metrics do not match phase medians")
+    elif difference is not None or reduction is not None:
+        raise RunnerError("paint-preparation improvement must be omitted when comparison is invalid")
 
 
 def dataset_info(cache: Path, dataset_ref: str) -> dict[str, Any] | None:
@@ -584,7 +715,7 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
     if child.returncode:
         raise RunnerError("child exited with status %d" % child.returncode)
     scroll_driver = getattr(arguments, "scroll_driver", "fixed-step")
-    if scroll_driver == "paint-split-probe":
+    if scroll_driver in ("paint-split-probe", "paint-preparation-probe"):
         preflight = parse_preflight(child.stdout, arguments.family, cell["workload"], cell["profile"])
         if (preflight.get("runtimeSourceCommit") != runtime_commit
                 or preflight.get("benchmarkSourceCommit") != benchmark_commit):
@@ -617,6 +748,8 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
         validate_historical_scroll_result(run, arguments.width, arguments.height)
     elif arguments.family == "scroll" and scroll_driver == "paint-split-probe":
         validate_paint_split_result(run, arguments.width, arguments.height)
+    elif arguments.family == "scroll" and scroll_driver == "paint-preparation-probe":
+        validate_paint_preparation_result(run, arguments.width, arguments.height)
     elif getattr(arguments, "require_default_scroll_preflight", False):
         measurements = run.get("measurements", {})
         logical = run.get("logicalDimensions")
@@ -886,7 +1019,8 @@ def execute(arguments) -> int:
         else:
             arguments.runtime_identity = "github-artifact:%s;sha256:%s;runtime-files-sha256:%s" % (
                 official_provenance["artifactName"], official_provenance["outerArtifactSha256"], runtime_hash)
-        if getattr(arguments, "scroll_driver", "fixed-step") != "paint-split-probe":
+        if getattr(arguments, "scroll_driver", "fixed-step") not in (
+                "paint-split-probe", "paint-preparation-probe"):
             process_index += 1
             try:
                 launch_preflight(arguments, cell, process_index, dataset, runtime_commit, benchmark_commit,
@@ -962,7 +1096,8 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--width", type=int, default=540)
     render.add_argument("--height", type=int, default=960)
     render.add_argument("--diagnostics", action="store_true")
-    render.add_argument("--scroll-driver", choices=("fixed-step", "historical-driver", "paint-split-probe"), default="fixed-step",
+    render.add_argument("--scroll-driver", choices=("fixed-step", "historical-driver", "paint-split-probe",
+                                                     "paint-preparation-probe"), default="fixed-step",
                         help="scroll cadence and position driver; probe modes are one-round investigations")
     render.add_argument("--fail-fast", action="store_true")
     render.add_argument("--runtime-source", type=Path,

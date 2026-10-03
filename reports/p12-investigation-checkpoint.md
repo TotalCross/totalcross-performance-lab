@@ -1145,3 +1145,210 @@ Post-run validation: `python3 -m unittest discover -s tests` passed all 59 tests
 run. No expensive platform, sanitizer or benchmark matrix was run, as the user
 restricted this task to one historical static probe. No runtime/source rebuild
 was needed for the replacement. PR #1 is not merged.
+
+
+## Current-master native draw-path classification (2026-10-03)
+
+Exactly one application process ran from benchmark commit
+`b9506e892b407813e73756c6b44dde8ffb803bc4` on `perf/image-rendering-benchmarks`.
+It used the previously validated official `TotalCross-7.2.2` package,
+workflow run [37076804175](https://github.com/TotalCross/totalcross/actions/runs/37076804175),
+artifact `11256633898`, source SHA
+`5a44f503bf6fa1bec350f1218f4d501a70fc4812`. The official SDK, Launcher and
+libtcvm hashes were revalidated against the package provenance before launch
+and during offline analysis. No TotalCross source or binaries were rebuilt or
+modified. Package manifest and source/deployed artifact hashes are indexed once
+in `.local-data/draw-path-probe/evidence.json`.
+
+The inline preflight accepted default RASTER/STANDARD on macOS ARM64, runtime
+diagnostics disabled, target-color conversion/physical-variant cache/scroll
+raster reuse/automatic preparation disabled, and LEGACY_PER_ENTRY_THREAD.
+The verified image-scroll/v1 manifest has 663 images (660 JPEG, 3 PNG), 221
+rows and 3 columns; logical dimensions are 540x960, tiles 179x179, inner viewport
+540x910, scale 2 and drawable 1080x1920. The normal nested ScrollContainers and
+Image creation/scaling were unchanged. All measured calls stayed at position 0
+with the same row, ImageControl and Image references.
+
+Protocol: one ordinary untimed stabilization repaint, one whole-tree sample,
+then one direct `control.onPaint(control.getGraphics())` per visible control in
+manifest order, resetting existing test accounting before each sample. No
+preparation request, scroll pass, additional stabilization, alternate profile,
+mask, historical runtime, Windows, matrix or cache-policy experiment ran.
+
+The exact runner command, from the performance-lab root, was:
+
+```sh
+python3 runners/run.py image-rendering scroll --profile default \
+  --scroll-driver draw-path-probe --rounds 1 --warmups 0 \
+  --timeout-seconds 180 --width 540 --height 960 \
+  --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 \
+  --package-manifest .local-data/packages/image-rendering-macos-official-draw-path-probe/package-manifest.json \
+  --results-dir .local-data/results/image-rendering-draw-path-probe \
+  --require-default-scroll-preflight --fail-fast
+```
+
+The sole native child command was:
+
+```sh
+/Users/flsobral/repos/totalcross-performance-lab/.local-data/packages/image-rendering-macos-official-draw-path-probe/profiles/default/image-rendering-default /scr -2,-2,540,960
+```
+
+### Complete measurement and offline recovery
+
+The child exited successfully and emitted one run plus one final summary,
+including all 19 measured calls. The runner then exited 1 on a post-process
+validation error: `$.aggregate.statusHex has an invalid format`. The raw status
+was 217099, but the benchmark emitted `0x500B`. The SDK's native substitute
+`Integer4D.toHexString(int)` calls `Convert.unsigned2hex(i, 4)`, producing four
+uppercase digits; canonical full-width hex for that integer is `0x3500b`.
+This was a benchmark presentation error after measurement, not a failed paint.
+
+The original helper also omitted the identity-fallback classification because
+it used only `Image.physicalIdentityFallbackCountForTest()`, which returned 0.
+The native returned status has `DRAW_IDENTITY_FALLBACK` set in every sample.
+Source inspection explains the accounting distinction: `tugG_copyRectPlanNative`
+records direct executions but does not increment Image's identity hit/fallback
+fields, whereas `tugG_drawGeometryNative` increments those fields. The bridge
+records identity attempts and generic/smooth events from the returned status.
+The raw getter counters remain 0; they are not replaced with inferred counts.
+
+Benchmark-only fixes now format all status bits and classify identity outcomes
+from the status flags as well as getter counters. An offline analyzer repairs
+only the two known presentation defects for the original benchmark commit,
+preserving emitted strings/classifications and all timings/counters. It validates
+package hashes, the original run/summary protocol, inline preflight, retained
+instances, geometry, exact manifest order, status bits, counter consistency and
+timing statistics. The ordinary runner remains strict. Its original failure
+record and raw stdout remain intact; the offline analysis reports `validated`.
+No application was launched again and no rebuilt package was used for these
+measurements.
+
+Exact offline analysis command:
+
+```sh
+python3 tools/analyze_draw_path_probe.py \
+  --stdout .local-data/results/image-rendering-draw-path-probe/run-20261003T044727Z-49989/processes/0001-default-measured-1/stdout.log \
+  --package-manifest .local-data/packages/image-rendering-macos-official-draw-path-probe/package-manifest.json \
+  --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 \
+  --output .local-data/draw-path-probe/analysis.json --recover-legacy-status
+```
+
+### Aggregate accounting
+
+Whole-tree paint: **290.778208 ms** (`290778208 ns`),
+**6 rows / 18 ImageControls**, position 0. Enclosed ImageControl paint time:
+290.292039 ms; enclosed row paint time: 0.274626 ms.
+These callback timings are enclosed measurements, not independent components.
+
+| Existing counter/state | Value |
+|---|---:|
+| `cachedFinalRasterHits` | 0 |
+| `cachedFinalRasterMisses` | 18 |
+| `cachedFinalRasterProbes` | 18 |
+| `copyRectPlanAttempts` | 18 |
+| `copyRectPlanFallbacks` | 0 |
+| `copyRectPlanHandled` | 18 |
+| `copyRectPlanLastStatus` | 217099 |
+| `directDrawPlanExecutions` | 18 |
+| `genericGeometryDraws` | 18 |
+| `identityAttempts` | 18 |
+| `identityFallbacks` | 0 |
+| `identityHits` | 0 |
+| `physicalCopyHits` | 0 |
+| `physicalVariantFallbacks` | 0 |
+| `physicalVariantHits` | 0 |
+| `physicalVariantMaterializations` | 0 |
+| `smoothResampleDraws` | 18 |
+| `targetColorFallbacks` | 0 |
+| `targetColorHits` | 0 |
+| `targetColorMaterializations` | 0 |
+
+Aggregate last status: 217099 / `0x3500b`; decoded SDK flags: handled,
+identity attempted, identity fallback, generic geometry and smooth resample.
+Identity hit, physical-copy hit and every target-color/physical-variant flag
+are false. `unexpectedDisabledPathActivity` is false; all target-color and
+physical-variant hit/materialization/fallback counters are zero.
+Physical-copy accounting exposes only hits; there are no attempt/fallback
+counters to report. Aggregate last status describes only its last plan attempt,
+so it does not provide an aggregate identity-fallback count.
+
+### Eighteen per-control samples
+
+Classification **F** for every row: cached-final miss; physical identity
+attempted and fell back; no physical-copy hit; generic geometry; smooth resample;
+draw handled. Native identity hit and all target-color/physical-variant flags
+are false. All rows have one plan attempt, one handled draw, zero plan fallback,
+one cached-final probe/miss, one identity attempt, one generic draw, one smooth
+resample and one direct execution. Getter identity hit/fallback counters and
+physical-copy/target-color/physical-variant counters are 0. Each paints one
+ImageControl and no row; no control issues more than one plan attempt.
+The raw status integer is unchanged; hex and F are the offline interpretation.
+
+| Manifest index | Path | Format | Elapsed (ms) | Classification | Raw integer / canonical hex |
+|---|---|---|---:|---|---|
+| 0 | `-1009782731.jpg` | jpeg | 19.064541 | F | 217099 / `0x3500b` |
+| 1 | `-1012043485.jpg` | jpeg | 18.837666 | F | 217099 / `0x3500b` |
+| 2 | `-1013143947.jpg` | jpeg | 19.397667 | F | 217099 / `0x3500b` |
+| 3 | `-1015024107.jpg` | jpeg | 19.502584 | F | 217099 / `0x3500b` |
+| 4 | `-1026010547.jpg` | jpeg | 19.523792 | F | 217099 / `0x3500b` |
+| 5 | `-1028874041.jpg` | jpeg | 18.890167 | F | 217099 / `0x3500b` |
+| 6 | `-1038926037.jpg` | jpeg | 18.781209 | F | 217099 / `0x3500b` |
+| 7 | `-104018500.jpg` | jpeg | 18.937167 | F | 217099 / `0x3500b` |
+| 8 | `-1040544427.jpg` | jpeg | 18.593458 | F | 217099 / `0x3500b` |
+| 9 | `-1042033183.jpg` | jpeg | 18.601375 | F | 217099 / `0x3500b` |
+| 10 | `-1042180667.jpg` | jpeg | 18.546708 | F | 217099 / `0x3500b` |
+| 11 | `-1043960095.jpg` | jpeg | 18.679500 | F | 217099 / `0x3500b` |
+| 12 | `-1056468936.jpg` | jpeg | 18.593916 | F | 217099 / `0x3500b` |
+| 13 | `-1059601584.jpg` | jpeg | 19.303000 | F | 217099 / `0x3500b` |
+| 14 | `-108958495.jpg` | jpeg | 19.365750 | F | 217099 / `0x3500b` |
+| 15 | `-1096038007.jpg` | jpeg | 0.453125 | F | 217099 / `0x3500b` |
+| 16 | `-111131558.jpg` | jpeg | 0.397250 | F | 217099 / `0x3500b` |
+| 17 | `-1111384947.jpg` | jpeg | 0.389292 | F | 217099 / `0x3500b` |
+
+Individual timing (ms): min **0.389292**,
+median **18.809438**,
+max **19.523792**,
+sum **285.858167**.
+Indices 0–14 took 18.546708–19.523792 ms each, while indices 15–17 took
+0.389292–0.453125 ms. These are single control measurements, not distributions.
+
+The sum exceeds the earlier 277.762 ms cumulative ImageControl reference by
+8.096167 ms (**2.91%**), reasonably consistent for one probe. Aggregate enclosed
+ImageControl time is 290.292039 ms; whole-tree time is 290.778208 ms, compared
+with the supplied earlier paint-tree p50 of 278.192 ms. The earlier reference
+was not rerun.
+
+### Interpretation and next target
+
+The draw-path hypothesis is confirmed by the returned native status for **all
+18 individual controls**: identity attempt → identity fallback → generic
+geometry → smooth resample. No cached-final, identity or physical-copy hit was
+observed. The aggregate has exactly 18 attempts, handled draws, cached-final
+misses, identity attempts, generic draws and smooth resamples, with zero cache
+hits, identity getter hits and physical-copy hits. The proposed approximate
+identity-fallback counter of 18 was **not** observed: that getter returned 0,
+while all 18 independently captured statuses reported fallback. This accounting
+limitation is explicit, not forced to match the hypothesis.
+
+The next investigation target is the historical
+`drawPhysicalFastPath` / `buildRasterPhysicalPlan` versus current
+`physicalIdentityMapping` / `physicalIdentityDraw`, particularly why the same
+179x179 presentation falls back from a cheap physical draw. This task identifies
+that target; it does not investigate or implement the production fix. The
+**Open follow-up: materialized cache admission policy** section is preserved
+verbatim and remains unresolved and out of scope.
+
+Raw stdout/stderr, preflight, process config and original runner failure are
+under `.local-data/results/image-rendering-draw-path-probe/run-20261003T044727Z-49989/`.
+The launch guard, canonical analysis, build/test logs and evidence index are
+under `.local-data/draw-path-probe/`; all remain outside Git.
+
+Validation after the complete measurement and benchmark-only recovery fixes:
+`python3 -m unittest discover -s tests` passed all 70 tests, including 11 focused
+draw-path contracts and saved-output recovery cases; `git diff --check` passed.
+The corrected benchmark sources compile against the same official SDK with
+`javac --release 8`; no replacement package or application process was created.
+The offline analyzer passed the complete result contract against the verified
+manifest and package. The original runner validation failure remains recorded.
+No platform matrix, sanitizer, scrolling benchmark or extra performance sample
+was run because this task is restricted to the single static draw-path process.

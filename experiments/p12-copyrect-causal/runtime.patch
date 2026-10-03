@@ -1,0 +1,112 @@
+diff --git a/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java b/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
+index 2f6bf3ebf..56a1fb31a 100644
+--- a/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
++++ b/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
+@@ -83,0 +84,7 @@ public class Image extends GfxSurface {
++  // Experiment-only: enabled by the P12 causal probe after normal startup paint.
++  static int copyRectPhysicalOnlyForTest;
++  static int causalResolveCallsForTest;
++  static int causalResolveCacheHitsForTest;
++  static int causalVariantObservationsForTest;
++  static int causalVariantAdmissionsForTest;
++
+@@ -181,0 +189,4 @@ public class Image extends GfxSurface {
++    causalResolveCallsForTest = 0;
++    causalResolveCacheHitsForTest = 0;
++    causalVariantObservationsForTest = 0;
++    causalVariantAdmissionsForTest = 0;
+@@ -1298,0 +1310,3 @@ public class Image extends GfxSurface {
++    if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++      causalResolveCallsForTest++;
++    }
+@@ -1304,0 +1319,3 @@ public class Image extends GfxSurface {
++      if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++        causalResolveCacheHitsForTest++;
++      }
+@@ -1312,0 +1330,3 @@ public class Image extends GfxSurface {
++    if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++      causalVariantObservationsForTest++;
++    }
+@@ -1314,0 +1335,3 @@ public class Image extends GfxSurface {
++      if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++        causalVariantAdmissionsForTest++;
++      }
+diff --git a/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java b/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java
+index d25829d93..aa92d07e2 100644
+--- a/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java
++++ b/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java
+@@ -18,0 +19,3 @@ public final class ImageRasterFeatureBridge {
++  static int physicalCopyAttemptsForTest;
++  static int physicalCopyFallbacksForTest;
++  static int causalIdentityFallbacksForTest;
+@@ -75,0 +79,3 @@ public final class ImageRasterFeatureBridge {
++    if ((status & (1 << 12)) != 0) physicalCopyAttemptsForTest++;
++    if ((status & (1 << 14)) != 0) physicalCopyFallbacksForTest++;
++    if ((status & ImageRasterDiagnostics.DRAW_IDENTITY_FALLBACK) != 0) causalIdentityFallbacksForTest++;
+@@ -137,0 +144,3 @@ public final class ImageRasterFeatureBridge {
++    physicalCopyAttemptsForTest = 0;
++    physicalCopyFallbacksForTest = 0;
++    causalIdentityFallbacksForTest = 0;
+diff --git a/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h b/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h
+index 9b680730d..35d5a7d78 100644
+--- a/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h
++++ b/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h
+@@ -186,0 +187,2 @@ static int skiaDrawGeometryPlan(Context currentContext, TCObject dstSurf, TCObje
++   int32* causalPhysicalOnly = allowPhysicalCopy
++      ? imageTestAccountingField(currentContext, "copyRectPhysicalOnlyForTest") : null;
+@@ -190 +192,2 @@ static int skiaDrawGeometryPlan(Context currentContext, TCObject dstSurf, TCObje
+-      allowPhysicalCopy != 0 && doClip != 0);
++      allowPhysicalCopy != 0 && doClip != 0,
++      causalPhysicalOnly != null && *causalPhysicalOnly != 0);
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia.h b/TotalCrossVM/src/nm/ui/skia/skia.h
+index 6a338067b..062b0cb44 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia.h
++++ b/TotalCrossVM/src/nm/ui/skia/skia.h
+@@ -188 +188 @@ int skia_image_backing_draw_geometry_to_surface(int32 targetSurface,
+-    bool allowPhysicalCopy);
++    bool allowPhysicalCopy, bool physicalOnlyForTest);
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp b/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp
+index 3466bf11a..86bdc235d 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp
++++ b/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp
+@@ -1027 +1027 @@ int skia_image_backing_draw_geometry_to_surface(int32 targetSurface,
+-    bool allowPhysicalCopy) {
++    bool allowPhysicalCopy, bool physicalOnlyForTest) {
+@@ -1045,0 +1046,5 @@ int skia_image_backing_draw_geometry_to_surface(int32 targetSurface,
++    // P12 experiment: preserve production physical eligibility, but let Java
++    // resolve the final raster instead of terminating copyRect with generic draw.
++    if (allowPhysicalCopy && physicalOnlyForTest) {
++        return status;
++    }
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp b/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp
+index 5b64194a9..ca81ad1b0 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp
++++ b/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp
+@@ -109 +109 @@ static bool testPhysicalIdentityCopyCase(int operation, int32 alphaMask,
+-        destinationRight, destinationBottom, true);
++        destinationRight, destinationBottom, true, expectCopyHit || expectIdentityHit);
+@@ -111,0 +112,15 @@ static bool testPhysicalIdentityCopyCase(int operation, int32 alphaMask,
++    const bool baselinePhysicalHit = (status & (SKIA_IMAGE_DRAW_PHYSICAL_COPY_HIT
++        | SKIA_IMAGE_DRAW_PHYSICAL_IDENTITY_HIT)) != 0;
++    // Rejected physical-only calls must return before drawing. Fixtures with
++    // physical hits exercised the enabled switch in the baseline call above.
++    if (!baselinePhysicalHit && !failDirectWritePixels) {
++        const int physicalOnlyStatus = skia_image_backing_draw_geometry_to_surface(destinationSurface, &plan,
++            static_cast<float>(sourceLeft), 0, sourceRight, sourceBottom, destinationX, destinationY,
++            destinationRight, destinationBottom, true, true);
++        if ((physicalOnlyStatus & (SKIA_IMAGE_DRAW_HANDLED | SKIA_IMAGE_DRAW_GENERIC_GEOMETRY
++                | SKIA_IMAGE_DRAW_SMOOTH_RESAMPLE)) != 0) {
++            std::fprintf(stderr, "physical-only experiment routing failed\n");
++            return false;
++        }
++    }
++
+@@ -116 +131 @@ static bool testPhysicalIdentityCopyCase(int operation, int32 alphaMask,
+-        destinationX, destinationY, destinationRight, destinationBottom, false);
++        destinationX, destinationY, destinationRight, destinationBottom, false, false);
+@@ -276 +291 @@ static bool testPhysicalCopyFallbackCase(const char* name, int destinationColorT
+-        destinationBottom, true);
++        destinationBottom, true, false);
+@@ -279 +294 @@ static bool testPhysicalCopyFallbackCase(const char* name, int destinationColorT
+-        destinationRight, destinationBottom, false);
++        destinationRight, destinationBottom, false, false);

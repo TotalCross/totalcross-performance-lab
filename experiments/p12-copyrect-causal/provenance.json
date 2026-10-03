@@ -1,0 +1,63 @@
+{
+  "runtimeSourceCommit": "fc08c39499dead73b327ad259a992ab34ec42870",
+  "baseRuntimeSourceCommit": "5a44f503bf6fa1bec350f1218f4d501a70fc4812",
+  "runtimeSource": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-copyrect-causal",
+  "configuration": "Release macOS arm64 SDL Skia",
+  "artifacts": [
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-copyrect-causal/TotalCrossSDK/dist/totalcross-sdk.jar",
+      "sha256": "7ae364eac27dd1be327e8a0aab28ee814c463a42c554853768d2f9ecf7838d88"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-copyrect-causal/Launcher",
+      "sha256": "a02760a0f5d9451732b8948646bfee542d784d067b5a30c218896bd1af87b3bc"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-copyrect-causal/libtcvm.dylib",
+      "sha256": "4db3a8fee8461bc7fd53db9612b46a4cdcfe54f3a0140cb2249340913f24df69"
+    }
+  ],
+  "buildCommands": {
+    "sdk": [
+      "./gradlew-agent",
+      "dist",
+      "-x",
+      "test"
+    ],
+    "native": [
+      "ninja",
+      "-C",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-copyrect-causal",
+      "tcvm",
+      "Launcher",
+      "skia_surface_test"
+    ],
+    "configure": [
+      "cmake",
+      "-S",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-copyrect-causal/TotalCrossVM",
+      "-B",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-copyrect-causal",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_OSX_ARCHITECTURES=arm64",
+      "-DTC_RENDERER_SKIA=ON",
+      "-DTC_WINDOWING_SDL=ON",
+      "-DTC_WINDOWING_NATIVE=OFF",
+      "-DTC_BUILD_NATIVE_STARTUP_TEST=ON",
+      "-DSQLITE3_RELEASE_TAG=sqlite3-3.32.3-r2",
+      "-DQRCODEGEN_RELEASE_TAG=qrcodegen-20250123-r2",
+      "-DTCVM_DEPOT_TOOLS_DIR=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools",
+      "-DSDL2_DEPOT_ROOT=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools/sdl2/local/macos/arm64"
+    ]
+  },
+  "validation": {
+    "pythonTests": 90,
+    "nativeRoutingTest": "passed",
+    "officialBenchmarkCompile": "passed",
+    "customBenchmarkCompile": "passed",
+    "headers": "passed"
+  },
+  "measuredNativeProcesses": 0
+}

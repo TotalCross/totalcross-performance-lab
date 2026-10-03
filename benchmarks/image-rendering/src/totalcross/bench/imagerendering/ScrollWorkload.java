@@ -7,6 +7,7 @@ import totalcross.json.JSONObject;
 import totalcross.sys.RuntimeDiagnosticSnapshot;
 import totalcross.sys.RuntimeDiagnostics;
 import totalcross.sys.Settings;
+import totalcross.sys.Vm;
 import totalcross.ui.Container;
 import totalcross.ui.Control;
 import totalcross.ui.ImageControl;
@@ -27,10 +28,13 @@ final class ScrollWorkload implements TimerListener {
   private static final int SCROLL_STEP = 120;
   private static final int PASS_COUNT = 3;
   private static final int TIMER_MILLIS = 16;
+  private static final String DRIVER_FIXED_STEP = "fixed-step";
+  private static final String DRIVER_HISTORICAL = "historical-driver";
 
   private final ImageRenderingBenchmarkApp app;
   private final JSONObject config;
   private final boolean preparation;
+  private final String scrollDriver;
   private final ScrollContainer mainContainer;
   private final ScrollContainer scroll;
   private final BenchSupport.DatasetEntry[] entries;
@@ -69,6 +73,13 @@ final class ScrollWorkload implements TimerListener {
     this.config = config;
     String profile = config.getString("profile");
     preparation = profile.startsWith("prepared-") || profile.startsWith("combined-");
+    scrollDriver = config.getString("scrollDriver");
+    if (!DRIVER_FIXED_STEP.equals(scrollDriver) && !DRIVER_HISTORICAL.equals(scrollDriver)) {
+      throw new IllegalArgumentException("unsupported scroll driver: " + scrollDriver);
+    }
+    if (DRIVER_HISTORICAL.equals(scrollDriver) && (!"default".equals(profile) || preparation)) {
+      throw new IllegalArgumentException("historical-driver requires the default profile");
+    }
     entries = BenchSupport.readDataset(config);
     if (entries.length != BenchSupport.EXPECTED_FILE_COUNT || entries.length % COLUMNS != 0) {
       throw new IllegalStateException("scroll workload requires 663 images arranged in complete rows");
@@ -181,6 +192,10 @@ final class ScrollWorkload implements TimerListener {
     app.removeTimer(timer);
     timer = null;
     try {
+      if (DRIVER_HISTORICAL.equals(scrollDriver)) {
+        runHistoricalPass();
+        return;
+      }
       if (passStartedNs == 0L) {
         beginPass();
       }
@@ -313,6 +328,110 @@ final class ScrollWorkload implements TimerListener {
     } else {
       finish();
     }
+  }
+
+  private void runHistoricalPass() throws Exception {
+    int minimum = scroll.sbV.getMinimum();
+    int endpoint = scrollMaximum;
+    if (scroll.sbV.getValue() != minimum) {
+      scroll.sbV.setValue(minimum);
+    }
+    collectPaints = false;
+
+    SampleSeries frameIntervals = new SampleSeries();
+    SampleSeries scrollWork = new SampleSeries();
+    SampleSeries paintWork = new SampleSeries();
+    SampleSeries workTime = new SampleSeries();
+    JSONArray frameSamples = new JSONArray();
+    long passStartNs = System.nanoTime();
+    long previousFrameStartNs = 0L;
+    int frameCount = 0;
+
+    while (true) {
+      long frameStartNs = System.nanoTime();
+      long elapsedNs = frameStartNs - passStartNs;
+      long nominalElapsedNs = (long) frameCount * ScrollTiming.HISTORICAL_CADENCE_NS;
+      if (frameCount > 0 && elapsedNs < nominalElapsedNs) {
+        long remainingNs = nominalElapsedNs - elapsedNs;
+        Vm.sleep(ScrollTiming.boundedSleepMillis(remainingNs));
+        continue;
+      }
+
+      int target = frameCount == 0 ? minimum
+          : ScrollTiming.historicalTarget(minimum, endpoint, elapsedNs);
+      int before = scroll.sbV.getValue();
+      int requestedDelta = target - before;
+      long activeWorkStartNs = System.nanoTime();
+      long scrollWorkNs = 0L;
+      if (requestedDelta != 0) {
+        long scrollStartNs = System.nanoTime();
+        if (!scroll.scrollContent(0, requestedDelta, true)) {
+          throw new IllegalStateException("historical scroll stopped before its time-based target");
+        }
+        scrollWorkNs = Math.max(0L, System.nanoTime() - scrollStartNs);
+      }
+      int actualScroll = scroll.sbV.getValue();
+      if (actualScroll != target) {
+        throw new IllegalStateException("historical scroll did not reach its time-based target: target="
+            + target + ", actual=" + actualScroll);
+      }
+
+      long paintStartNs = System.nanoTime();
+      scroll.repaintNow();
+      long paintWorkNs = Math.max(0L, System.nanoTime() - paintStartNs);
+      long activeWorkNs = Math.max(0L, System.nanoTime() - activeWorkStartNs);
+      long frameIntervalNs = frameCount == 0 ? 0L : frameStartNs - previousFrameStartNs;
+
+      frameSamples.put(BenchSupport.object(
+          "frameIndex", frameCount,
+          "elapsedNs", elapsedNs,
+          "targetScroll", target,
+          "actualScroll", actualScroll,
+          "requestedDelta", requestedDelta,
+          "frameIntervalNs", frameIntervalNs,
+          "scrollWorkNs", scrollWorkNs,
+          "paintWorkNs", paintWorkNs,
+          "workTimeNs", activeWorkNs));
+      if (frameCount > 0) {
+        frameIntervals.add(frameIntervalNs);
+      }
+      scrollWork.add(scrollWorkNs);
+      paintWork.add(paintWorkNs);
+      workTime.add(activeWorkNs);
+      previousFrameStartNs = frameStartNs;
+      frameCount++;
+
+      if (actualScroll == endpoint && elapsedNs >= ScrollTiming.HISTORICAL_DURATION_NS) {
+        break;
+      }
+    }
+
+    long totalPassWallTimeNs = Math.max(0L, System.nanoTime() - passStartNs);
+    int finalScrollPosition = scroll.sbV.getValue();
+    if (finalScrollPosition != endpoint || frameCount == 0) {
+      throw new IllegalStateException("historical scroll pass did not finish at the scrollbar endpoint");
+    }
+    app.removeTimerListener(this);
+    JSONObject measurements = BenchSupport.object(
+        "scrollDriver", DRIVER_HISTORICAL,
+        "passDirection", "top-to-bottom",
+        "passCount", 1,
+        "targetDurationNs", ScrollTiming.HISTORICAL_DURATION_NS,
+        "targetCadenceNs", ScrollTiming.HISTORICAL_CADENCE_NS,
+        "frameCount", frameCount,
+        "totalPassWallTimeNs", totalPassWallTimeNs,
+        "frameSamples", frameSamples,
+        "frameIntervalStatistics", frameIntervals.statistics(),
+        "scrollWorkStatistics", scrollWork.statistics(),
+        "paintWorkStatistics", paintWork.statistics(),
+        "workTimeStatistics", workTime.statistics(),
+        "finalScrollPosition", finalScrollPosition,
+        "scrollEndpoint", endpoint,
+        "diagnostics", JSONObject.NULL);
+    JSONObject durations = BenchSupport.object("wallTime", totalPassWallTimeNs);
+    app.emit(app.runRecord(measurements, durations, config.getInt("round"),
+        config.getString("phase"), config.getString("family")));
+    app.exit(0);
   }
 
   private static String passName(int index) {

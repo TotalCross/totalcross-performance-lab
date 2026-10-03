@@ -209,6 +209,19 @@ def build_cells(arguments) -> list[dict[str, Any]]:
     return cells
 
 
+def validate_scroll_driver_arguments(arguments) -> None:
+    driver = getattr(arguments, "scroll_driver", "fixed-step")
+    if driver == "fixed-step":
+        return
+    if driver != "historical-driver":
+        raise RunnerError("invalid scroll driver")
+    profiles = comma_values(arguments.profiles, DEFAULT_PROFILES[arguments.family], PROFILES, "profile")
+    if (arguments.family != "scroll" or profiles != ("default",) or arguments.rounds != 1
+            or arguments.warmups != 0 or arguments.diagnostics or arguments.width != 540
+            or arguments.height != 960):
+        raise RunnerError("historical-driver requires one default scroll round at 540x960 with no warmup or diagnostics")
+
+
 def dataset_info(cache: Path, dataset_ref: str) -> dict[str, Any] | None:
     if not dataset_ref:
         return None
@@ -251,12 +264,15 @@ def parse_preflight(stdout: str, family: str, workload: str, profile: str) -> di
 
 
 def validate_scroll_preflight(record: dict[str, Any], dataset: dict[str, Any] | None,
-                              width: int, height: int, require_default: bool = False) -> None:
+                              width: int, height: int, require_default: bool = False,
+                              scroll_driver: str = "fixed-step") -> None:
     fixture = record.get("fixture")
     if not isinstance(fixture, dict):
         raise RunnerError("scroll preflight is missing its fixture configuration")
     if record.get("renderer") in (None, "", "unavailable"):
         raise RunnerError("scroll preflight did not identify its renderer")
+    if record.get("scrollDriver", "fixed-step") != scroll_driver:
+        raise RunnerError("scroll preflight driver does not match the requested driver")
     if not isinstance(record.get("diagnosticsRequested"), bool) or not isinstance(record.get("diagnosticsEnabled"), bool):
         raise RunnerError("scroll preflight did not report diagnostics state")
     if require_default and (record["diagnosticsRequested"] or record["diagnosticsEnabled"]):
@@ -338,6 +354,7 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
         "schemaVersion": 1,
         "family": arguments.family,
         **cell,
+        "scrollDriver": getattr(arguments, "scroll_driver", "fixed-step"),
         "round": round_number,
         "phase": phase,
         "preflight": False,
@@ -429,11 +446,13 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
         validate_scroll_preflight({
             "profile": run.get("profile"),
             "renderer": run.get("renderer"),
+            "scrollDriver": run.get("measurements", {}).get("scrollDriver", "fixed-step"),
             "diagnosticsRequested": False,
             "diagnosticsEnabled": run.get("diagnosticsEnabled"),
             "runtimeConfigurationReport": run.get("runtimeConfigurationReport"),
             "fixture": measured_fixture,
-        }, dataset, arguments.width, arguments.height, require_default=True)
+        }, dataset, arguments.width, arguments.height, require_default=True,
+           scroll_driver=getattr(arguments, "scroll_driver", "fixed-step"))
     return run
 
 
@@ -442,7 +461,8 @@ def launch_preflight(arguments, cell: dict[str, Any], index: int, dataset, runti
     run_dir = output_dir / "preflight" / ("%04d-%s-%s" % (index, cell["profile"], cell["workload"]))
     run_dir.mkdir(parents=True, exist_ok=False)
     config = {
-        "schemaVersion": 1, "family": arguments.family, **cell, "round": 0, "phase": "preflight",
+        "schemaVersion": 1, "family": arguments.family, **cell,
+        "scrollDriver": getattr(arguments, "scroll_driver", "fixed-step"), "round": 0, "phase": "preflight",
         "preflight": True, "dataset": dataset,
         "datasetRoot": str(arguments.dataset_cache.resolve() / "files") if dataset else None,
         "datasetManifestPath": str(arguments.dataset_cache.resolve() / "objects" / "manifest.json") if dataset else None,
@@ -495,7 +515,8 @@ def launch_preflight(arguments, cell: dict[str, Any], index: int, dataset, runti
         if record.get("runtimeIdentity") != config["runtimeIdentity"]:
             raise RunnerError("scroll preflight runtime identity does not match the package provenance")
         validate_scroll_preflight(record, dataset, arguments.width, arguments.height,
-                                  require_default=getattr(arguments, "require_default_scroll_preflight", False))
+                                  require_default=getattr(arguments, "require_default_scroll_preflight", False),
+                                  scroll_driver=getattr(arguments, "scroll_driver", "fixed-step"))
         (run_dir / "preflight.json").write_text(json.dumps(record, indent=2, sort_keys=True) + "\n",
                                                   encoding="utf-8")
 
@@ -515,6 +536,7 @@ def execute(arguments) -> int:
         raise RunnerError("rounds and timeout must be positive; warmups must be non-negative")
     if arguments.width < 1 or arguments.height < 1:
         raise RunnerError("logical dimensions must be positive")
+    validate_scroll_driver_arguments(arguments)
     benchmark_commit = git_value(ROOT, "rev-parse", "HEAD")
     dirty = bool(git_value(ROOT, "status", "--porcelain"))
     manifest_path = arguments.package_manifest.resolve() if arguments.package_manifest else None
@@ -749,6 +771,8 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--width", type=int, default=540)
     render.add_argument("--height", type=int, default=960)
     render.add_argument("--diagnostics", action="store_true")
+    render.add_argument("--scroll-driver", choices=("fixed-step", "historical-driver"), default="fixed-step",
+                        help="scroll cadence and position driver; historical-driver is a single-pass probe")
     render.add_argument("--fail-fast", action="store_true")
     render.add_argument("--runtime-source", type=Path,
                         help="clean TotalCross checkout for locally built runtimes; not used with attested packages")

@@ -148,6 +148,101 @@ def paint_split_record(mismatched_visible_work=False):
     }
 
 
+def paint_preparation_record(position_mismatch=False, count_mismatch=False):
+    def phase(sample_times, image_times, position, changed_counts=False):
+        samples = []
+        rows = []
+        images = []
+        for sample_index, elapsed in enumerate(sample_times):
+            row_count = 6 + (1 if changed_counts and sample_index == 4 else 0)
+            image_count = row_count * 3
+            rows.append(row_count)
+            images.append(image_count)
+            samples.append({
+                "sampleIndex": sample_index,
+                "paintTreeNs": elapsed,
+                "rowPaintCount": row_count,
+                "rowPaintNs": 10 + sample_index,
+                "imagePaintCount": image_count,
+                "imagePaintNs": image_times[sample_index],
+                "scrollPosition": position,
+                "scrollbarPosition": position,
+                "scrollContentPosition": position,
+            })
+        return {
+            "sampleCount": 5,
+            "samples": samples,
+            "statistics": {
+                "sampleCount": 5,
+                "p50Ns": run.percentile(sample_times, 0.50),
+                "p95Ns": run.percentile(sample_times, 0.95),
+                "p99Ns": run.percentile(sample_times, 0.99),
+                "maxNs": max(sample_times),
+            },
+            "imageControlPaintP50PerSampleNs": run.percentile(image_times, 0.50),
+            "rowPaintCounts": rows,
+            "imagePaintCounts": images,
+            "cumulativeRowPaintNs": sum(sample["rowPaintNs"] for sample in samples),
+            "cumulativeImageControlPaintNs": sum(sample["imagePaintNs"] for sample in samples),
+        }
+
+    before_position = 0
+    after_position = 1 if position_mismatch else 0
+    before = phase([100, 200, 300, 400, 500], [40, 50, 60, 70, 80], before_position)
+    after = phase([80, 160, 240, 320, 400], [20, 25, 30, 35, 40], after_position,
+                  changed_counts=count_mismatch)
+    same_viewport = before_position == 0 and after_position == 0
+    same_counts = before["rowPaintCounts"] == after["rowPaintCounts"] and before["imagePaintCounts"] == after["imagePaintCounts"]
+    request_matches = all(count == 18 for count in before["imagePaintCounts"] + after["imagePaintCounts"])
+    comparison_valid = same_viewport and same_counts and request_matches
+    difference = before["statistics"]["p50Ns"] - after["statistics"]["p50Ns"] if comparison_valid else None
+    reduction = 100.0 * difference / before["statistics"]["p50Ns"] if comparison_valid else None
+    status = ("invalid-position-mismatch" if not same_viewport else
+              "invalid-visible-count-mismatch" if not same_counts else
+              "invalid-request-visible-count-mismatch" if not request_matches else "valid")
+    return {
+        "family": "scroll",
+        "profile": "default",
+        "logicalDimensions": {"width": 540, "height": 960},
+        "renderer": "RASTER",
+        "diagnosticsEnabled": False,
+        "measurements": {
+            "scrollDriver": "paint-preparation-probe",
+            "imageControls": 663,
+            "rows": 221,
+            "columns": 3,
+            "tileWidth": 179,
+            "scrollMinimum": 0,
+            "scrollPositionBeforePreparation": before_position,
+            "scrollPositionAfterPreparation": after_position,
+            "phaseOrder": ["A-unprepared", "B-prepareForDisplay-call", "B-callback-complete", "C-prepared"],
+            "phaseAStartedNs": 10,
+            "phaseACompletedNs": 50,
+            "prepareRequests": 1,
+            "prepareCallStartNs": 60,
+            "prepareCallbackNs": 160,
+            "prepareWaitNs": 100,
+            "callbackCompletions": 1,
+            "prepareStatus": "callback-completed",
+            "visibleImageControlsAtRequest": 18,
+            "phaseCStartedNs": 170,
+            "phaseCCompletedNs": 210,
+            "paintSamplesPerPhase": 5,
+            "unpreparedPaintTree": before,
+            "preparedPaintTree": after,
+            "sameViewport": same_viewport,
+            "sameControlCounts": same_counts,
+            "requestVisibilityMatchesPaint": request_matches,
+            "timingComparisonValid": comparison_valid,
+            "comparisonStatus": status,
+            "absolutePaintTreeDifferenceNs": difference,
+            "paintTreeReductionPercent": reduction,
+            "preparation": False,
+            "explicitPreparationPerformed": True,
+        },
+    }
+
+
 class RunnerContractTests(unittest.TestCase):
     def test_parses_valid_run_and_final_summary(self):
         run_record, summary = records()
@@ -329,6 +424,48 @@ class RunnerContractTests(unittest.TestCase):
         record["measurements"]["positions"][0]["estimatedPresentResidualNs"] = 200
         with self.assertRaisesRegex(run.RunnerError, "residual must be absent"):
             run.validate_paint_split_result(record, 540, 960)
+
+    def test_paint_preparation_probe_is_limited_to_one_default_run_and_requires_preflight(self):
+        valid = SimpleNamespace(
+            scroll_driver="paint-preparation-probe", family="scroll", profiles="default",
+            rounds=1, warmups=0, diagnostics=False, width=540, height=960,
+            require_default_scroll_preflight=True,
+        )
+        run.validate_scroll_driver_arguments(valid)
+        with self.assertRaisesRegex(run.RunnerError, "paint-preparation-probe requires"):
+            run.validate_scroll_driver_arguments(SimpleNamespace(**{
+                **vars(valid), "require_default_scroll_preflight": False,
+            }))
+        for change in ({"profiles": "compact"}, {"rounds": 2}, {"warmups": 1},
+                       {"diagnostics": True}, {"width": 480}, {"height": 720}):
+            with self.subTest(change=change):
+                with self.assertRaisesRegex(run.RunnerError, "paint-preparation-probe requires"):
+                    run.validate_scroll_driver_arguments(SimpleNamespace(**{**vars(valid), **change}))
+
+    def test_paint_preparation_result_checks_single_callback_phase_order_and_five_samples(self):
+        record = paint_preparation_record()
+        run.validate_paint_preparation_result(record, 540, 960)
+        record["measurements"]["prepareRequests"] = 2
+        with self.assertRaisesRegex(run.RunnerError, "five samples per phase and one callback"):
+            run.validate_paint_preparation_result(record, 540, 960)
+        record["measurements"]["prepareRequests"] = 1
+        record["measurements"]["prepareCallbackNs"] = 55
+        with self.assertRaisesRegex(run.RunnerError, "timestamps violate"):
+            run.validate_paint_preparation_result(record, 540, 960)
+        record["measurements"]["prepareCallbackNs"] = 160
+        record["measurements"]["preparedPaintTree"]["samples"].pop()
+        with self.assertRaisesRegex(run.RunnerError, "exactly five samples"):
+            run.validate_paint_preparation_result(record, 540, 960)
+
+    def test_paint_preparation_comparison_is_suppressed_if_position_or_counts_differ(self):
+        position_mismatch = paint_preparation_record(position_mismatch=True)
+        run.validate_paint_preparation_result(position_mismatch, 540, 960)
+        position_mismatch["measurements"]["absolutePaintTreeDifferenceNs"] = 60
+        with self.assertRaisesRegex(run.RunnerError, "must be omitted"):
+            run.validate_paint_preparation_result(position_mismatch, 540, 960)
+        count_mismatch = paint_preparation_record(count_mismatch=True)
+        run.validate_paint_preparation_result(count_mismatch, 540, 960)
+        self.assertFalse(count_mismatch["measurements"]["timingComparisonValid"])
 
     def test_historical_result_validator_checks_fields_schedule_and_endpoint(self):
         stats = lambda count: {"sampleCount": count, "p50Ns": 10, "p95Ns": 10,

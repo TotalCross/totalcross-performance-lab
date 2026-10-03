@@ -125,8 +125,8 @@ class ImageRenderingSourceContractTests(unittest.TestCase):
         app = (SOURCE / "ImageRenderingBenchmarkApp.java").read_text(encoding="utf-8")
         scroll = (SOURCE / "ScrollWorkload.java").read_text(encoding="utf-8")
         runner = (ROOT / "runners/run.py").read_text(encoding="utf-8")
-        self.assertIn('"paint-split-probe".equals(config.getString("scrollDriver"))', app)
-        self.assertIn("validatePaintSplitPreconditions();", app)
+        self.assertIn('"paint-split-probe".equals(scrollDriver)', app)
+        self.assertIn("validateDefaultPaintProbePreconditions();", app)
         self.assertIn("emitPreflight();", app)
         self.assertIn("new MeasuredRow(paintProbeCounters)", scroll)
         self.assertIn("new MeasuredImageControl(thumbnail, paintProbeCounters)", scroll)
@@ -136,8 +136,41 @@ class ImageRenderingSourceContractTests(unittest.TestCase):
         self.assertIn('"rowPaintCount"', scroll)
         self.assertIn('"imagePaintCount"', scroll)
         self.assertIn('"cumulativeImageControlPaintNs"', scroll)
-        self.assertIn('getattr(arguments, "scroll_driver", "fixed-step") != "paint-split-probe"', runner)
+        self.assertIn('"paint-split-probe", "paint-preparation-probe"', runner)
         self.assertIn("validate_paint_split_result", runner)
+
+    def test_paint_preparation_probe_runs_one_callback_between_five_sample_phases(self):
+        app = (SOURCE / "ImageRenderingBenchmarkApp.java").read_text(encoding="utf-8")
+        scroll = (SOURCE / "ScrollWorkload.java").read_text(encoding="utf-8")
+        runner = (ROOT / "runners/run.py").read_text(encoding="utf-8")
+        self.assertIn('"paint-preparation-probe".equals(scrollDriver)', app)
+        self.assertIn('DRIVER_PAINT_PREPARATION = "paint-preparation-probe"', scroll)
+        start = scroll.index("private void startPaintPreparationProbe()")
+        finish = scroll.index("private void finishPaintPreparationProbe()")
+        probe = scroll[start:finish]
+        phase_a = probe.index("unpreparedPaints = measurePaintSplitPhase(false, scrollMinimum, true)")
+        prepare = probe.index("scroll.prepareForDisplay(new Runnable()")
+        callback_gate = start + probe.index(
+            "paintPreparationProbeState = PAINT_PREPARATION_CALLBACK_COMPLETE")
+        phase_a += start
+        prepare += start
+        self.assertLess(phase_a, prepare)
+        self.assertLess(prepare, callback_gate)
+        self.assertEqual(1, probe.count("scroll.prepareForDisplay("))
+        finish_phase = scroll[finish:scroll.index("private int countVisibleImageControls(", finish)]
+        phase_c = finish_phase.index(
+            "PaintSplitPhase preparedPaints = measurePaintSplitPhase(false, scrollMinimum, true)")
+        phase_c += finish
+        self.assertIn("paintPreparationCallbackCount != 1", finish_phase)
+        self.assertIn("PAINT_SPLIT_SAMPLE_COUNT", finish_phase)
+        self.assertLess(callback_gate, phase_c)
+        self.assertIn("prepareRequests", finish_phase)
+        self.assertIn("callbackCompletions", finish_phase)
+        self.assertIn('"paint-preparation-probe"', runner)
+        self.assertIn("validate_paint_preparation_result", runner)
+        self.assertIn('"paint-split-probe", "paint-preparation-probe"', runner)
+        self.assertIn("test_paint_preparation_result_checks_single_callback_phase_order_and_five_samples",
+                      (ROOT / "tests/test_runner_contract.py").read_text(encoding="utf-8"))
 
     def test_active_benchmark_sources_do_not_reintroduce_raw_masks(self):
         active_paths = [ROOT / "runners/run.py", ROOT / "tools/packaging/build_windows.py"]

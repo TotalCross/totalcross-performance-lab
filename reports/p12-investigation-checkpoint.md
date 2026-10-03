@@ -1715,3 +1715,22 @@ physical eligibility, JPEG decode, preparation, renderer/runtime defaults and
 unrelated behavior remain unchanged outside the isolated enabled routing test.
 The **Open follow-up: materialized cache admission policy** section is preserved
 verbatim, remains unresolved and is explicitly out of scope.
+
+
+## Isolated immediate-admission experiment — implementation ready
+
+The new experiment derives from routing revision `fc08c394` and changes only
+the successful exact-scale materialized-variant admission decision, guarded by
+experiment-only immediate/physical-only/accounting fields. Isolated source
+`f95c280db3d6856d17582ea31d47aaded6a0e492` keeps ImagePipeline, native routing/geometry, decode, cache
+keys/validity, preparation and production defaults unchanged relative to that
+parent. Normal packages exclude its hooks. The same causal protocol supplies
+one untimed stabilization and five timed tree samples with retained UI instances.
+
+Before measurement, 58 focused SDK tests (nine admission cases), native physical
+identity/surface assertions, 97 lab Python tests, normal official/custom Java
+compilation and focused header validation passed. ARM64 Release SDK, tcvm and
+Launcher are built and hashed. Source patches and build evidence are indexed in
+`experiments/p12-immediate-admission/provenance.json`. Packaging and the sole
+measurement remain pending. This is experimental evidence gathering; production
+admission policy and the historical warm-path residual remain unresolved.

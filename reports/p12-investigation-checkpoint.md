@@ -707,3 +707,87 @@ The raw result, preflight, and logs remain ignored under
 `.local-data/results/image-rendering-historical-driver-official/run-20261003T005925Z-76353/`.
 The probe and runner fixes are commits `b3b6b6501fa89cf86d4a796721643bc9de447c17`
 and `13cfd0d`; no other P12 workload was resumed.
+
+## Official-package paint-tree split probe (2026-10-02, America/Sao_Paulo)
+
+This focused probe separates the benchmark scroll's Java paint tree from the
+additional work performed by `repaintNow()`. It uses benchmark-only subclasses
+to time visible row and `ImageControl.onPaint()` calls. At each fixed scrollbar
+position it performs one untimed stabilization repaint, then takes five direct
+`scroll.onPaint(getGraphics()); scroll.paintChildren();` samples and five
+`scroll.repaintNow()` samples. The probe does not alter the production runtime
+or the normal scroll drivers.
+
+The app emitted its default-policy preflight inline before the samples. The
+single fresh process confirmed RASTER, STANDARD storage, target-color
+conversion/physical-variant cache/scroll raster reuse/automatic preparation
+disabled, `LEGACY_PER_ENTRY_THREAD`, diagnostics disabled, no explicit
+preparation, and `image-scroll/v1` with 663 images, 221 rows, 3 columns,
+540x960 logical size, and 179-pixel tiles. The verified dataset manifest SHA-256
+is `4dac75139e4e7095f5843a696f5fcd84055bf798e90b49614d6e4243120f5dbe`.
+
+The package contains only the `default` profile and was built at benchmark
+source commit `c5d01d8ff1421b55a2be7d36dd135deae8d28a99` with the official SDK,
+deployer, Launcher, and `libtcvm.dylib` from workflow run `37076804175`, artifact
+`11256633898` (`TotalCross-7.2.2`), source SHA
+`5a44f503bf6fa1bec350f1218f4d501a70fc4812`. The outer artifact digest is
+`4eed292bc20af56ef55cbb7397ffc090c3690b1b1d8f41d75cfbb70ebe6cec41`; the
+contained package ZIP SHA-256 is
+`dddbc50ffae0ce3a1b6f3b315d99cf971190238524c960cd06035066cab337dd`, official
+SDK JAR SHA-256 is
+`389204c26d4377a5964d529ed6aaac0b751dd39c5546c6310918d085bb9baf49`, Launcher
+SHA-256 is `3439082ff2b6e7bab37d7049b5860b6d4743297536bb7c9ba6806a2b45445884`,
+and official `libtcvm.dylib` SHA-256 is
+`421f957d551a75022a92db21638620732614e6d033a6f417ada09c6867cb8f24`.
+
+The built default profile input JAR SHA-256 is
+`2a1cfdac72df419d06dba242e868f7681ee82d0d65b3d482e20a5647df77a521`, deployed
+executable SHA-256 is
+`3439082ff2b6e7bab37d7049b5860b6d4743297536bb7c9ba6806a2b45445884`,
+application TCZ SHA-256 is
+`339fb1db93443a090de1416e757cc58b0c05a56c167aa4e105e750feaf57edc3`, and
+deployed `libtcvm.dylib` SHA-256 is
+`421f957d551a75022a92db21638620732614e6d033a6f417ada09c6867cb8f24`. The
+package manifest SHA-256 is
+`5b8842168d6558585ab730efaeb610f90e83e3bfa86a16115e172df8bf5abd9f`.
+
+| Position | Phase | p50 (ms) | p95 (ms) | p99 (ms) | max (ms) | Rows / images per sample | Cumulative ImageControl paint (5 samples) |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Top (0) | paint tree | 277.857 | 279.393 | 279.581 | 279.628 | 6 / 18 | 1388.710 ms |
+| Top (0) | `repaintNow()` | 281.387 | 282.385 | 282.498 | 282.526 | 6 / 18 | 1388.268 ms |
+| Middle (19545) | paint tree | 278.599 | 278.737 | 278.746 | 278.748 | 6 / 18 | 1389.005 ms |
+| Middle (19545) | `repaintNow()` | 281.431 | 281.538 | 281.544 | 281.546 | 6 / 18 | 1389.126 ms |
+| Bottom (39091) | paint tree | 278.873 | 279.340 | 279.424 | 279.444 | 6 / 18 | 1392.213 ms |
+| Bottom (39091) | `repaintNow()` | 281.003 | 283.256 | 283.305 | 283.317 | 6 / 18 | 1389.679 ms |
+
+Visible row/image counts matched between phases at every sample and all three
+positions. The estimated median residual (`repaintNow()` p50 minus paint-tree
+p50) was 3.530 ms at top, 2.833 ms in the middle, and 2.130 ms at bottom. No
+sample painted the full corpus. Six rows and 18 images out of 221 rows and 663
+images indicate that clipping/culling is working at all three positions.
+Across each five-sample phase, cumulative `ImageControl.onPaint()` time was
+about 1.389 seconds, or roughly 278 ms per sample. That nearly equals the
+paint-tree median, so image-control painting accounts for nearly all measured
+tree time. The additional repaint/update/present portion in this static probe
+is small compared with the tree itself.
+
+This supports the Java/UI paint tree as the main contributor to the earlier
+roughly 323 ms scroll repaint observation. The fixed positions and stabilization
+repaints make this probe different from continuously scrolling; its
+`repaintNow()` p50 values were about 281 ms, so it does not explain the full
+difference from the earlier 322.644 ms historical-driver median. Each phase has
+only five samples, so the p95/p99 values and residual estimates are directional,
+not stable tail estimates. No feature effectiveness or performance regression
+claim is made.
+
+The exact single-process runner command was:
+
+    python3 runners/run.py image-rendering scroll --profile default --scroll-driver paint-split-probe --rounds 1 --warmups 0 --timeout-seconds 180 --width 540 --height 960 --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 --package-manifest .local-data/packages/image-rendering-macos-official-paint-split-c5d01d8/package-manifest.json --results-dir .local-data/results/image-rendering-paint-split-official --require-default-scroll-preflight --fail-fast
+
+One measured app process ran, with one inline preflight record and no separate
+preflight process. Raw output remains outside Git at
+`.local-data/results/image-rendering-paint-split-official/run-20261003T012408Z-12993/`;
+the default-only package and build log remain under
+`.local-data/packages/image-rendering-macos-official-paint-split-c5d01d8/`.
+No P12 matrix, preparation, SIGBUS, Windows, or additional benchmark work was
+resumed.

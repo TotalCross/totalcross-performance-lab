@@ -1815,3 +1815,33 @@ commands and hashes, exact historical blobs, first-process evidence and validati
 105 lab tests,58 SDK tests, focused native parity/eligibility and cheap post-run
 audits passed. No replacement, historical run, production change, alternate
 experiment or matrix followed; the open cache-policy section remains unchanged.
+
+## Final-raster admission memory comparison: implementation (2026-10-03)
+
+The four-case memory/work comparison is implemented, but no measured application
+has launched. One isolated runtime revision
+`1944f203c4bf2130ab8fda1497d0922bacacfaf0` derives from the validated physical-only
+routing, immediate-admission selector and safe historical writePixels experiment.
+The normal policy remains second-observation, selected only through guarded test
+fields. Both measured policies use one slot per pipeline. Native TARGET_COLOR and
+PHYSICAL observe/store function bodies are byte-identical to the parent and both
+kinds pass miss/materialize/hit tests under the new accounting.
+
+The [protocol](../experiments/p12-admission-memory/protocol.md) defines one-shot
+910-unit monotonic pages and repeated 120-unit down/back scrolling with the
+existing 16 ms nominal timer cadence. Normal damage paints drive both cases;
+per-image and frame records preserve unavoidable repeated/extra paints. No
+preparation, prefetch or synthetic resolve calls are used. Slot-owned bytes/counts
+are separate from all tagged geometry-derived native backings, including
+unadmitted temporaries awaiting collection, decoded root storage and aggregate
+native totals. Natural peak/end memory precedes a separate post-GC diagnostic.
+Texture release alone retains the raster reference and is not a slot detach.
+
+Focused validation passes: 63 SDK tests, 115 Python tests, native category/release,
+unchanged speculative admission, prior writePixels/physical/surface assertions,
+normal official-SDK Java compilation and isolated-SDK compilation. Release macOS
+ARM64 SDK/tcvm/Launcher build hashes, full/parent patches and source provenance
+are indexed in [experiment provenance](../experiments/p12-admission-memory/provenance.json).
+Implementation is committed before any of the four ordered measured processes.
+This checkpoint introduces no new performance evidence or production policy
+recommendation; the architectural decision remains pending the comparison.

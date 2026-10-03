@@ -129,7 +129,7 @@ class ImageRenderingSourceContractTests(unittest.TestCase):
         self.assertIn("validateDefaultPaintProbePreconditions();", app)
         self.assertIn("emitPreflight();", app)
         self.assertIn("new MeasuredRow(paintProbeCounters)", scroll)
-        self.assertIn("new MeasuredImageControl(thumbnail, paintProbeCounters)", scroll)
+        self.assertIn("new MeasuredImageControl(thumbnail, paintProbeCounters, i)", scroll)
         self.assertIn("super.onPaint(graphics);", scroll)
         self.assertIn("void paintTreeOnly()", scroll)
         self.assertIn("onPaint(graphics);\n      paintChildren();", scroll)

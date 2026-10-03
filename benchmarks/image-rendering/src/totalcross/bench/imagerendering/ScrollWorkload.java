@@ -12,6 +12,7 @@ import totalcross.ui.Container;
 import totalcross.ui.Control;
 import totalcross.ui.ImageControl;
 import totalcross.ui.ScrollContainer;
+import totalcross.ui.Window;
 import totalcross.ui.event.DragEvent;
 import totalcross.ui.event.TimerEvent;
 import totalcross.ui.event.TimerListener;
@@ -29,6 +30,14 @@ final class ScrollWorkload implements TimerListener {
   private static final int SCROLL_STEP = 120;
   private static final int PASS_COUNT = 3;
   private static final int TIMER_MILLIS = 16;
+  private static final String DRIVER_ADMISSION_MEMORY = "materialized-admission-memory-probe";
+  private boolean memoryActive, memoryPositionPainted;
+  private long memoryStartedNs, memoryPaintStartedNs;
+  private int memoryRouteIndex;
+  private int[] memoryRoute;
+  private final JSONArray memoryFrames = new JSONArray();
+  private String memoryConfigurationBefore;
+
   private static final String DRIVER_FIXED_STEP = "fixed-step";
   private static final String DRIVER_HISTORICAL = "historical-driver";
   private static final String DRIVER_PAINT_SPLIT = "paint-split-probe";
@@ -105,19 +114,19 @@ final class ScrollWorkload implements TimerListener {
     if (!DRIVER_FIXED_STEP.equals(scrollDriver) && !DRIVER_HISTORICAL.equals(scrollDriver)
         && !DRIVER_PAINT_SPLIT.equals(scrollDriver) && !DRIVER_PAINT_PREPARATION.equals(scrollDriver)
         && !DRIVER_DRAW_PATH.equals(scrollDriver) && !DRIVER_PHYSICAL_MAPPING.equals(scrollDriver)
-        && !DRIVER_COPYRECT_CAUSAL.equals(scrollDriver) && !DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) && !DRIVER_WRITEPIXELS_WARM.equals(scrollDriver)) {
+        && !DRIVER_COPYRECT_CAUSAL.equals(scrollDriver) && !DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) && !DRIVER_WRITEPIXELS_WARM.equals(scrollDriver) && !DRIVER_ADMISSION_MEMORY.equals(scrollDriver)) {
       throw new IllegalArgumentException("unsupported scroll driver: " + scrollDriver);
     }
     if ((DRIVER_HISTORICAL.equals(scrollDriver) || DRIVER_PAINT_SPLIT.equals(scrollDriver)
         || DRIVER_PAINT_PREPARATION.equals(scrollDriver) || DRIVER_DRAW_PATH.equals(scrollDriver)
         || DRIVER_PHYSICAL_MAPPING.equals(scrollDriver) || DRIVER_COPYRECT_CAUSAL.equals(scrollDriver)
-        || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) || DRIVER_WRITEPIXELS_WARM.equals(scrollDriver))
+        || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) || DRIVER_WRITEPIXELS_WARM.equals(scrollDriver) || DRIVER_ADMISSION_MEMORY.equals(scrollDriver))
         && (!"default".equals(profile) || preparation)) {
       throw new IllegalArgumentException(scrollDriver + " requires the default profile");
     }
     paintProbeCounters = DRIVER_PAINT_SPLIT.equals(scrollDriver) || DRIVER_PAINT_PREPARATION.equals(scrollDriver)
         || DRIVER_DRAW_PATH.equals(scrollDriver) || DRIVER_COPYRECT_CAUSAL.equals(scrollDriver)
-        || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) || DRIVER_WRITEPIXELS_WARM.equals(scrollDriver)
+        || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) || DRIVER_WRITEPIXELS_WARM.equals(scrollDriver) || DRIVER_ADMISSION_MEMORY.equals(scrollDriver)
         ? new PaintProbeCounters() : null;
     entries = BenchSupport.readDataset(config);
     if (entries.length != BenchSupport.EXPECTED_FILE_COUNT || entries.length % COLUMNS != 0) {
@@ -171,7 +180,7 @@ final class ScrollWorkload implements TimerListener {
         Image thumbnail = image.getSmoothScaledInstance(tileWidth, tileWidth);
         image = null;
         ImageControl control = paintProbeCounters == null ? new ImageControl(thumbnail)
-            : new MeasuredImageControl(thumbnail, paintProbeCounters);
+            : new MeasuredImageControl(thumbnail, paintProbeCounters, i);
         row.add(control, Control.AFTER + 1, Control.TOP, tileWidth, tileWidth);
         controls[i] = control;
         controlsInRow++;
@@ -232,6 +241,10 @@ final class ScrollWorkload implements TimerListener {
     app.removeTimer(timer);
     timer = null;
     try {
+      if (DRIVER_ADMISSION_MEMORY.equals(scrollDriver)) {
+        advanceAdmissionMemory();
+        return;
+      }
       if (DRIVER_COPYRECT_CAUSAL.equals(scrollDriver) || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) || DRIVER_WRITEPIXELS_WARM.equals(scrollDriver)) {
         runCopyRectCausalProbe();
         return;
@@ -274,6 +287,70 @@ final class ScrollWorkload implements TimerListener {
     } catch (Throwable failure) {
       app.fail(failure);
     }
+  }
+
+  private Image[] admissionImages() {
+    Image[] images=new Image[controls.length];
+    for(int i=0;i<images.length;i++)images[i]=controls[i].getImage();return images;
+  }
+
+  private void advanceAdmissionMemory() throws Exception {
+    if(memoryRoute==null) {
+      String workload=config.getString("admissionWorkload");
+      boolean repeated="repeated-scroll".equals(workload);
+      if(!repeated&&!"one-shot".equals(workload))throw new IllegalArgumentException("memory workload");
+      if(!config.getBoolean("memoryProbeDiagnostics"))throw new IllegalStateException("explicit experiment diagnostics required");
+      int step=repeated?SCROLL_STEP:scroll.getRect().height;
+      int down=(scrollMaximum-scrollMinimum+step-1)/step;
+      memoryRoute=new int[1+down*(repeated?2:1)];
+      memoryRoute[0]=scrollMinimum;
+      for(int i=1;i<=down;i++)memoryRoute[i]=Math.min(scrollMaximum,scrollMinimum+i*step);
+      if(repeated)for(int i=1;i<=down;i++)memoryRoute[down+i]=Math.max(scrollMinimum,scrollMaximum-i*step);
+      memoryConfigurationBefore=totalcross.sys.runtime.RuntimeConfigurationReport.describe();
+      ImageDrawPathProbeAccess.startAdmissionMemory(admissionImages(),config.getString("admissionPolicy"));
+      memoryStartedNs=System.nanoTime();memoryActive=true;memoryPositionPainted=false;
+      Window.needsPaint=true;schedule(TIMER_MILLIS);return;
+    }
+    if(!memoryPositionPainted) {schedule(1);return;}
+    if(memoryRouteIndex==memoryRoute.length-1) {finishAdmissionMemory();return;}
+    int next=memoryRoute[++memoryRouteIndex];
+    memoryPositionPainted=false;
+    if(!scroll.scrollContent(0,next-scroll.sbV.getValue(),true)||scroll.sbV.getValue()!=next)
+      throw new IllegalStateException("memory route did not reach exact position");
+    schedule(TIMER_MILLIS);
+  }
+
+  private void captureAdmissionMemoryPaint(long elapsed) {
+    if(!memoryActive)return;
+    try {
+      int position=scroll.sbV.getValue();
+      if(position!=memoryRoute[memoryRouteIndex])throw new IllegalStateException("paint outside memory route");
+      memoryFrames.put(BenchSupport.object("routeIndex",memoryRouteIndex,"position",position,
+          "extraPaint",memoryPositionPainted,"paintTreeNs",elapsed,"elapsedNs",System.nanoTime()-memoryStartedNs,
+          "memory",ImageDrawPathProbeAccess.admissionMemoryFrame()));
+      if(memoryFrames.length()==1 || memoryFrames.length()%50==0)
+        System.out.println("P12_ADMISSION_MEMORY_PROGRESS "+memoryFrames.getJSONObject(memoryFrames.length()-1).toString());
+      memoryPositionPainted=true;
+    } catch(Throwable failure) {memoryActive=false;app.fail(failure);}
+  }
+
+  private void finishAdmissionMemory() throws Exception {
+    memoryActive=false;long workloadNs=System.nanoTime()-memoryStartedNs;
+    JSONObject summary=ImageDrawPathProbeAccess.finishAdmissionMemory(admissionImages());
+    String after=totalcross.sys.runtime.RuntimeConfigurationReport.describe();
+    if(!memoryConfigurationBefore.equals(after))throw new IllegalStateException("memory probe changed runtime defaults");
+    JSONArray route=new JSONArray();for(int position:memoryRoute)route.put(position);
+    JSONObject measurements=BenchSupport.object("scrollDriver",DRIVER_ADMISSION_MEMORY,
+        "admissionPolicy",config.getString("admissionPolicy"),"admissionWorkload",config.getString("admissionWorkload"),
+        "memoryProbeDiagnostics",true,"capacityPerPipeline",1,"prepareRequests",0,"imageControls",controls.length,
+        "rows",rows.length,"tileWidth",tileWidth,"viewportHeight",scroll.getRect().height,
+        "scrollMaximum",scrollMaximum,"nominalStepMillis",TIMER_MILLIS,"positions",route,"frames",memoryFrames,
+        "workloadNs",workloadNs,"summary",summary,"runtimeDefaultsUnchanged",true,
+        "runtimeConfigurationBefore",memoryConfigurationBefore,"runtimeConfigurationAfter",after);
+    app.removeTimerListener(this);
+    app.emit(app.runRecord(measurements,BenchSupport.object("wallTime",workloadNs),
+        config.getInt("round"),config.getString("phase"),config.getString("family")));
+    app.exit(0);
   }
 
   private void beginPass() {
@@ -1064,16 +1141,20 @@ final class ScrollWorkload implements TimerListener {
     }
   }
 
-  private static final class MeasuredImageControl extends ImageControl {
+  private final class MeasuredImageControl extends ImageControl {
     private final PaintProbeCounters counters;
 
-    MeasuredImageControl(Image image, PaintProbeCounters counters) {
+    private final int datasetIndex;
+
+    MeasuredImageControl(Image image, PaintProbeCounters counters, int datasetIndex) {
       super(image);
       this.counters = counters;
+      this.datasetIndex = datasetIndex;
     }
 
     @Override
     public void onPaint(Graphics graphics) {
+      if(memoryActive)ImageDrawPathProbeAccess.admissionMemoryPaint(datasetIndex);
       long startedNs = System.nanoTime();
       try {
         super.onPaint(graphics);
@@ -1083,7 +1164,15 @@ final class ScrollWorkload implements TimerListener {
     }
   }
 
-  private static final class MeasuredScrollContainer extends ScrollContainer {
+  private final class MeasuredScrollContainer extends ScrollContainer {
+    @Override public void onPaint(Graphics graphics) {
+      if(memoryActive)memoryPaintStartedNs=System.nanoTime();
+      super.onPaint(graphics);
+    }
+    @Override public void paintChildren() {
+      super.paintChildren();
+      if(memoryActive)captureAdmissionMemoryPaint(System.nanoTime()-memoryPaintStartedNs);
+    }
     void paintTreeOnly() {
       Graphics graphics = getGraphics();
       if (graphics == null) {

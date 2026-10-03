@@ -559,3 +559,72 @@ state.
 Latest ignored evidence bundle: `artifacts/p12-checkpoint.tar.gz`, SHA-256
 `1a17f6c1d0aae2b52ba3eff2fcb4b367465d518769554d58741486395c63bff0`.
 `artifacts/p12-checkpoint/SHA256SUMS` covers the preserved bundle contents.
+
+## Official-package default scroll comparison (2026-10-02, America/Sao_Paulo)
+
+The user-authorized single `scroll/default` experiment used only GitHub Actions
+workflow run `37076804175`, artifact `11256633898` (`TotalCross-7.2.2`), source
+SHA `5a44f503bf6fa1bec350f1218f4d501a70fc4812`. Before build, the outer
+artifact SHA-256 matched the GitHub digest
+`4eed292bc20af56ef55cbb7397ffc090c3690b1b1d8f41d75cfbb70ebe6cec41`; the
+contained package ZIP was
+`dddbc50ffae0ce3a1b6f3b315d99cf971190238524c960cd06035066cab337dd`. The
+SDK JAR, macOS Launcher, and `libtcvm.dylib` matched the pinned hashes
+`389204c26d4377a5964d529ed6aaac0b751dd39c5546c6310918d085bb9baf49`,
+`3439082ff2b6e7bab37d7049b5860b6d4743297536bb7c9ba6806a2b45445884`, and
+`421f957d551a75022a92db21638620732614e6d033a6f417ada09c6867cb8f24`.
+Dataset verification passed for 663 files and manifest SHA-256
+`4dac75139e4e7095f5843a696f5fcd84055bf798e90b49614d6e4243120f5dbe`.
+
+The official package builder compiled against that package's
+`dist/totalcross-sdk-7.2.2.jar` and `dist/libs/*`, then called `tc.Deploy` for
+`Default.jar` only. The generated package inventory contains only `default`;
+no SDK or native runtime build was run. The exact javac and `tc.Deploy`
+invocations and full output are preserved in
+`.local-data/packages/image-rendering-macos-official-p12-default-9731f6c.build.log`.
+The package manifest is
+`.local-data/packages/image-rendering-macos-official-p12-default-9731f6c/package-manifest.json`.
+
+One required runner preflight passed before timing: renderer RASTER; STANDARD
+storage; target-color conversion, physical-variant cache, scroll reuse,
+automatic preparation, explicit preparation, and diagnostics disabled; worker
+LEGACY_PER_ENTRY_THREAD; 663 controls, 221 rows by 3 columns, logical 540x960,
+tile width 179, dataset `image-scroll/v1`. The runner then launched exactly
+one fresh measured child, round 1, with zero warmups. It completed with zero
+failures and 972 paint samples. No other profile or round was run.
+
+| Metric | Official package, one measured round | Previous corrected local default |
+|---|---:|---:|
+| Scroll wall time | 278.893 s | about 280–281 s |
+| Paint p50 | 284.406 ms | about 286–288 ms |
+| Paint p95 | 292.748 ms | about 294–297 ms |
+| Paint p99 | 298.137 ms | about 298–301 ms |
+| Paint max | 371.784 ms | about 359–371 ms |
+| Samples | 972 | 972 |
+
+The very slow scroll behavior reproduced with the official SDK, deployer,
+Launcher, and native library: the one official-package result was about 279 s,
+close to the earlier 280–281 s local-build results. This single comparison does
+not identify a cause or measure feature effectiveness. The measured stdout
+also contains a `Read-only file system` warning from
+`Resources.uiStyleChanged`; the child still completed successfully. No
+investigation or fix was performed.
+
+The deployed profile provenance is recorded in the package manifest: input
+JAR SHA-256 `c4c350fc4407bfad7e6fb677f246ec8d2593427ca58b5466033798d0adbe07f5`,
+executable SHA-256 `3439082ff2b6e7bab37d7049b5860b6d4743297536bb7c9ba6806a2b45445884`,
+application TCZ SHA-256 `c1f45b6b08ae3b1135ca922004f5de3de672610ddf7802ededaed10581637095`,
+and deployed `libtcvm.dylib` SHA-256
+`421f957d551a75022a92db21638620732614e6d033a6f417ada09c6867cb8f24`.
+The benchmark source commit was `9731f6c3b5f16683deae8dc257f1bc6e5a8b64ff`;
+the runtime source identity was `5a44f503bf6fa1bec350f1218f4d501a70fc4812`.
+
+The exact runner invocation was:
+
+    python3 runners/run.py image-rendering scroll --profile default --rounds 1 --warmups 0 --timeout-seconds 600 --width 540 --height 960 --dataset-cache .local-data/datasets/p12-final/image-scroll/v1 --package-manifest .local-data/packages/image-rendering-macos-official-p12-default-9731f6c/package-manifest.json --results-dir .local-data/results/image-rendering-p12-official-default --require-default-scroll-preflight
+
+Raw preflight, measured JSON, stdout, DebugConsole, and summary remain outside
+Git under
+`.local-data/results/image-rendering-p12-official-default/run-20261003T002224Z-44831/`.
+No P12 matrix, preparation, SIGBUS, Windows, or additional benchmark work was
+resumed. P12 remains incomplete and paused pending further explicit direction.

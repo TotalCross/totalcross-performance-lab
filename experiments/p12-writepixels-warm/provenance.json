@@ -1,0 +1,154 @@
+{
+  "runtimeSourceCommit": "18baece1f199ab5d2e7cad6d864c40c188bd1bab",
+  "parentImmediateAdmissionRuntimeSourceCommit": "f95c280db3d6856d17582ea31d47aaded6a0e492",
+  "parentRoutingRuntimeSourceCommit": "fc08c39499dead73b327ad259a992ab34ec42870",
+  "baseRuntimeSourceCommit": "5a44f503bf6fa1bec350f1218f4d501a70fc4812",
+  "historicalReferenceSourceCommit": "f5dad132cafea5c9086f6f946a6f44ca5bcb5f76",
+  "runtimeSource": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-writepixels-warm",
+  "configuration": "Release macOS arm64 SDL Skia SOFTWARE",
+  "artifacts": [
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-writepixels-warm/TotalCrossSDK/dist/totalcross-sdk.jar",
+      "sha256": "36111cff2d00964c812be44292c38d973fbda120c664d5267018d37e2f12902c"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-writepixels-warm/Launcher",
+      "sha256": "f13352208f344660cb8154dfbad196aec1d7f347f4bcc545aefff06086fea1d1"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-writepixels-warm/libtcvm.dylib",
+      "sha256": "af9d015703eb9121cd38240b64ca75f1db606ce0b7af9e79643ab53778dd48b3"
+    }
+  ],
+  "buildCommands": {
+    "sdk": [
+      "./gradlew-agent",
+      "dist",
+      "test",
+      "--tests",
+      "totalcross.ui.image.ImageImmediateAdmissionExperimentTest",
+      "--tests",
+      "totalcross.ui.image.ImageDestinationScaleTest",
+      "--tests",
+      "totalcross.ui.image.ImageBackingContractTest",
+      "--tests",
+      "totalcross.ui.image.ImageDecodeRequirementTest",
+      "--tests",
+      "totalcross.ui.image.ImageDecodePolicyTest"
+    ],
+    "native": [
+      "ninja",
+      "-C",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-writepixels-warm",
+      "tcvm",
+      "Launcher",
+      "skia_surface_test"
+    ],
+    "configure": [
+      "cmake",
+      "-S",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-writepixels-warm/TotalCrossVM",
+      "-B",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-writepixels-warm",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_OSX_ARCHITECTURES=arm64",
+      "-DTC_RENDERER_SKIA=ON",
+      "-DTC_WINDOWING_SDL=ON",
+      "-DTC_WINDOWING_NATIVE=OFF",
+      "-DTC_BUILD_NATIVE_STARTUP_TEST=ON",
+      "-DSQLITE3_RELEASE_TAG=sqlite3-3.32.3-r2",
+      "-DQRCODEGEN_RELEASE_TAG=qrcodegen-20250123-r2",
+      "-DTCVM_DEPOT_TOOLS_DIR=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools",
+      "-DSDL2_DEPOT_ROOT=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools/sdl2/local/macos/arm64"
+    ]
+  },
+  "runtimePatchSha256": "95fc3c6449a6c3cbc3b6d88f9841ab6e9f885978a1bf83c5b676544d9c4db6fb",
+  "writePixelsPatchSha256": "47ec135242f65ca339e002768883b04bb14c3a73e78c6ef91c731d83c33b318a",
+  "historicalReferenceBlobIndexSha256": "1f37151083abad06c1bff7842c8bd3ee5a3b9b1d9b524b8caa52e75c2c248c99",
+  "validation": {
+    "pythonTests": 105,
+    "sdkTests": {
+      "totalcross.ui.image.ImageDecodePolicyTest": 4,
+      "totalcross.ui.image.ImageDestinationScaleTest": 21,
+      "totalcross.ui.image.ImageBackingContractTest": 20,
+      "totalcross.ui.image.ImageImmediateAdmissionExperimentTest": 9,
+      "totalcross.ui.image.ImageDecodeRequirementTest": 4
+    },
+    "nativeTests": "16 historical writePixels eligibility/default-off/parity cases, including proof reuse/generation invalidation; existing physical identity and surface assertions passed",
+    "javaCompile": "official 8 sources/custom 11 sources passed",
+    "headers": "3 changed runtime files passed",
+    "initialNativeBuildFailure": "direct SkCanvas test include required newer C++ than existing test target; removed include and used preexisting skew test bridge",
+    "initialNativeTestFixtureFailure": "disabled-case assertion saw preceding clipped-case counters; test now explicitly clears prior event evidence before disabling; no eligibility change"
+  },
+  "measurementStatus": "not launched",
+  "runnerProcesses": 0,
+  "measuredNativeProcesses": 0,
+  "evidenceFiles": [
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-committed.log",
+      "sha256": "ebbf5658f86612981a11e9c2aede02d7aad10b510d16ff926dbe6a743433759f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests-final.log",
+      "sha256": "dc41aad9a03b6e62ff436e6b173ed32a75b5a7f9b40c7efdcf9fbbeee3c7036d"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/javac-official.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests-debug.log",
+      "sha256": "60357122a90eecad7001df94ad99f44352063af353c7108bbb6366d91823b444"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/cmake.log",
+      "sha256": "8b5638b53092ea88eaf433f2424876d4cb42b35fff0a9ccb0fe5810a2671d343"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-debug.log",
+      "sha256": "06e6ac174cb53c0832ad299548f91846528820c877a0fb08cbabeed26ca68779"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/sdk-tests-build.log",
+      "sha256": "6ada445e14cfef0e004351c41ebd925011e00bd75ee5750a8238cc0fa9fd2e11"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests-committed.log",
+      "sha256": "dc41aad9a03b6e62ff436e6b173ed32a75b5a7f9b40c7efdcf9fbbeee3c7036d"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/lab-tests-final.log",
+      "sha256": "1d58e70efb1226e97035e2474f0f976064673ce5b8b328371ef961275fbe1b2b"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-tests.log",
+      "sha256": "d926f8e7e251083121efe4572059593e06d464af314934e74b4e580af477b2b2"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/lab-tests.log",
+      "sha256": "2dee9f5eee47d3acbcd16cdd958112584d0943b14e1713e68238bf3c62f928f9"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-validation.log",
+      "sha256": "28be6c840bd9f4c99ce596d080eef1af46006dcb506f3befc1800eec833ad9b1"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/javac-writepixels.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build.log",
+      "sha256": "8cc6eef3cf0276b37cedcb12604975632348d04bb9b1f7299acb6e92ff3195bf"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/native-build-final.log",
+      "sha256": "06e6ac174cb53c0832ad299548f91846528820c877a0fb08cbabeed26ca68779"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/writepixels-warm/logs/sdk-tests-committed.log",
+      "sha256": "0d70308cccd394e214020d0ab46fad175a47d24a4cc6d5b55e98c54162d96efb"
+    }
+  ]
+}

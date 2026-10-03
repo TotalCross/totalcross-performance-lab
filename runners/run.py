@@ -213,7 +213,7 @@ def validate_scroll_driver_arguments(arguments) -> None:
     driver = getattr(arguments, "scroll_driver", "fixed-step")
     if driver == "fixed-step":
         return
-    probe_drivers = ("paint-split-probe", "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe", "copyrect-causal-probe", "immediate-admission-probe")
+    probe_drivers = ("paint-split-probe", "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe", "copyrect-causal-probe", "immediate-admission-probe", "writepixels-warm-path-probe")
     if driver not in ("historical-driver",) + probe_drivers:
         raise RunnerError("invalid scroll driver")
     profiles = comma_values(arguments.profiles, DEFAULT_PROFILES[arguments.family], PROFILES, "profile")
@@ -800,13 +800,13 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
     (run_dir / "stderr.log").write_text(child.stderr, encoding="utf-8")
     if debug_console.is_file():
         shutil.copy2(debug_console, run_dir / "DebugConsole.txt")
-    if getattr(arguments, "scroll_driver", "fixed-step") in ("copyrect-causal-probe", "immediate-admission-probe"):
+    if getattr(arguments, "scroll_driver", "fixed-step") in ("copyrect-causal-probe", "immediate-admission-probe", "writepixels-warm-path-probe"):
         (run_dir / "exit-status.json").write_text(json.dumps({"nativeExitCode": child.returncode,
             "runnerChildWallTimeNs": wall_time_ns}, indent=2) + "\n", encoding="utf-8")
     if child.returncode:
         raise RunnerError("child exited with status %d" % child.returncode)
     scroll_driver = getattr(arguments, "scroll_driver", "fixed-step")
-    if scroll_driver in ("paint-split-probe", "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe", "copyrect-causal-probe", "immediate-admission-probe"):
+    if scroll_driver in ("paint-split-probe", "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe", "copyrect-causal-probe", "immediate-admission-probe", "writepixels-warm-path-probe"):
         preflight = parse_preflight(child.stdout, arguments.family, cell["workload"], cell["profile"])
         if (preflight.get("runtimeSourceCommit") != runtime_commit
                 or preflight.get("benchmarkSourceCommit") != benchmark_commit):
@@ -841,7 +841,7 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
         validate_paint_split_result(run, arguments.width, arguments.height)
     elif arguments.family == "scroll" and scroll_driver == "paint-preparation-probe":
         validate_paint_preparation_result(run, arguments.width, arguments.height)
-    elif arguments.family == "scroll" and scroll_driver in ("copyrect-causal-probe", "immediate-admission-probe"):
+    elif arguments.family == "scroll" and scroll_driver in ("copyrect-causal-probe", "immediate-admission-probe", "writepixels-warm-path-probe"):
         from tools.copyrect_causal import validate_result
         validate_result(run, read_json(arguments.dataset_cache / "objects/manifest.json")["files"])
     elif arguments.family == "scroll" and scroll_driver == "physical-mapping-probe":
@@ -1038,7 +1038,7 @@ def execute(arguments) -> int:
             raise RunnerError("package manifest does not contain every requested profile")
         if arguments.require_default_scroll_preflight:
             from tools.copyrect_causal import is_experiment_package
-            causal_package = (arguments.scroll_driver in ("copyrect-causal-probe", "immediate-admission-probe")
+            causal_package = (arguments.scroll_driver in ("copyrect-causal-probe", "immediate-admission-probe", "writepixels-warm-path-probe")
                               and is_experiment_package(package_manifest, runtime_source if official_provenance is None else None, arguments.scroll_driver))
             if ((official_provenance is None and not causal_package) or arguments.family != "scroll" or selected_profiles != ("default",)
                     or arguments.rounds != 1 or arguments.warmups != 0 or arguments.width != 540
@@ -1049,7 +1049,7 @@ def execute(arguments) -> int:
             arguments.fail_fast = True
         if dataset and package_manifest.get("dataset", {}).get("manifestSha256") != dataset["manifestSha256"]:
             raise RunnerError("package and verified dataset manifest identities differ")
-    if arguments.scroll_driver in ("copyrect-causal-probe", "immediate-admission-probe"):
+    if arguments.scroll_driver in ("copyrect-causal-probe", "immediate-admission-probe", "writepixels-warm-path-probe"):
         from tools.copyrect_causal import is_experiment_package
         if not package_manifest or official_provenance is not None or not is_experiment_package(package_manifest, runtime_source, arguments.scroll_driver):
             raise RunnerError("causal probe requires its exact clean experimental source package")
@@ -1127,7 +1127,7 @@ def execute(arguments) -> int:
             arguments.runtime_identity = "github-artifact:%s;sha256:%s;runtime-files-sha256:%s" % (
                 official_provenance["artifactName"], official_provenance["outerArtifactSha256"], runtime_hash)
         if getattr(arguments, "scroll_driver", "fixed-step") not in (
-                "paint-split-probe", "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe", "copyrect-causal-probe", "immediate-admission-probe"):
+                "paint-split-probe", "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe", "copyrect-causal-probe", "immediate-admission-probe", "writepixels-warm-path-probe"):
             process_index += 1
             try:
                 launch_preflight(arguments, cell, process_index, dataset, runtime_commit, benchmark_commit,
@@ -1204,7 +1204,7 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--height", type=int, default=960)
     render.add_argument("--diagnostics", action="store_true")
     render.add_argument("--scroll-driver", choices=("fixed-step", "historical-driver", "paint-split-probe",
-                                                     "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe", "copyrect-causal-probe", "immediate-admission-probe"), default="fixed-step",
+                                                     "paint-preparation-probe", "draw-path-probe", "physical-mapping-probe", "copyrect-causal-probe", "immediate-admission-probe", "writepixels-warm-path-probe"), default="fixed-step",
                         help="scroll cadence and position driver; probe modes are one-round investigations")
     render.add_argument("--fail-fast", action="store_true")
     render.add_argument("--runtime-source", type=Path,

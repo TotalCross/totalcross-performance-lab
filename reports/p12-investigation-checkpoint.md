@@ -1759,3 +1759,25 @@ interpretation; `experiments/p12-immediate-admission/provenance.json` indexes
 source patches, artifacts and original process evidence. 97 lab tests and cheap
 offline checks passed. No second process, production change, alternate experiment,
 historical run or P12 matrix followed. The open cache-policy section is unchanged.
+
+
+## Isolated historical writePixels warm-path experiment — implementation ready
+
+Derived only from immediate-admission source `f95c280db3d6856d17582ea31d47aaded6a0e492`,
+isolated runtime `18baece1f199ab5d2e7cad6d864c40c188bd1bab` restores the historical
+RGBA opaque device-1:1 writePixels attempt before normal native backing canvas
+drawing. Exact historical `f5dad132` predicates, clipping/opacity adaptations
+and source blob identities are documented in
+`experiments/p12-writepixels-warm/source-comparison.md`. The existing private
+metric bridge enables the switch only for the isolated entry after startup;
+runtime configuration/masks and production APIs do not change. Prior routing,
+admission, representation, cache validity, decode and geometry remain untouched.
+
+Native attempts/hits/fallbacks, reasons, bytes, clipping, opacity proofs, format,
+input/mapped/clipped rectangles and operation timing are captured per event.
+16 focused native cases plus existing copy assertions, 58 SDK tests, 105 Python
+tests and official/custom Java compilation passed. Initial test-build and
+stale-counter fixture failures were corrected offline and indexed. ARM64
+Release artifacts and source patches are indexed in the new provenance file.
+Package/hash checks and the sole measured process remain pending. No production
+cache-policy decision or runtime performance claim follows from these tests.

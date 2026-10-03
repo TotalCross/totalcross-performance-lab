@@ -34,6 +34,7 @@ final class ScrollWorkload implements TimerListener {
   private static final String DRIVER_PAINT_SPLIT = "paint-split-probe";
   private static final String DRIVER_PAINT_PREPARATION = "paint-preparation-probe";
   private static final String DRIVER_PHYSICAL_MAPPING = "physical-mapping-probe";
+  private static final String DRIVER_WRITEPIXELS_WARM = "writepixels-warm-path-probe";
   private static final String DRIVER_IMMEDIATE_ADMISSION = "immediate-admission-probe";
   private static final String DRIVER_COPYRECT_CAUSAL = "copyrect-causal-probe";
   private static final String DRIVER_DRAW_PATH = "draw-path-probe";
@@ -104,19 +105,19 @@ final class ScrollWorkload implements TimerListener {
     if (!DRIVER_FIXED_STEP.equals(scrollDriver) && !DRIVER_HISTORICAL.equals(scrollDriver)
         && !DRIVER_PAINT_SPLIT.equals(scrollDriver) && !DRIVER_PAINT_PREPARATION.equals(scrollDriver)
         && !DRIVER_DRAW_PATH.equals(scrollDriver) && !DRIVER_PHYSICAL_MAPPING.equals(scrollDriver)
-        && !DRIVER_COPYRECT_CAUSAL.equals(scrollDriver) && !DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver)) {
+        && !DRIVER_COPYRECT_CAUSAL.equals(scrollDriver) && !DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) && !DRIVER_WRITEPIXELS_WARM.equals(scrollDriver)) {
       throw new IllegalArgumentException("unsupported scroll driver: " + scrollDriver);
     }
     if ((DRIVER_HISTORICAL.equals(scrollDriver) || DRIVER_PAINT_SPLIT.equals(scrollDriver)
         || DRIVER_PAINT_PREPARATION.equals(scrollDriver) || DRIVER_DRAW_PATH.equals(scrollDriver)
         || DRIVER_PHYSICAL_MAPPING.equals(scrollDriver) || DRIVER_COPYRECT_CAUSAL.equals(scrollDriver)
-        || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver))
+        || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) || DRIVER_WRITEPIXELS_WARM.equals(scrollDriver))
         && (!"default".equals(profile) || preparation)) {
       throw new IllegalArgumentException(scrollDriver + " requires the default profile");
     }
     paintProbeCounters = DRIVER_PAINT_SPLIT.equals(scrollDriver) || DRIVER_PAINT_PREPARATION.equals(scrollDriver)
         || DRIVER_DRAW_PATH.equals(scrollDriver) || DRIVER_COPYRECT_CAUSAL.equals(scrollDriver)
-        || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver)
+        || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) || DRIVER_WRITEPIXELS_WARM.equals(scrollDriver)
         ? new PaintProbeCounters() : null;
     entries = BenchSupport.readDataset(config);
     if (entries.length != BenchSupport.EXPECTED_FILE_COUNT || entries.length % COLUMNS != 0) {
@@ -231,7 +232,7 @@ final class ScrollWorkload implements TimerListener {
     app.removeTimer(timer);
     timer = null;
     try {
-      if (DRIVER_COPYRECT_CAUSAL.equals(scrollDriver) || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver)) {
+      if (DRIVER_COPYRECT_CAUSAL.equals(scrollDriver) || DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) || DRIVER_WRITEPIXELS_WARM.equals(scrollDriver)) {
         runCopyRectCausalProbe();
         return;
       }
@@ -555,9 +556,10 @@ final class ScrollWorkload implements TimerListener {
         "stabilization", stabilization, "samples", samples,
         "axes", BenchSupport.object("logicalViewportWidth", scroll.getRect().width,
             "logicalViewportHeight", scroll.getRect().height, "displayScale", getDisplayScale()));
-    if (DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver)) {
+    if (DRIVER_IMMEDIATE_ADMISSION.equals(scrollDriver) || DRIVER_WRITEPIXELS_WARM.equals(scrollDriver)) {
       measurements.put("admissionPolicy", "immediate");
     }
+    if (DRIVER_WRITEPIXELS_WARM.equals(scrollDriver)) measurements.put("writePixelsPolicy", "historical-rgba-bit2");
     app.emit(app.runRecord(measurements, BenchSupport.object("wallTime", System.nanoTime() - probeStartedNs),
         config.getInt("round"), config.getString("phase"), config.getString("family")));
     app.exit(0);

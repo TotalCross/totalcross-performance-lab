@@ -961,7 +961,23 @@ def launch_preflight(arguments, cell: dict[str, Any], index: int, dataset, runti
                                                   encoding="utf-8")
 
 
+def require_free_disk(path: Path, minimum_gib: float) -> None:
+    if minimum_gib <= 0:
+        return
+    usage = shutil.disk_usage(path)
+    minimum_bytes = int(minimum_gib * 1024 * 1024 * 1024)
+    if usage.free < minimum_bytes:
+        raise RunnerError(
+            "insufficient free disk space: %.2f GiB available under %s; %.2f GiB required"
+            % (usage.free / (1024 ** 3), path, minimum_gib)
+        )
+
+
 def execute(arguments) -> int:
+    disk_probe_root = arguments.results_dir.resolve()
+    disk_probe_root.mkdir(parents=True, exist_ok=True)
+    require_free_disk(disk_probe_root, arguments.min_free_disk_gib)
+
     if arguments.sigbus_stress:
         if arguments.family != "preparation":
             raise RunnerError("--sigbus-stress is valid only for the preparation family")
@@ -1244,6 +1260,8 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--require-default-scroll-preflight", action="store_true",
                         help="require production-default config and historical 540x960 geometry before measuring")
     render.add_argument("--results-dir", type=Path, default=ROOT / "results/image-rendering/latest")
+    render.add_argument("--min-free-disk-gib", type=float, default=5.0,
+                        help="fail before launching benchmark processes when results storage has less free space; 0 disables")
     render.add_argument("--command", nargs=argparse.REMAINDER,
                         help="launcher/app command; supports {package}, {profile}, and {workload}; place last")
     return parser

@@ -244,6 +244,15 @@ def paint_preparation_record(position_mismatch=False, count_mismatch=False):
 
 
 class RunnerContractTests(unittest.TestCase):
+    def test_disk_preflight_rejects_insufficient_space_and_allows_disable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            usage = __import__("shutil").disk_usage(path)
+            unavailable_gib = usage.free / (1024 ** 3) + 1.0
+            with self.assertRaises(run.RunnerError):
+                run.require_free_disk(path, unavailable_gib)
+            run.require_free_disk(path, 0)
+
     def test_parses_valid_run_and_final_summary(self):
         run_record, summary = records()
         parsed_run, parsed_summary = run.parse_protocol(protocol_text(run_record, summary), "scroll", "scroll", "default", 1, "measured")

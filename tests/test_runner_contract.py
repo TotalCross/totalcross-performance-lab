@@ -1,0 +1,652 @@
+import hashlib
+import json
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+
+from runners import run
+from tools.packaging import build_windows
+from tools.packaging import build_macos
+
+
+ENVIRONMENT = {
+    "hostOs": "macOS test",
+    "hostArchitecture": "arm64",
+    "javaVersion": "17-test",
+    "totalcrossBuild": "source:0123456789abcdef",
+    "hostName": "test-host",
+    "sessionType": None,
+    "benchmarkWorkingTreeDirty": False,
+}
+
+
+def records(family="scroll", workload="scroll", profile="default", round_number=1, phase="measured"):
+    run_record = {
+        "schemaVersion": 1,
+        "recordType": "run",
+        "family": family,
+        "workload": workload,
+        "profile": profile,
+        "runtimeSourceCommit": "0123456789abcdef0123456789abcdef01234567",
+        "benchmarkSourceCommit": "89abcdef0123456789abcdef0123456789abcdef",
+        "dataset": None,
+        "environment": ENVIRONMENT,
+        "runtimeIdentity": "source:0123456789abcdef;artifact-sha256:abc",
+        "logicalDimensions": {"width": 540, "height": 960},
+        "drawableDimensions": None,
+        "renderer": "Raster",
+        "diagnosticsSupported": False,
+        "diagnosticsEnabled": False,
+        "runtimeConfigurationReport": "Runtime configuration test snapshot",
+        "round": round_number,
+        "phase": phase,
+        "durationsNs": {"wallTime": 500},
+        "measurements": {"axes": {}, "frameIntervalsNs": [10, 20, 30]},
+    }
+    summary = {
+        "schemaVersion": 1,
+        "recordType": "summary",
+        "family": family,
+        "workload": workload,
+        "profile": profile,
+        "dataset": None,
+        "runtimeSourceCommit": run_record["runtimeSourceCommit"],
+        "benchmarkSourceCommit": run_record["benchmarkSourceCommit"],
+        "rounds": [run_record],
+        "failures": 0,
+        "statistics": {"wallTimeNs": {"median": 500}},
+        "environment": ENVIRONMENT,
+    }
+    return run_record, summary
+
+
+def protocol_text(run_record, summary):
+    return "launcher diagnostic\n" + run.PREFIX + json.dumps(run_record) + "\n" + run.PREFIX + json.dumps(summary) + "\n"
+
+
+def paint_split_record(mismatched_visible_work=False):
+    times = [100, 200, 300, 400, 500]
+    positions = []
+    for label, scroll_position, rows in (("top", 0, 5), ("middle", 50, 7), ("bottom", 100, 6)):
+        phases = []
+        for timing_key, offset in (("paintTreeNs", 0), ("repaintNowNs", 200)):
+            samples = []
+            row_counts = []
+            image_counts = []
+            for sample_index, elapsed in enumerate(times):
+                row_count = rows + (sample_index % 2)
+                image_count = row_count * 3
+                if mismatched_visible_work and timing_key == "repaintNowNs" and sample_index == 4:
+                    image_count += 1
+                row_counts.append(row_count)
+                image_counts.append(image_count)
+                samples.append({
+                    "sampleIndex": sample_index,
+                    timing_key: elapsed + offset,
+                    "rowPaintCount": row_count,
+                    "rowPaintNs": 10,
+                    "imagePaintCount": image_count,
+                    "imagePaintNs": 20,
+                    "scrollbarPosition": scroll_position,
+                    "scrollContentPosition": scroll_position,
+                })
+            phase_times = [sample[timing_key] for sample in samples]
+            phases.append({
+                "sampleCount": 5,
+                "samples": samples,
+                "statistics": {
+                    "sampleCount": 5,
+                    "p50Ns": run.percentile(phase_times, 0.50),
+                    "p95Ns": run.percentile(phase_times, 0.95),
+                    "p99Ns": run.percentile(phase_times, 0.99),
+                    "maxNs": max(phase_times),
+                },
+                "rowPaintCounts": row_counts,
+                "imagePaintCounts": image_counts,
+                "cumulativeRowPaintNs": sum(sample["rowPaintNs"] for sample in samples),
+                "cumulativeImageControlPaintNs": sum(sample["imagePaintNs"] for sample in samples),
+            })
+        comparable = sorted(phases[0]["rowPaintCounts"]) == sorted(phases[1]["rowPaintCounts"])
+        comparable &= sorted(phases[0]["imagePaintCounts"]) == sorted(phases[1]["imagePaintCounts"])
+        positions.append({
+            "label": label,
+            "requestedPosition": scroll_position,
+            "scrollPosition": scroll_position,
+            "scrollContentPosition": scroll_position,
+            "scrollViewport": {"x": 0, "y": 0, "width": 540, "height": 900},
+            "paintTreeOnly": phases[0],
+            "repaintNow": phases[1],
+            "visibleWorkComparable": comparable,
+            "estimatedPresentResidualNs": (phases[1]["statistics"]["p50Ns"]
+                                             - phases[0]["statistics"]["p50Ns"])
+                if comparable else None,
+            "fullCorpusPaintDetected": False,
+        })
+    return {
+        "family": "scroll",
+        "profile": "default",
+        "logicalDimensions": {"width": 540, "height": 960},
+        "renderer": "RASTER",
+        "diagnosticsEnabled": False,
+        "measurements": {
+            "scrollDriver": "paint-split-probe",
+            "imageControls": 663,
+            "rows": 221,
+            "columns": 3,
+            "tileWidth": 179,
+            "preparation": False,
+            "positionCount": 3,
+            "samplesPerMeasurement": 5,
+            "scrollMinimum": 0,
+            "scrollMaximum": 100,
+            "positions": positions,
+            "fullCorpusPaintDetected": False,
+        },
+    }
+
+
+def paint_preparation_record(position_mismatch=False, count_mismatch=False):
+    def phase(sample_times, image_times, position, changed_counts=False):
+        samples = []
+        rows = []
+        images = []
+        for sample_index, elapsed in enumerate(sample_times):
+            row_count = 6 + (1 if changed_counts and sample_index == 4 else 0)
+            image_count = row_count * 3
+            rows.append(row_count)
+            images.append(image_count)
+            samples.append({
+                "sampleIndex": sample_index,
+                "paintTreeNs": elapsed,
+                "rowPaintCount": row_count,
+                "rowPaintNs": 10 + sample_index,
+                "imagePaintCount": image_count,
+                "imagePaintNs": image_times[sample_index],
+                "scrollPosition": position,
+                "scrollbarPosition": position,
+                "scrollContentPosition": position,
+            })
+        return {
+            "sampleCount": 5,
+            "samples": samples,
+            "statistics": {
+                "sampleCount": 5,
+                "p50Ns": run.percentile(sample_times, 0.50),
+                "p95Ns": run.percentile(sample_times, 0.95),
+                "p99Ns": run.percentile(sample_times, 0.99),
+                "maxNs": max(sample_times),
+            },
+            "imageControlPaintP50PerSampleNs": run.percentile(image_times, 0.50),
+            "rowPaintCounts": rows,
+            "imagePaintCounts": images,
+            "cumulativeRowPaintNs": sum(sample["rowPaintNs"] for sample in samples),
+            "cumulativeImageControlPaintNs": sum(sample["imagePaintNs"] for sample in samples),
+        }
+
+    before_position = 0
+    after_position = 1 if position_mismatch else 0
+    before = phase([100, 200, 300, 400, 500], [40, 50, 60, 70, 80], before_position)
+    after = phase([80, 160, 240, 320, 400], [20, 25, 30, 35, 40], after_position,
+                  changed_counts=count_mismatch)
+    same_viewport = before_position == 0 and after_position == 0
+    same_counts = before["rowPaintCounts"] == after["rowPaintCounts"] and before["imagePaintCounts"] == after["imagePaintCounts"]
+    request_matches = all(count == 18 for count in before["imagePaintCounts"] + after["imagePaintCounts"])
+    comparison_valid = same_viewport and same_counts and request_matches
+    difference = before["statistics"]["p50Ns"] - after["statistics"]["p50Ns"] if comparison_valid else None
+    reduction = 100.0 * difference / before["statistics"]["p50Ns"] if comparison_valid else None
+    status = ("invalid-position-mismatch" if not same_viewport else
+              "invalid-visible-count-mismatch" if not same_counts else
+              "invalid-request-visible-count-mismatch" if not request_matches else "valid")
+    return {
+        "family": "scroll",
+        "profile": "default",
+        "logicalDimensions": {"width": 540, "height": 960},
+        "renderer": "RASTER",
+        "diagnosticsEnabled": False,
+        "measurements": {
+            "scrollDriver": "paint-preparation-probe",
+            "imageControls": 663,
+            "rows": 221,
+            "columns": 3,
+            "tileWidth": 179,
+            "scrollMinimum": 0,
+            "scrollPositionBeforePreparation": before_position,
+            "scrollPositionAfterPreparation": after_position,
+            "phaseOrder": ["A-unprepared", "B-prepareForDisplay-call", "B-callback-complete", "C-prepared"],
+            "phaseAStartedNs": 10,
+            "phaseACompletedNs": 50,
+            "prepareRequests": 1,
+            "prepareCallStartNs": 60,
+            "prepareCallbackNs": 160,
+            "prepareWaitNs": 100,
+            "callbackCompletions": 1,
+            "prepareStatus": "callback-completed",
+            "visibleImageControlsAtRequest": 18,
+            "phaseCStartedNs": 170,
+            "phaseCCompletedNs": 210,
+            "paintSamplesPerPhase": 5,
+            "unpreparedPaintTree": before,
+            "preparedPaintTree": after,
+            "sameViewport": same_viewport,
+            "sameControlCounts": same_counts,
+            "requestVisibilityMatchesPaint": request_matches,
+            "timingComparisonValid": comparison_valid,
+            "comparisonStatus": status,
+            "absolutePaintTreeDifferenceNs": difference,
+            "paintTreeReductionPercent": reduction,
+            "preparation": False,
+            "explicitPreparationPerformed": True,
+        },
+    }
+
+
+class RunnerContractTests(unittest.TestCase):
+    def test_parses_valid_run_and_final_summary(self):
+        run_record, summary = records()
+        parsed_run, parsed_summary = run.parse_protocol(protocol_text(run_record, summary), "scroll", "scroll", "default", 1, "measured")
+        self.assertEqual(run_record, parsed_run)
+        self.assertEqual(summary, parsed_summary)
+
+    def test_rejects_malformed_tcb_record(self):
+        with self.assertRaisesRegex(run.RunnerError, "malformed TCBENCH_JSON"):
+            run.parse_protocol(run.PREFIX + "{broken\n", "scroll", "scroll", "default", 1, "measured")
+
+    def test_rejects_missing_final_summary(self):
+        run_record, _ = records()
+        with self.assertRaisesRegex(run.RunnerError, "missing its final"):
+            run.parse_protocol(run.PREFIX + json.dumps(run_record) + "\n", "scroll", "scroll", "default", 1, "measured")
+
+    def test_rejects_duplicate_or_invalid_records(self):
+        run_record, summary = records()
+        with self.assertRaisesRegex(run.RunnerError, "exactly one run and one final summary"):
+            duplicate = run.PREFIX + json.dumps(run_record) + "\n" + run.PREFIX + json.dumps(run_record) + "\n" + run.PREFIX + json.dumps(summary) + "\n"
+            run.parse_protocol(duplicate,
+                               "scroll", "scroll", "default", 1, "measured")
+        bad = dict(run_record)
+        bad.pop("runtimeSourceCommit")
+        with self.assertRaisesRegex(run.RunnerError, "missing required field"):
+            run.parse_protocol(protocol_text(bad, summary), "scroll", "scroll", "default", 1, "measured")
+
+    def test_rejects_summary_identity_mismatch(self):
+        run_record, summary = records()
+        summary["workload"] = "other"
+        with self.assertRaisesRegex(run.RunnerError, "summary identity"):
+            run.parse_protocol(protocol_text(run_record, summary), "scroll", "scroll", "default", 1, "measured")
+
+    def test_child_timeout_is_enforced(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            args = SimpleNamespace(
+                family="scroll", dataset_cache=root, width=540, height=960, diagnostics=False,
+                command=[sys.executable, "-c", "import time; time.sleep(2)"], timeout_seconds=1,
+            )
+            with self.assertRaisesRegex(run.RunnerError, "timed out"):
+                run.launch_one(args, {"profile": "default", "workload": "scroll"}, 1, "measured", 1,
+                               None, "0123456789abcdef", "89abcdef01234567", [], "abc", ENVIRONMENT, root)
+
+    def test_child_exit_code_is_reported(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            args = SimpleNamespace(
+                family="scroll", dataset_cache=root, width=540, height=960, diagnostics=False,
+                command=[sys.executable, "-c", "raise SystemExit(9)"], timeout_seconds=3,
+            )
+            with self.assertRaisesRegex(run.RunnerError, "status 9"):
+                run.launch_one(args, {"profile": "default", "workload": "scroll"}, 1, "measured", 1,
+                               None, "0123456789abcdef", "89abcdef01234567", [], "abc", ENVIRONMENT, root)
+
+    def test_scroll_preflight_config_contains_requested_dimensions(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            args = SimpleNamespace(
+                family="scroll", dataset_cache=root / "dataset", width=540, height=960,
+                diagnostics=False,
+                command=[sys.executable, "-c",
+                         "import json; c=json.load(open('tcbench-run.json')); "
+                         "assert c['width']==540 and c['height']==960; "
+                         "r={'recordType':'preflight','family':c['family'],'workload':c['workload'],"
+                         "'profile':c['profile'],'runtimeSourceCommit':c['runtimeSourceCommit'],"
+                         "'benchmarkSourceCommit':c['benchmarkSourceCommit'],"
+                         "'scrollDriver':c['scrollDriver'],"
+                         "'runtimeIdentity':c['runtimeIdentity'],'renderer':'RASTER',"
+                         "'diagnosticsRequested':False,'diagnosticsEnabled':False,"
+                         "'runtimeConfigurationReport':'Runtime configuration test',"
+                         "'fixture':{'dataset':None,'logicalDimensions':{'width':540,'height':960},"
+                         "'runtimeLogicalDimensions':{'width':540,'height':960},'imageControls':663,"
+                         "'rows':221,'columns':3,'tileWidth':179,'explicitPreparationRequested':False}}; "
+                         "print('TCBENCH_PREFLIGHT_JSON '+json.dumps(r))"],
+                timeout_seconds=3, launch_cwd=None,
+            )
+            run.launch_preflight(args, {"profile": "default", "workload": "scroll"}, 1, None,
+                                 "0123456789abcdef", "89abcdef01234567", [], "abc", ENVIRONMENT, root)
+
+    def test_default_scroll_preflight_requires_the_production_runtime_policy(self):
+        dataset = {"id": "image-scroll", "version": "v1", "manifestSha256": "a" * 64}
+        record = {
+            "profile": "default", "renderer": "RASTER", "scrollDriver": "fixed-step",
+            "diagnosticsRequested": False,
+            "diagnosticsEnabled": False,
+            "runtimeConfigurationReport": (
+                "storage:\n  effective: STANDARD\n"
+                "targetColorConversion: disabled\nphysicalVariantCache: disabled\n"
+                "scrollRasterReuse: disabled\nautomaticPreparation: disabled\n"
+                "prefetchWorker: LEGACY_PER_ENTRY_THREAD"),
+            "fixture": {
+                "dataset": dataset,
+                "logicalDimensions": {"width": 540, "height": 960},
+                "runtimeLogicalDimensions": {"width": 540, "height": 960},
+                "imageControls": 663, "rows": 221, "columns": 3, "tileWidth": 179,
+                "explicitPreparationRequested": False,
+            },
+        }
+        run.validate_scroll_preflight(record, dataset, 540, 960, require_default=True)
+        record["runtimeConfigurationReport"] = record["runtimeConfigurationReport"].replace(
+            "physicalVariantCache: disabled", "physicalVariantCache: enabled")
+        with self.assertRaisesRegex(run.RunnerError, "production defaults"):
+            run.validate_scroll_preflight(record, dataset, 540, 960, require_default=True)
+
+    def test_percentile_math(self):
+        self.assertEqual(25, run.percentile([10, 20, 30, 40], 0.5))
+        self.assertEqual(38.5, run.percentile([10, 20, 30, 40], 0.95))
+
+    def test_seeded_decode_matrix_order_is_stable(self):
+        args = SimpleNamespace(
+            family="decode", profiles="default,compact", sources="filesystem,tcz",
+            scales="full,half", orders="sequential,seeded-random",
+        )
+        cells = run.build_cells(args)
+        self.assertEqual(16, len(cells))
+        self.assertEqual({"profile": "default", "workload": "decode", "source": "filesystem",
+                          "scale": "full", "order": "sequential"}, cells[0])
+        self.assertEqual("compact", cells[-1]["profile"])
+        self.assertEqual("tcz", cells[-1]["source"])
+        self.assertEqual("half", cells[-1]["scale"])
+        self.assertEqual("seeded-random", cells[-1]["order"])
+
+    def test_scroll_matrix_includes_combined_profiles_and_pacing_order_is_stable(self):
+        scroll = run.build_cells(SimpleNamespace(family="scroll", profiles=None))
+        self.assertEqual("combined-standard", scroll[-2]["profile"])
+        self.assertEqual("combined-compact", scroll[-1]["profile"])
+        pacing = run.build_cells(SimpleNamespace(family="pacing", profiles=None, workloads=None))
+        self.assertEqual(["flick-40", "flick-60", "synthetic-16ms", "synthetic-16.667ms"],
+                         [cell["workload"] for cell in pacing])
+
+    def test_historical_scroll_driver_is_limited_to_one_default_pass(self):
+        valid = SimpleNamespace(
+            scroll_driver="historical-driver", family="scroll", profiles="default",
+            rounds=1, warmups=0, diagnostics=False, width=540, height=960,
+        )
+        run.validate_scroll_driver_arguments(valid)
+        invalid = (
+            {"family": "preparation"}, {"profiles": "compact"}, {"rounds": 2},
+            {"warmups": 1}, {"diagnostics": True}, {"width": 480}, {"height": 720},
+        )
+        for change in invalid:
+            with self.subTest(change=change):
+                candidate = SimpleNamespace(**{**vars(valid), **change})
+                with self.assertRaisesRegex(run.RunnerError, "historical-driver requires"):
+                    run.validate_scroll_driver_arguments(candidate)
+        run.validate_scroll_driver_arguments(SimpleNamespace(
+            scroll_driver="fixed-step", family="scroll", profiles="compact",
+            rounds=3, warmups=1, diagnostics=False, width=540, height=960,
+        ))
+
+    def test_default_gate_accepts_only_matching_clean_local_release_package(self):
+        source = Path("/tmp/clean-totalcross-candidate")
+        revision = "a" * 40
+        manifest = {
+            "totalcrossSourceCommit": revision,
+            "runtimeArtifactSourceCommit": revision,
+            "buildConfiguration": {"runtimeArtifactMode": "local-release-build"},
+        }
+        self.assertTrue(run.is_matching_local_candidate_package(manifest, source, revision))
+        self.assertFalse(run.is_matching_local_candidate_package(manifest, None, revision))
+        self.assertFalse(run.is_matching_local_candidate_package(manifest, source, "b" * 40))
+
+        wrong_mode = json.loads(json.dumps(manifest))
+        wrong_mode["buildConfiguration"]["runtimeArtifactMode"] = "github-actions-package"
+        self.assertFalse(run.is_matching_local_candidate_package(wrong_mode, source, revision))
+
+        wrong_runtime = json.loads(json.dumps(manifest))
+        wrong_runtime["runtimeArtifactSourceCommit"] = "b" * 40
+        self.assertFalse(run.is_matching_local_candidate_package(wrong_runtime, source, revision))
+
+    def test_paint_split_probe_is_limited_to_one_default_run_and_requires_preflight(self):
+        valid = SimpleNamespace(
+            scroll_driver="paint-split-probe", family="scroll", profiles="default",
+            rounds=1, warmups=0, diagnostics=False, width=540, height=960,
+            require_default_scroll_preflight=True,
+        )
+        run.validate_scroll_driver_arguments(valid)
+        with self.assertRaisesRegex(run.RunnerError, "requires --require-default-scroll-preflight"):
+            run.validate_scroll_driver_arguments(SimpleNamespace(**{
+                **vars(valid), "require_default_scroll_preflight": False,
+            }))
+        for change in ({"profiles": "compact"}, {"rounds": 2}, {"warmups": 1},
+                       {"diagnostics": True}, {"width": 480}):
+            with self.subTest(change=change):
+                with self.assertRaisesRegex(run.RunnerError, "paint-split-probe requires"):
+                    run.validate_scroll_driver_arguments(SimpleNamespace(**{**vars(valid), **change}))
+
+    def test_paint_split_result_validates_phase_samples_positions_and_residual(self):
+        record = paint_split_record()
+        run.validate_paint_split_result(record, 540, 960)
+        record["measurements"]["positions"][0]["paintTreeOnly"]["samples"][0]["scrollbarPosition"] = 1
+        with self.assertRaisesRegex(run.RunnerError, "invalid duration, paint count, or position"):
+            run.validate_paint_split_result(record, 540, 960)
+
+    def test_paint_split_result_with_changed_visible_work_has_no_residual(self):
+        record = paint_split_record(mismatched_visible_work=True)
+        run.validate_paint_split_result(record, 540, 960)
+        record["measurements"]["positions"][0]["estimatedPresentResidualNs"] = 200
+        with self.assertRaisesRegex(run.RunnerError, "residual must be absent"):
+            run.validate_paint_split_result(record, 540, 960)
+
+    def test_paint_preparation_probe_is_limited_to_one_default_run_and_requires_preflight(self):
+        valid = SimpleNamespace(
+            scroll_driver="paint-preparation-probe", family="scroll", profiles="default",
+            rounds=1, warmups=0, diagnostics=False, width=540, height=960,
+            require_default_scroll_preflight=True,
+        )
+        run.validate_scroll_driver_arguments(valid)
+        with self.assertRaisesRegex(run.RunnerError, "paint-preparation-probe requires"):
+            run.validate_scroll_driver_arguments(SimpleNamespace(**{
+                **vars(valid), "require_default_scroll_preflight": False,
+            }))
+        for change in ({"profiles": "compact"}, {"rounds": 2}, {"warmups": 1},
+                       {"diagnostics": True}, {"width": 480}, {"height": 720}):
+            with self.subTest(change=change):
+                with self.assertRaisesRegex(run.RunnerError, "paint-preparation-probe requires"):
+                    run.validate_scroll_driver_arguments(SimpleNamespace(**{**vars(valid), **change}))
+
+    def test_paint_preparation_result_checks_single_callback_phase_order_and_five_samples(self):
+        record = paint_preparation_record()
+        run.validate_paint_preparation_result(record, 540, 960)
+        record["measurements"]["prepareRequests"] = 2
+        with self.assertRaisesRegex(run.RunnerError, "five samples per phase and one callback"):
+            run.validate_paint_preparation_result(record, 540, 960)
+        record["measurements"]["prepareRequests"] = 1
+        record["measurements"]["prepareCallbackNs"] = 55
+        with self.assertRaisesRegex(run.RunnerError, "timestamps violate"):
+            run.validate_paint_preparation_result(record, 540, 960)
+        record["measurements"]["prepareCallbackNs"] = 160
+        record["measurements"]["preparedPaintTree"]["samples"].pop()
+        with self.assertRaisesRegex(run.RunnerError, "exactly five samples"):
+            run.validate_paint_preparation_result(record, 540, 960)
+
+    def test_paint_preparation_comparison_is_suppressed_if_position_or_counts_differ(self):
+        position_mismatch = paint_preparation_record(position_mismatch=True)
+        run.validate_paint_preparation_result(position_mismatch, 540, 960)
+        position_mismatch["measurements"]["absolutePaintTreeDifferenceNs"] = 60
+        with self.assertRaisesRegex(run.RunnerError, "must be omitted"):
+            run.validate_paint_preparation_result(position_mismatch, 540, 960)
+        count_mismatch = paint_preparation_record(count_mismatch=True)
+        run.validate_paint_preparation_result(count_mismatch, 540, 960)
+        self.assertFalse(count_mismatch["measurements"]["timingComparisonValid"])
+
+    def test_historical_result_validator_checks_fields_schedule_and_endpoint(self):
+        stats = lambda count: {"sampleCount": count, "p50Ns": 10, "p95Ns": 10,
+                               "p99Ns": 10, "maxNs": 10}
+        frames = [
+            {"frameIndex": 0, "elapsedNs": 0, "targetScroll": 0, "actualScroll": 0,
+             "requestedDelta": 0, "frameIntervalNs": 0, "scrollWorkNs": 0,
+             "paintWorkNs": 10, "workTimeNs": 10},
+            {"frameIndex": 1, "elapsedNs": 20000000, "targetScroll": 100, "actualScroll": 100,
+             "requestedDelta": 100, "frameIntervalNs": 20000000, "scrollWorkNs": 1,
+             "paintWorkNs": 10, "workTimeNs": 11},
+        ]
+        record = {
+            "family": "scroll", "profile": "default", "logicalDimensions": {"width": 540, "height": 960},
+            "renderer": "RASTER", "diagnosticsEnabled": False,
+            "durationsNs": {"wallTime": 30000000},
+            "measurements": {
+                "scrollDriver": "historical-driver", "passDirection": "top-to-bottom", "passCount": 1,
+                "targetDurationNs": 3000000000, "targetCadenceNs": 16000000,
+                "frameCount": 2, "totalPassWallTimeNs": 30000000,
+                "frameSamples": frames,
+                "frameIntervalStatistics": stats(1), "scrollWorkStatistics": stats(2),
+                "paintWorkStatistics": stats(2), "workTimeStatistics": stats(2),
+                "finalScrollPosition": 100, "scrollEndpoint": 100,
+            },
+        }
+        run.validate_historical_scroll_result(record, 540, 960)
+        record["measurements"]["finalScrollPosition"] = 99
+        with self.assertRaisesRegex(run.RunnerError, "did not reach"):
+            run.validate_historical_scroll_result(record, 540, 960)
+        record["measurements"]["finalScrollPosition"] = 100
+        record["measurements"]["paintWorkStatistics"]["sampleCount"] = 1
+        with self.assertRaisesRegex(run.RunnerError, "paintWorkStatistics"):
+            run.validate_historical_scroll_result(record, 540, 960)
+
+    def test_direct_launcher_templates_expand_profile_and_workload(self):
+        self.assertEqual("/bench/profiles/default/image-rendering-default-flick-60",
+                         run.expand_cell_value("/bench/profiles/{profile}/image-rendering-{profile}-{workload}",
+                                               "default", "flick-60"))
+        with self.assertRaisesRegex(run.RunnerError, "unknown command placeholder"):
+            run.expand_cell_value("/bench/{unknown}", "default", "flick-60")
+
+    def test_scroll_families_pass_requested_logical_window_to_launcher(self):
+        self.assertEqual(["launcher", "/scr", "-2,-2,540,960"],
+                         run.ensure_scroll_window_arguments(["launcher"], "scroll", 540, 960))
+        self.assertEqual(["launcher", "/scr", "-2,-2,800,1200"],
+                         run.ensure_scroll_window_arguments(["launcher"], "preparation", 800, 1200))
+        self.assertEqual(["launcher"], run.ensure_scroll_window_arguments(["launcher"], "pacing", 540, 960))
+        self.assertEqual(["launcher", "/scr", "custom"],
+                         run.ensure_scroll_window_arguments(["launcher", "/scr", "custom"], "scroll", 540, 960))
+
+    def test_windows_runner_passes_requested_logical_window_to_launcher(self):
+        runner = (Path(__file__).parents[1] / "runners/windows/run-image-rendering-benchmark.ps1").read_text(
+            encoding="utf-8")
+        self.assertIn("$processInfo.Arguments = \"/scr -2,-2,$Width,$Height\"", runner)
+
+    def test_macos_package_builder_targets_matching_release_arm64_runtime(self):
+        self.assertEqual(list(run.PROFILES), list(build_macos.PROFILE_CLASSES))
+        source = (Path(__file__).parents[1] / "tools/packaging/build_macos.py").read_text(encoding="utf-8")
+        for token in ("CMAKE_HOME_DIRECTORY", "CMAKE_BUILD_TYPE", "CMAKE_OSX_ARCHITECTURES",
+                      "lipo", '"-macos"', '"install/macos"', "runtimeArtifactSourceCommit"):
+            self.assertIn(token, source)
+
+    def test_package_manifest_schema_and_safe_paths(self):
+        schema_dir = Path(run.SCHEMA_DIR)
+        profiles = {}
+        binaries = []
+        for profile in run.PROFILES:
+            executable = "profiles/" + profile + "/app.exe"
+            digest = "a" * 64
+            profiles[profile] = {
+                "entryClass": "bench." + profile,
+                "executable": executable,
+                "workingDirectory": "profiles/" + profile,
+                "runtimeFiles": [{"path": "profiles/" + profile + "/tcvm.dll", "sha256": digest}],
+            }
+            binaries.append({"path": executable, "sha256": digest})
+        manifest = {
+            "schemaVersion": 1,
+            "packageType": "image-rendering-windows",
+            "platform": "windows",
+            "generatedAt": "2026-10-02T12:00:00Z",
+            "totalcrossSourceCommit": "1" * 40,
+            "runtimeArtifactSourceCommit": "1" * 40,
+            "benchmarkSourceCommit": "2" * 40,
+            "benchmarkWorkingTreeDirty": False,
+            "dataset": {"id": "image-scroll", "version": "v1", "manifestSha256": "3" * 64},
+            "buildConfiguration": {
+                "jdk": "17 test", "sdkHome": "sdk", "nativeRuntimeDirectory": "runtime",
+                "deployTarget": "win32", "sdkBuildCommand": [], "javaCompileRelease": 8,
+            },
+            "profileInventory": list(run.PROFILES),
+            "profiles": profiles,
+            "runtimeBinaries": binaries,
+        }
+        run.validate_schema(manifest, run.read_json(schema_dir / "benchmark-package-v1.schema.json"), schema_dir)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.assertEqual((root / "profiles/default/app.exe").resolve(), run.package_path(root, "profiles/default/app.exe"))
+            with self.assertRaisesRegex(run.RunnerError, "escapes"):
+                run.package_path(root, "../outside.exe")
+
+    def test_windows_runner_contract_is_powershell_only(self):
+        runner_path = Path(__file__).parents[1] / "runners/windows/run-image-rendering-benchmark.ps1"
+        dataset_path = Path(__file__).parents[1] / "runners/windows/dataset.ps1"
+        runner = runner_path.read_text(encoding="utf-8")
+        dataset = dataset_path.read_text(encoding="utf-8")
+        for token in ("$process.ExitCode", "WaitForExit", "RedirectStandardOutput", "RedirectStandardError",
+                      "DebugConsole.txt", "TCBENCH_JSON", "Assert-RunRecord", "failures.json"):
+            self.assertIn(token, runner)
+        self.assertNotIn("python.exe", runner.lower())
+        self.assertNotIn("python3", runner.lower())
+        for token in ("Get-FileHash", "Assert-SafeDatasetPath", "OpenRead", "Test-ImageScrollPayload"):
+            self.assertIn(token, dataset)
+
+    def test_windows_package_profile_inventory_and_runtime_hashes(self):
+        self.assertEqual(list(run.PROFILES), list(build_windows.PROFILE_CLASSES))
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            profile_dir = root / "package/profiles/default"
+            profile_dir.mkdir(parents=True)
+            executable = profile_dir / "image.exe"
+            runtime = profile_dir / "tcvm.dll"
+            executable.write_bytes(b"launcher")
+            runtime.write_bytes(b"runtime")
+            result = build_windows.package_files(profile_dir, executable)
+            self.assertEqual(["profiles/default/tcvm.dll"], [item["path"] for item in result])
+            self.assertEqual(hashlib.sha256(b"runtime").hexdigest(), result[0]["sha256"])
+
+    def test_profile_jar_contains_only_selected_entry_and_has_reproducible_metadata(self):
+        import zipfile
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            classes = root / "classes/totalcross/bench/imagerendering/profiles"
+            classes.mkdir(parents=True)
+            (classes / "Default.class").write_bytes(b"default")
+            (classes / "Compact.class").write_bytes(b"compact")
+            shared = root / "classes/totalcross/bench/imagerendering/BenchSupport.class"
+            shared.parent.mkdir(parents=True, exist_ok=True)
+            shared.write_bytes(b"shared")
+            dataset_files = root / "dataset"
+            dataset_files.mkdir()
+            (dataset_files / "photo.jpg").write_bytes(b"image payload")
+            jar_path = root / "Default.jar"
+            build_windows.write_profile_jar(root / "classes", "Default", jar_path, dataset_files)
+            with zipfile.ZipFile(jar_path) as archive:
+                self.assertEqual(
+                    ["image-scroll/photo.jpg",
+                     "totalcross/bench/imagerendering/BenchSupport.class",
+                     "totalcross/bench/imagerendering/profiles/Default.class"],
+                    sorted(archive.namelist()),
+                )
+                self.assertEqual((1980, 1, 1, 0, 0, 0), archive.getinfo(archive.namelist()[0]).date_time)
+                self.assertEqual(b"image payload", archive.read("image-scroll/photo.jpg"))
+
+    def test_macos_builder_compiles_only_the_selected_profile_source(self):
+        source_root = Path(__file__).parents[1] / "benchmarks/image-rendering/src/totalcross/bench/imagerendering"
+        sources = build_macos.selected_java_sources(source_root, ("default",))
+        profile_sources = [path for path in sources if source_root / "profiles" in path.parents]
+        self.assertEqual([source_root / "profiles/Default.java"], profile_sources)
+
+
+if __name__ == "__main__":
+    unittest.main()

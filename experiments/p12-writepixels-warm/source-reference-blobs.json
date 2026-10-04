@@ -1,0 +1,12 @@
+{
+  "f5dad132cafea5c9086f6f946a6f44ca5bcb5f76": {
+    "TotalCrossSDK/src/main/java/totalcross/ui/gfx/Graphics.java": "792dadd9c85e8b1fe1bc99f0c7956ddb154f8eea",
+    "TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h": "12306299d84bd26ef05df360f3e8609edf73f8d2",
+    "TotalCrossVM/src/nm/ui/skia/skia_image_backing.cpp": "46b47b4aa399d0c0ac78d1b183e20aa01c58325c"
+  },
+  "5a44f503bf6fa1bec350f1218f4d501a70fc4812": {
+    "TotalCrossSDK/src/main/java/totalcross/ui/gfx/Graphics.java": "01a3fb4760faea0ddfd817fddd224386e5502411",
+    "TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h": "9b680730d7810144f7b2da4d50869877f16cef55",
+    "TotalCrossVM/src/nm/ui/skia/skia_image_backing.cpp": "074285cfb144792fa205a044503ff8d65c0e1894"
+  }
+}

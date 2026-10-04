@@ -1,0 +1,151 @@
+{
+  "runtimeSourceCommit": "fc08c39499dead73b327ad259a992ab34ec42870",
+  "baseRuntimeSourceCommit": "5a44f503bf6fa1bec350f1218f4d501a70fc4812",
+  "runtimeSource": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-copyrect-causal",
+  "configuration": "Release macOS arm64 SDL Skia",
+  "artifacts": [
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-copyrect-causal/TotalCrossSDK/dist/totalcross-sdk.jar",
+      "sha256": "7ae364eac27dd1be327e8a0aab28ee814c463a42c554853768d2f9ecf7838d88"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-copyrect-causal/Launcher",
+      "sha256": "a02760a0f5d9451732b8948646bfee542d784d067b5a30c218896bd1af87b3bc"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-copyrect-causal/libtcvm.dylib",
+      "sha256": "4db3a8fee8461bc7fd53db9612b46a4cdcfe54f3a0140cb2249340913f24df69"
+    }
+  ],
+  "buildCommands": {
+    "sdk": [
+      "./gradlew-agent",
+      "dist",
+      "-x",
+      "test"
+    ],
+    "native": [
+      "ninja",
+      "-C",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-copyrect-causal",
+      "tcvm",
+      "Launcher",
+      "skia_surface_test"
+    ],
+    "configure": [
+      "cmake",
+      "-S",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/runtime-copyrect-causal/TotalCrossVM",
+      "-B",
+      "/Users/flsobral/repos/totalcross-performance-lab/.local-data/build/runtime-copyrect-causal",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_OSX_ARCHITECTURES=arm64",
+      "-DTC_RENDERER_SKIA=ON",
+      "-DTC_WINDOWING_SDL=ON",
+      "-DTC_WINDOWING_NATIVE=OFF",
+      "-DTC_BUILD_NATIVE_STARTUP_TEST=ON",
+      "-DSQLITE3_RELEASE_TAG=sqlite3-3.32.3-r2",
+      "-DQRCODEGEN_RELEASE_TAG=qrcodegen-20250123-r2",
+      "-DTCVM_DEPOT_TOOLS_DIR=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools",
+      "-DSDL2_DEPOT_ROOT=/Users/flsobral/repos/totalcross-runtime-p12/TotalCrossVM/deps/totalcross-depot-tools/sdl2/local/macos/arm64"
+    ]
+  },
+  "validation": {
+    "pythonTests": 90,
+    "nativeRoutingTest": "passed",
+    "officialBenchmarkCompile": "passed",
+    "customBenchmarkCompile": "passed",
+    "headers": "passed",
+    "offlineProtocolParser": "valid causal run/summary accepted; truncated and duplicate summaries rejected"
+  },
+  "measuredNativeProcesses": 1,
+  "benchmarkSourceCommit": "e9cb47bbe2750ec3a19341514283b9f19002d8b4",
+  "runnerProcesses": 1,
+  "runnerExitCode": 0,
+  "nativeExitCode": 0,
+  "validRecords": 1,
+  "processDirectory": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-copyrect-causal-probe/run-20261003T062742Z-26394/processes/0001-default-measured-1",
+  "runtimePatchSha256": "456a7e500d17e9f590cc35508cbae0de7f158543b8ee40ab54a933249e87352e",
+  "runnerCommand": [
+    "python3",
+    "runners/run.py",
+    "image-rendering",
+    "scroll",
+    "--profile",
+    "default",
+    "--scroll-driver",
+    "copyrect-causal-probe",
+    "--rounds",
+    "1",
+    "--warmups",
+    "0",
+    "--timeout-seconds",
+    "180",
+    "--width",
+    "540",
+    "--height",
+    "960",
+    "--dataset-cache",
+    ".local-data/datasets/p12-final/image-scroll/v1",
+    "--package-manifest",
+    ".local-data/packages/image-rendering-macos-copyrect-causal/package-manifest.json",
+    "--runtime-source",
+    ".local-data/runtime-copyrect-causal",
+    "--results-dir",
+    ".local-data/results/image-rendering-copyrect-causal-probe",
+    "--require-default-scroll-preflight",
+    "--fail-fast"
+  ],
+  "evidenceFiles": [
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-copyrect-causal-probe/run-20261003T062742Z-26394/runs.jsonl",
+      "sha256": "9335dcc143fdd2c4f7ce39a39129f08dc5585e7c1b8da76697b880011b1d0366"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-copyrect-causal-probe/run-20261003T062742Z-26394/failures.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-copyrect-causal-probe/run-20261003T062742Z-26394/processes/0001-default-measured-1/exit-status.json",
+      "sha256": "5db4cc100310e0503328b5d4e2c2ed2a7f671af2f7f265e636c174073a0406de"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-copyrect-causal-probe/run-20261003T062742Z-26394/processes/0001-default-measured-1/stdout.log",
+      "sha256": "0742a7649a306c6c00ac235746734271270a908ea120d4947158e726e2992204"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-copyrect-causal-probe/run-20261003T062742Z-26394/processes/0001-default-measured-1/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-copyrect-causal-probe/run-20261003T062742Z-26394/processes/0001-default-measured-1/DebugConsole.txt",
+      "sha256": "8af66226705b01f61fcca6ae35b53794f0d7250986c7e2b207cc5581aae3db98"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-copyrect-causal-probe/run-20261003T062742Z-26394/processes/0001-default-measured-1/preflight.json",
+      "sha256": "497ba86c3230f8577b26559e07b9a12e509fae7c5097d1571e6015ef4168ec3a"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/results/image-rendering-copyrect-causal-probe/run-20261003T062742Z-26394/processes/0001-default-measured-1/tcbench-run.json",
+      "sha256": "a4da4549db9012c808e37999c9efea6ffa29050e85e40adb15fe8182d679360f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/packages/image-rendering-macos-copyrect-causal/package-manifest.json",
+      "sha256": "1d8d97e4b67e4a49e0f8709574847d40bc53b24bc9aecf3878ce0e7b9a0cba2f"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/packages/image-rendering-macos-copyrect-causal.build.log",
+      "sha256": "ea53157765717fe54d65ac8a9c0d0e5034dfe71197300f0aee31daf2ea51b4ec"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/copyrect-causal/launch-authorized.json",
+      "sha256": "afd4a4893d514ab569cdce43fab0eb81f429536189f968c084f455923f61ec12"
+    },
+    {
+      "path": "/Users/flsobral/repos/totalcross-performance-lab/.local-data/copyrect-causal/logs/runner.log",
+      "sha256": "3d254376e038d4097bb146ff3aeb270fcc9206705a08b20486434853941b119c"
+    }
+  ]
+}

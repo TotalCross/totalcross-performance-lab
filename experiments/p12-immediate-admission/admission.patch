@@ -1,0 +1,181 @@
+diff --git a/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java b/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
+index 56a1fb31a..e3a48d005 100644
+--- a/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
++++ b/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
+@@ -85,0 +86,2 @@ public class Image extends GfxSurface {
++  // Isolated admission experiment; no production setting/API enables this field.
++  static int immediateMaterializedAdmissionForTest;
+@@ -1333 +1335,3 @@ public class Image extends GfxSurface {
+-    boolean admitted = deferred.observeMaterializedVariant(scaleBits, sourceDecodeGeneration);
++    boolean admitted = (immediateMaterializedAdmissionForTest != 0
++        && copyRectPhysicalOnlyForTest != 0 && imageOperationAccountingForTest)
++        || deferred.observeMaterializedVariant(scaleBits, sourceDecodeGeneration);
+diff --git a/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageImmediateAdmissionExperimentTest.java b/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageImmediateAdmissionExperimentTest.java
+new file mode 100644
+index 000000000..da520a7ba
+--- /dev/null
++++ b/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageImmediateAdmissionExperimentTest.java
+@@ -0,0 +1,163 @@
++// Copyright (C) 2026 Amalgam Solucoes em TI Ltda
++//
++// SPDX-License-Identifier: LGPL-2.1-only
++
++package totalcross.ui.image;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++import java.awt.image.BufferedImage;
++import java.io.ByteArrayOutputStream;
++import javax.imageio.ImageIO;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++
++/** JVM-only contracts for the isolated first-successful-materialization hook. */
++class ImageImmediateAdmissionExperimentTest {
++  private boolean previousAccounting;
++
++  @BeforeEach void reset() {
++    assertEquals(0, Image.immediateMaterializedAdmissionForTest);
++    previousAccounting = Image.imageOperationAccountingForTest;
++    Image.resetImageOperationAccountingForTest();
++    Image.copyRectPhysicalOnlyForTest = 0;
++  }
++
++  @AfterEach void restore() {
++    Image.immediateMaterializedAdmissionForTest = 0;
++    Image.copyRectPhysicalOnlyForTest = 0;
++    Image.imageOperationAccountingForTest = previousAccounting;
++  }
++
++  private void enable() {
++    Image.copyRectPhysicalOnlyForTest = 1;
++    Image.immediateMaterializedAdmissionForTest = 1;
++  }
++
++  private Image deferred() throws Exception {
++    BufferedImage pixels = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
++    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
++    ImageIO.write(pixels, "png", bytes);
++    return new Image(bytes.toByteArray()).getSmoothScaledInstance(48, 48);
++  }
++
++  @Test void firstSuccessfulExactScaleMaterializationIsAdmitted() throws Exception {
++    enable();
++    Image image = deferred();
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    Image first = image.resolveForDrawing(2);
++    assertTrue(first.backing.isValid());
++    assertEquals(96, first.getPixelWidth());
++    assertEquals(1, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++    assertSame(first, image.cachedFinalRasterForDrawing(2));
++    assertSame(first, image.resolveForDrawing(2));
++    assertEquals(1, Image.causalResolveCacheHitsForTest);
++    assertEquals(1, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++  }
++
++  @Test void disabledAdmissionHookKeepsProductionSecondObservation() throws Exception {
++    Image.copyRectPhysicalOnlyForTest = 1;
++    Image image = deferred();
++    Image first = image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertEquals(0, Image.causalVariantAdmissionsForTest);
++    Image second = image.resolveForDrawing(2);
++    assertNotSame(first, second);
++    assertSame(second, image.cachedFinalRasterForDrawing(2));
++    assertEquals(2, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++  }
++
++  @Test void immediateHookRequiresPhysicalOnlyRouting() throws Exception {
++    Image.immediateMaterializedAdmissionForTest = 1;
++    Image image = deferred();
++    image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertSame(image.resolveForDrawing(2), image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void immediateHookRequiresExplicitTestAccounting() throws Exception {
++    enable();
++    Image.imageOperationAccountingForTest = false;
++    Image image = deferred();
++    image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertSame(image.resolveForDrawing(2), image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void invalidScalesCannotObserveOrAdmit() throws Exception {
++    enable();
++    Image image = deferred();
++    for (double scale : new double[] {0, -1, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY}) {
++      assertThrows(ImageException.class, () -> image.resolveForDrawing(scale));
++      assertThrows(ImageException.class, () -> image.cachedFinalRasterForDrawing(scale));
++    }
++    assertEquals(0, Image.causalVariantObservationsForTest);
++    assertEquals(0, Image.causalVariantAdmissionsForTest);
++    assertEquals(0, image.pipelineForSmoke().cachedVariantCountForSmoke());
++  }
++
++  @Test void exactScaleCacheKeyIsUnchanged() throws Exception {
++    enable();
++    Image image = deferred();
++    Image two = image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(1));
++    assertNull(image.cachedFinalRasterForDrawing(4));
++    Image four = image.resolveForDrawing(4);
++    assertNotSame(two, four);
++    assertEquals(192, four.getPixelWidth());
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertSame(four, image.cachedFinalRasterForDrawing(4));
++    assertEquals(1, image.pipelineForSmoke().cachedVariantCountForSmoke());
++  }
++
++  @Test void changedDecodeGenerationStillRejectsAnAdmittedRaster() throws Exception {
++    enable();
++    Image image = deferred();
++    Image old = image.resolveForDrawing(2);
++    EncodedImageSource source = (EncodedImageSource) image.pipelineForSmoke().root();
++    source.evictDecodedBacking();
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    Image fresh = image.resolveForDrawing(2);
++    assertNotSame(old, fresh);
++    assertSame(fresh, image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void invalidBackingStillRejectsAnAdmittedRaster() throws Exception {
++    enable();
++    Image image = deferred();
++    Image old = image.resolveForDrawing(2);
++    ImageBacking backing = old.backing;
++    old.backing = null;
++    try {
++      assertNull(image.cachedFinalRasterForDrawing(2));
++      assertEquals(0, image.pipelineForSmoke().cachedVariantCountForSmoke());
++    } finally {
++      old.backing = backing;
++    }
++    Image fresh = image.resolveForDrawing(2);
++    assertNotSame(old, fresh);
++    assertSame(fresh, image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void failedMaterializationCannotObserveOrAdmitAndRetryAdmitsImmediately() throws Exception {
++    enable();
++    // The existing allocation hook is consumed by the legacy BMP decode path.
++    BufferedImage pixels = new BufferedImage(96, 96, BufferedImage.TYPE_INT_RGB);
++    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
++    assertTrue(ImageIO.write(pixels, "bmp", bytes));
++    Image image = new Image(bytes.toByteArray()).getSmoothScaledInstance(48, 48);
++    Image.failNextDecodedRasterAllocationForTest();
++    assertThrows(TransientImageMaterializationException.class, () -> image.resolveForDrawing(2));
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertEquals(0, Image.causalVariantObservationsForTest);
++    assertEquals(0, Image.causalVariantAdmissionsForTest);
++    Image recovered = image.resolveForDrawing(2);
++    assertSame(recovered, image.cachedFinalRasterForDrawing(2));
++    assertEquals(1, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++  }
++}

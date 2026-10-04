@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TotalCross/totalcross-performance-lab/schemas/benchmark-run-v1.schema.json",
+  "title": "TotalCross benchmark run record v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion", "recordType", "family", "workload", "profile",
+    "runtimeSourceCommit", "benchmarkSourceCommit", "dataset", "environment",
+    "runtimeIdentity", "logicalDimensions", "drawableDimensions", "renderer",
+    "diagnosticsSupported", "diagnosticsEnabled", "runtimeConfigurationReport",
+    "round", "phase", "durationsNs", "measurements"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "recordType": { "const": "run" },
+    "family": { "enum": ["decode", "scroll", "preparation", "pacing"] },
+    "workload": { "type": "string", "minLength": 1 },
+    "profile": { "type": "string", "minLength": 1 },
+    "runtimeSourceCommit": { "type": "string", "minLength": 7 },
+    "benchmarkSourceCommit": { "type": ["string", "null"] },
+    "dataset": {
+      "type": ["object", "null"],
+      "required": ["id", "version", "manifestSha256"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "manifestSha256": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    },
+    "environment": { "$ref": "environment-v1.schema.json" },
+    "runtimeIdentity": { "type": "string", "minLength": 1 },
+    "runtimeProvenance": { "$ref": "official-runtime-provenance-v1.schema.json" },
+    "runnerRuntimeFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    },
+    "logicalDimensions": { "$ref": "#/$defs/dimensionsOrNull" },
+    "drawableDimensions": { "$ref": "#/$defs/dimensionsOrNull" },
+    "renderer": { "type": "string", "minLength": 1 },
+    "displayRefreshHz": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+    "diagnosticsSupported": { "type": "boolean" },
+    "diagnosticsEnabled": { "type": "boolean" },
+    "runtimeConfigurationReport": { "type": "string" },
+    "round": { "type": "integer", "minimum": 0 },
+    "phase": { "enum": ["warmup", "measured", "diagnostic"] },
+    "durationsNs": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "measurements": { "type": "object" },
+    "diagnostics": { "type": ["object", "null"] }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "dimensionsOrNull": {
+      "type": ["object", "null"],
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

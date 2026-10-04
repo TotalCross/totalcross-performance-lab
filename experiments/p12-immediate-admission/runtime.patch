@@ -1,0 +1,287 @@
+diff --git a/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java b/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
+index 2f6bf3ebf..e3a48d005 100644
+--- a/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
++++ b/TotalCrossSDK/src/main/java/totalcross/ui/image/Image.java
+@@ -83,0 +84,9 @@ public class Image extends GfxSurface {
++  // Experiment-only: enabled by the P12 causal probe after normal startup paint.
++  static int copyRectPhysicalOnlyForTest;
++  // Isolated admission experiment; no production setting/API enables this field.
++  static int immediateMaterializedAdmissionForTest;
++  static int causalResolveCallsForTest;
++  static int causalResolveCacheHitsForTest;
++  static int causalVariantObservationsForTest;
++  static int causalVariantAdmissionsForTest;
++
+@@ -181,0 +191,4 @@ public class Image extends GfxSurface {
++    causalResolveCallsForTest = 0;
++    causalResolveCacheHitsForTest = 0;
++    causalVariantObservationsForTest = 0;
++    causalVariantAdmissionsForTest = 0;
+@@ -1298,0 +1312,3 @@ public class Image extends GfxSurface {
++    if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++      causalResolveCallsForTest++;
++    }
+@@ -1304,0 +1321,3 @@ public class Image extends GfxSurface {
++      if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++        causalResolveCacheHitsForTest++;
++      }
+@@ -1313 +1332,6 @@ public class Image extends GfxSurface {
+-    boolean admitted = deferred.observeMaterializedVariant(scaleBits, sourceDecodeGeneration);
++    if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++      causalVariantObservationsForTest++;
++    }
++    boolean admitted = (immediateMaterializedAdmissionForTest != 0
++        && copyRectPhysicalOnlyForTest != 0 && imageOperationAccountingForTest)
++        || deferred.observeMaterializedVariant(scaleBits, sourceDecodeGeneration);
+@@ -1314,0 +1339,3 @@ public class Image extends GfxSurface {
++      if (imageOperationAccountingForTest && copyRectPhysicalOnlyForTest != 0) {
++        causalVariantAdmissionsForTest++;
++      }
+diff --git a/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java b/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java
+index d25829d93..aa92d07e2 100644
+--- a/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java
++++ b/TotalCrossSDK/src/main/java/totalcross/ui/image/ImageRasterFeatureBridge.java
+@@ -18,0 +19,3 @@ public final class ImageRasterFeatureBridge {
++  static int physicalCopyAttemptsForTest;
++  static int physicalCopyFallbacksForTest;
++  static int causalIdentityFallbacksForTest;
+@@ -75,0 +79,3 @@ public final class ImageRasterFeatureBridge {
++    if ((status & (1 << 12)) != 0) physicalCopyAttemptsForTest++;
++    if ((status & (1 << 14)) != 0) physicalCopyFallbacksForTest++;
++    if ((status & ImageRasterDiagnostics.DRAW_IDENTITY_FALLBACK) != 0) causalIdentityFallbacksForTest++;
+@@ -137,0 +144,3 @@ public final class ImageRasterFeatureBridge {
++    physicalCopyAttemptsForTest = 0;
++    physicalCopyFallbacksForTest = 0;
++    causalIdentityFallbacksForTest = 0;
+diff --git a/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageImmediateAdmissionExperimentTest.java b/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageImmediateAdmissionExperimentTest.java
+new file mode 100644
+index 000000000..da520a7ba
+--- /dev/null
++++ b/TotalCrossSDK/src/test/java/totalcross/ui/image/ImageImmediateAdmissionExperimentTest.java
+@@ -0,0 +1,163 @@
++// Copyright (C) 2026 Amalgam Solucoes em TI Ltda
++//
++// SPDX-License-Identifier: LGPL-2.1-only
++
++package totalcross.ui.image;
++
++import static org.junit.jupiter.api.Assertions.*;
++
++import java.awt.image.BufferedImage;
++import java.io.ByteArrayOutputStream;
++import javax.imageio.ImageIO;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++
++/** JVM-only contracts for the isolated first-successful-materialization hook. */
++class ImageImmediateAdmissionExperimentTest {
++  private boolean previousAccounting;
++
++  @BeforeEach void reset() {
++    assertEquals(0, Image.immediateMaterializedAdmissionForTest);
++    previousAccounting = Image.imageOperationAccountingForTest;
++    Image.resetImageOperationAccountingForTest();
++    Image.copyRectPhysicalOnlyForTest = 0;
++  }
++
++  @AfterEach void restore() {
++    Image.immediateMaterializedAdmissionForTest = 0;
++    Image.copyRectPhysicalOnlyForTest = 0;
++    Image.imageOperationAccountingForTest = previousAccounting;
++  }
++
++  private void enable() {
++    Image.copyRectPhysicalOnlyForTest = 1;
++    Image.immediateMaterializedAdmissionForTest = 1;
++  }
++
++  private Image deferred() throws Exception {
++    BufferedImage pixels = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
++    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
++    ImageIO.write(pixels, "png", bytes);
++    return new Image(bytes.toByteArray()).getSmoothScaledInstance(48, 48);
++  }
++
++  @Test void firstSuccessfulExactScaleMaterializationIsAdmitted() throws Exception {
++    enable();
++    Image image = deferred();
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    Image first = image.resolveForDrawing(2);
++    assertTrue(first.backing.isValid());
++    assertEquals(96, first.getPixelWidth());
++    assertEquals(1, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++    assertSame(first, image.cachedFinalRasterForDrawing(2));
++    assertSame(first, image.resolveForDrawing(2));
++    assertEquals(1, Image.causalResolveCacheHitsForTest);
++    assertEquals(1, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++  }
++
++  @Test void disabledAdmissionHookKeepsProductionSecondObservation() throws Exception {
++    Image.copyRectPhysicalOnlyForTest = 1;
++    Image image = deferred();
++    Image first = image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertEquals(0, Image.causalVariantAdmissionsForTest);
++    Image second = image.resolveForDrawing(2);
++    assertNotSame(first, second);
++    assertSame(second, image.cachedFinalRasterForDrawing(2));
++    assertEquals(2, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++  }
++
++  @Test void immediateHookRequiresPhysicalOnlyRouting() throws Exception {
++    Image.immediateMaterializedAdmissionForTest = 1;
++    Image image = deferred();
++    image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertSame(image.resolveForDrawing(2), image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void immediateHookRequiresExplicitTestAccounting() throws Exception {
++    enable();
++    Image.imageOperationAccountingForTest = false;
++    Image image = deferred();
++    image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertSame(image.resolveForDrawing(2), image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void invalidScalesCannotObserveOrAdmit() throws Exception {
++    enable();
++    Image image = deferred();
++    for (double scale : new double[] {0, -1, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY}) {
++      assertThrows(ImageException.class, () -> image.resolveForDrawing(scale));
++      assertThrows(ImageException.class, () -> image.cachedFinalRasterForDrawing(scale));
++    }
++    assertEquals(0, Image.causalVariantObservationsForTest);
++    assertEquals(0, Image.causalVariantAdmissionsForTest);
++    assertEquals(0, image.pipelineForSmoke().cachedVariantCountForSmoke());
++  }
++
++  @Test void exactScaleCacheKeyIsUnchanged() throws Exception {
++    enable();
++    Image image = deferred();
++    Image two = image.resolveForDrawing(2);
++    assertNull(image.cachedFinalRasterForDrawing(1));
++    assertNull(image.cachedFinalRasterForDrawing(4));
++    Image four = image.resolveForDrawing(4);
++    assertNotSame(two, four);
++    assertEquals(192, four.getPixelWidth());
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertSame(four, image.cachedFinalRasterForDrawing(4));
++    assertEquals(1, image.pipelineForSmoke().cachedVariantCountForSmoke());
++  }
++
++  @Test void changedDecodeGenerationStillRejectsAnAdmittedRaster() throws Exception {
++    enable();
++    Image image = deferred();
++    Image old = image.resolveForDrawing(2);
++    EncodedImageSource source = (EncodedImageSource) image.pipelineForSmoke().root();
++    source.evictDecodedBacking();
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    Image fresh = image.resolveForDrawing(2);
++    assertNotSame(old, fresh);
++    assertSame(fresh, image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void invalidBackingStillRejectsAnAdmittedRaster() throws Exception {
++    enable();
++    Image image = deferred();
++    Image old = image.resolveForDrawing(2);
++    ImageBacking backing = old.backing;
++    old.backing = null;
++    try {
++      assertNull(image.cachedFinalRasterForDrawing(2));
++      assertEquals(0, image.pipelineForSmoke().cachedVariantCountForSmoke());
++    } finally {
++      old.backing = backing;
++    }
++    Image fresh = image.resolveForDrawing(2);
++    assertNotSame(old, fresh);
++    assertSame(fresh, image.cachedFinalRasterForDrawing(2));
++  }
++
++  @Test void failedMaterializationCannotObserveOrAdmitAndRetryAdmitsImmediately() throws Exception {
++    enable();
++    // The existing allocation hook is consumed by the legacy BMP decode path.
++    BufferedImage pixels = new BufferedImage(96, 96, BufferedImage.TYPE_INT_RGB);
++    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
++    assertTrue(ImageIO.write(pixels, "bmp", bytes));
++    Image image = new Image(bytes.toByteArray()).getSmoothScaledInstance(48, 48);
++    Image.failNextDecodedRasterAllocationForTest();
++    assertThrows(TransientImageMaterializationException.class, () -> image.resolveForDrawing(2));
++    assertNull(image.cachedFinalRasterForDrawing(2));
++    assertEquals(0, Image.causalVariantObservationsForTest);
++    assertEquals(0, Image.causalVariantAdmissionsForTest);
++    Image recovered = image.resolveForDrawing(2);
++    assertSame(recovered, image.cachedFinalRasterForDrawing(2));
++    assertEquals(1, Image.causalVariantObservationsForTest);
++    assertEquals(1, Image.causalVariantAdmissionsForTest);
++  }
++}
+diff --git a/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h b/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h
+index 9b680730d..35d5a7d78 100644
+--- a/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h
++++ b/TotalCrossVM/src/nm/ui/GraphicsPrimitivesSkia_c.h
+@@ -186,0 +187,2 @@ static int skiaDrawGeometryPlan(Context currentContext, TCObject dstSurf, TCObje
++   int32* causalPhysicalOnly = allowPhysicalCopy
++      ? imageTestAccountingField(currentContext, "copyRectPhysicalOnlyForTest") : null;
+@@ -190 +192,2 @@ static int skiaDrawGeometryPlan(Context currentContext, TCObject dstSurf, TCObje
+-      allowPhysicalCopy != 0 && doClip != 0);
++      allowPhysicalCopy != 0 && doClip != 0,
++      causalPhysicalOnly != null && *causalPhysicalOnly != 0);
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia.h b/TotalCrossVM/src/nm/ui/skia/skia.h
+index 6a338067b..062b0cb44 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia.h
++++ b/TotalCrossVM/src/nm/ui/skia/skia.h
+@@ -188 +188 @@ int skia_image_backing_draw_geometry_to_surface(int32 targetSurface,
+-    bool allowPhysicalCopy);
++    bool allowPhysicalCopy, bool physicalOnlyForTest);
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp b/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp
+index 3466bf11a..86bdc235d 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp
++++ b/TotalCrossVM/src/nm/ui/skia/skia_image_geometry.cpp
+@@ -1027 +1027 @@ int skia_image_backing_draw_geometry_to_surface(int32 targetSurface,
+-    bool allowPhysicalCopy) {
++    bool allowPhysicalCopy, bool physicalOnlyForTest) {
+@@ -1045,0 +1046,5 @@ int skia_image_backing_draw_geometry_to_surface(int32 targetSurface,
++    // P12 experiment: preserve production physical eligibility, but let Java
++    // resolve the final raster instead of terminating copyRect with generic draw.
++    if (allowPhysicalCopy && physicalOnlyForTest) {
++        return status;
++    }
+diff --git a/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp b/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp
+index 5b64194a9..ca81ad1b0 100644
+--- a/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp
++++ b/TotalCrossVM/src/nm/ui/skia/skia_surface_test.cpp
+@@ -109 +109 @@ static bool testPhysicalIdentityCopyCase(int operation, int32 alphaMask,
+-        destinationRight, destinationBottom, true);
++        destinationRight, destinationBottom, true, expectCopyHit || expectIdentityHit);
+@@ -111,0 +112,15 @@ static bool testPhysicalIdentityCopyCase(int operation, int32 alphaMask,
++    const bool baselinePhysicalHit = (status & (SKIA_IMAGE_DRAW_PHYSICAL_COPY_HIT
++        | SKIA_IMAGE_DRAW_PHYSICAL_IDENTITY_HIT)) != 0;
++    // Rejected physical-only calls must return before drawing. Fixtures with
++    // physical hits exercised the enabled switch in the baseline call above.
++    if (!baselinePhysicalHit && !failDirectWritePixels) {
++        const int physicalOnlyStatus = skia_image_backing_draw_geometry_to_surface(destinationSurface, &plan,
++            static_cast<float>(sourceLeft), 0, sourceRight, sourceBottom, destinationX, destinationY,
++            destinationRight, destinationBottom, true, true);
++        if ((physicalOnlyStatus & (SKIA_IMAGE_DRAW_HANDLED | SKIA_IMAGE_DRAW_GENERIC_GEOMETRY
++                | SKIA_IMAGE_DRAW_SMOOTH_RESAMPLE)) != 0) {
++            std::fprintf(stderr, "physical-only experiment routing failed\n");
++            return false;
++        }
++    }
++
+@@ -116 +131 @@ static bool testPhysicalIdentityCopyCase(int operation, int32 alphaMask,
+-        destinationX, destinationY, destinationRight, destinationBottom, false);
++        destinationX, destinationY, destinationRight, destinationBottom, false, false);
+@@ -276 +291 @@ static bool testPhysicalCopyFallbackCase(const char* name, int destinationColorT
+-        destinationBottom, true);
++        destinationBottom, true, false);
+@@ -279 +294 @@ static bool testPhysicalCopyFallbackCase(const char* name, int destinationColorT
+-        destinationRight, destinationBottom, false);
++        destinationRight, destinationBottom, false, false);

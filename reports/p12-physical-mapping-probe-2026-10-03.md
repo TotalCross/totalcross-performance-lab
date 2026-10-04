@@ -18,7 +18,7 @@ preceded eighteen read-only metadata captures.
 
 The complete validated record, provenance, process count/exit status and original
 artifact paths/hashes are preserved in
-[evidence JSON](evidence/p12-physical-mapping-probe-2026-10-03.json).
+local raw evidence captured during the run; the durable report preserves the validated aggregates and hashes.
 The original logs are under
 `.local-data/results/image-rendering-physical-mapping-readonly-probe/run-20261003T054657Z-90240/processes/0001-default-measured-1/`.
 Stdout includes an initialization `IOException: Error Code: 30 - Read-only file

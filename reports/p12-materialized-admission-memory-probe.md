@@ -25,9 +25,7 @@ SDL/Skia runtime, SDK and default-only package served all four applications.
 The [provenance index](../experiments/p12-admission-memory/provenance.json)
 contains exact build commands, SDK/Launcher/libtcvm hashes, full and parent
 patches, unchanged native speculative function hashes and all process evidence
-hashes. The [analysis/evidence record](evidence/p12-materialized-admission-memory-probe.json)
-preserves per-image accounting, frame positions/times, complete aggregates,
-calculations and original evidence paths/hashes.
+hashes. The experiment provenance index preserves the source/build/package commands and hashes. Detailed raw per-image accounting and run output remain local benchmark artifacts and are intentionally not versioned.
 
 Exactly **four measured native application processes**, in this order:
 

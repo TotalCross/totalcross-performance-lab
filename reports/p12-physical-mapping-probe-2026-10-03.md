@@ -230,3 +230,17 @@ was authorized, it does not prove causal attribution or exact area-proportional
 cost. No generation value, production fix or cache-admission decision follows
 from this result. No additional process, P12 matrix, cache experiment or platform
 validation was run.
+
+## Subsequent authorization audit
+
+A later request named the same package-manifest and results-directory paths. The
+matching run was already present, with one accepted native child, one complete
+schema-valid result and no failures. Its package manifest SHA-256 is
+`30389cd399119d9e6c2dc321663a887f506b95ea3c2fe2538b6d15146aee3d9c`; its saved
+run-record SHA-256 is
+`e0914e2d6fae01bf2d2abe0e5bae0ba018c3ab195b9c1ef61a48d0147177d570`. Because
+the request also required no earlier attempt for that package/result pair and
+prohibited a second process, no additional application process was launched.
+The existing record was revalidated offline against package provenance, dataset
+identity, schemas, inline preflight and all eighteen physical-mapping
+evaluations. This audit adds no runtime measurement.

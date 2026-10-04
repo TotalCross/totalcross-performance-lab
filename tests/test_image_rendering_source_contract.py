@@ -31,6 +31,28 @@ PROFILE_RULES = {
 
 
 class ImageRenderingSourceContractTests(unittest.TestCase):
+    def test_versioned_scroll_workload_contract_matches_source_and_dataset(self):
+        contract = (ROOT / "benchmarks/image-rendering/workload-contract.json")
+        value = __import__("json").loads(contract.read_text(encoding="utf-8"))
+        dataset = __import__("json").loads(
+            (ROOT / "datasets/image-scroll/v1/dataset.json").read_text(encoding="utf-8"))
+        scroll = (SOURCE / "ScrollWorkload.java").read_text(encoding="utf-8")
+
+        self.assertEqual("image-rendering-scroll-v1", value["id"])
+        self.assertEqual(value["dataset"]["expectedFileCount"], dataset["expectedFileCount"])
+        self.assertEqual(value["dataset"]["manifestSha256"], dataset["integrity"]["manifestSha256"])
+        self.assertEqual({"width": 540, "height": 960}, value["logicalDimensions"])
+        self.assertEqual(663, value["hierarchy"]["imageControls"])
+        self.assertEqual(221, value["hierarchy"]["rows"])
+        self.assertEqual(3, value["hierarchy"]["columns"])
+        self.assertEqual(179, value["hierarchy"]["tileWidth"])
+        self.assertEqual(["cold-forward", "warm-reverse", "warm-forward"],
+                         value["traversal"]["passes"])
+        self.assertIn("setUIStyle(Settings." + value["hierarchy"]["uiStyle"] + ")", scroll)
+        self.assertIn("SCROLL_STEP = " + str(value["traversal"]["scrollStep"]), scroll)
+        self.assertIn("Color.brighter(Color.BLUE)", scroll)
+        self.assertIn("Color.darker(Color.GREEN)", scroll)
+
     def test_named_entries_are_direct_main_windows_with_typed_rules(self):
         self.assertEqual(set(run.PROFILES), set(build_windows.PROFILE_CLASSES))
         for class_name, rules in PROFILE_RULES.items():

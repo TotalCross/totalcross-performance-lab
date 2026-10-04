@@ -19,6 +19,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIR = ROOT / "schemas"
+SCROLL_WORKLOAD_CONTRACT_PATH = ROOT / "benchmarks/image-rendering/workload-contract.json"
 sys.path.insert(0, str(ROOT))
 from tools.packaging.official_runtime import validate_packaged_provenance
 
@@ -44,6 +45,13 @@ class RunnerError(Exception):
 
 def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def scroll_workload_contract() -> dict[str, Any]:
+    value = read_json(SCROLL_WORKLOAD_CONTRACT_PATH)
+    if value.get("schemaVersion") != 1 or value.get("id") != "image-rendering-scroll-v1":
+        raise RunnerError("unsupported scroll workload contract")
+    return value
 
 
 def resolve_schema_ref(reference: str, schema_dir: Path, current: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -680,17 +688,23 @@ def validate_scroll_preflight(record: dict[str, Any], dataset: dict[str, Any] | 
         raise RunnerError("default scroll preflight diagnostics must be disabled")
     if fixture.get("dataset") != dataset:
         raise RunnerError("scroll preflight dataset identity does not match the verified cache")
-    expected_dimensions = {"width": width, "height": height}
+    contract = scroll_workload_contract()
+    expected_dimensions = contract["logicalDimensions"]
+    if {"width": width, "height": height} != expected_dimensions:
+        raise RunnerError("requested dimensions differ from the versioned scroll workload contract")
     if fixture.get("logicalDimensions") != expected_dimensions or fixture.get("runtimeLogicalDimensions") != expected_dimensions:
-        raise RunnerError("scroll preflight logical resolution does not match the request")
+        raise RunnerError("scroll preflight logical resolution does not match the workload contract")
+    expected_dataset = contract["dataset"]
+    if (not isinstance(dataset, dict)
+            or any(dataset.get(key) != expected_dataset[key]
+                   for key in ("id", "version", "manifestSha256"))):
+        raise RunnerError("verified dataset differs from the versioned scroll workload contract")
     expected = {
-        "imageControls": 663,
-        "rows": 221,
-        "columns": 3,
-        "tileWidth": (width - 3) // 3,
+        key: contract["hierarchy"][key]
+        for key in ("imageControls", "rows", "columns", "tileWidth")
     }
     if any(fixture.get(key) != value for key, value in expected.items()):
-        raise RunnerError("scroll preflight fixture geometry does not match the historical workload")
+        raise RunnerError("scroll preflight fixture geometry does not match the workload contract")
     report = record.get("runtimeConfigurationReport")
     if not isinstance(report, str) or not report:
         raise RunnerError("scroll preflight did not report the effective runtime configuration")
@@ -893,6 +907,12 @@ def launch_one(arguments, cell: dict[str, Any], round_number: int, phase: str, i
             "fixture": measured_fixture,
         }, dataset, arguments.width, arguments.height, require_default=True,
            scroll_driver=getattr(arguments, "scroll_driver", "fixed-step"))
+        if getattr(arguments, "scroll_driver", "fixed-step") == "fixed-step":
+            contract = scroll_workload_contract()
+            passes = measurements.get("passes")
+            pass_names = [item.get("name") for item in passes] if isinstance(passes, list) else None
+            if pass_names != contract["traversal"]["passes"]:
+                raise RunnerError("measured scroll pass sequence differs from the workload contract")
     return run
 
 

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "image-rendering-scroll-v1",
+  "dataset": {
+    "id": "image-scroll",
+    "version": "v1",
+    "expectedFileCount": 663,
+    "manifestSha256": "4dac75139e4e7095f5843a696f5fcd84055bf798e90b49614d6e4243120f5dbe"
+  },
+  "logicalDimensions": {
+    "width": 540,
+    "height": 960
+  },
+  "hierarchy": {
+    "imageControls": 663,
+    "rows": 221,
+    "columns": 3,
+    "tileWidth": 179,
+    "uiStyle": "ANDROID_UI",
+    "mainBackground": "brighter(BLUE)",
+    "scrollBackground": "brighter(BLUE)",
+    "rowBackground": "darker(GREEN)"
+  },
+  "traversal": {
+    "scrollStep": 120,
+    "passes": [
+      "cold-forward",
+      "warm-reverse",
+      "warm-forward"
+    ]
+  },
+  "defaultProfile": {
+    "explicitPreparationRequested": false,
+    "renderer": "RASTER",
+    "diagnosticsEnabled": false
+  }
+}

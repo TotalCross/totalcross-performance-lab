@@ -1593,6 +1593,39 @@ The **Open follow-up: materialized cache admission policy** section is preserved
 verbatim and remains explicitly unresolved and out of scope.
 
 
+## Physical mapping authorization audit: existing capture reused (2026-10-03)
+
+The later launch request specified the same default-only package manifest and
+results directory. Before any launch, that directory already contained the
+matching successful `physical-mapping-probe` process from benchmark commit
+`564ce7c1bbda2b4995108683696d954631be04ca`: one process directory, one saved
+record, no runner failures, and an accepted native child exit status of **0**.
+The record is bound to the official runtime source
+`5a44f503bf6fa1bec350f1218f4d501a70fc4812`, the same package/runtime identity,
+and `image-scroll/v1`. Its package-manifest SHA-256 is
+`30389cd399119d9e6c2dc321663a887f506b95ea3c2fe2538b6d15146aee3d9c`; the saved
+run-record SHA-256 is
+`e0914e2d6fae01bf2d2abe0e5bae0ba018c3ab195b9c1ef61a48d0147177d570`.
+
+This meant the request's no-previous-attempt precondition was not satisfied for
+the specified package/result pair. No second TotalCross/native process was
+launched. The existing record was revalidated offline against the official
+package provenance, the verified 663-file dataset, the benchmark run and probe
+schemas, its inline default preflight, and all eighteen recomputed physical
+mapping evaluations. It contains the complete metadata capture, zero preparation
+requests and zero timed paint samples. The detailed per-control table, gate
+distributions, scale-equality interpretation and fast-versus-slow geometry
+comparison remain in
+[p12-physical-mapping-probe-2026-10-03.md](p12-physical-mapping-probe-2026-10-03.md)
+and its evidence index. The existing evidence is the sole runtime result used;
+no new runtime evidence is claimed here.
+
+At audit time the clean benchmark branch checkout was at `5b490210…`, while the
+saved package and process record identify `564ce7c1…`. The checkout was not
+moved and no process was launched from the later HEAD. The cache-admission policy
+remains explicitly unresolved and out of scope.
+
+
 ## copyRect causal experiment: implementation checkpoint (2026-10-03)
 
 The next authorized experiment isolates whether current copyRect draw-plan generic

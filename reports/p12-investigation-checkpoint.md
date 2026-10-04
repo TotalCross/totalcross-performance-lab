@@ -1540,7 +1540,7 @@ control gate table and true/false/unknown distributions are in
 [p12-physical-mapping-probe-2026-10-03.md](p12-physical-mapping-probe-2026-10-03.md).
 The complete validated record and evidence index (original paths and hashes,
 including package and previous draw-path evidence) are durably preserved in
-[evidence/p12-physical-mapping-probe-2026-10-03.json](evidence/p12-physical-mapping-probe-2026-10-03.json).
+the local raw physical-mapping evidence; the durable report preserves the validated aggregates and hashes.
 The sole process directory is
 `.local-data/results/image-rendering-physical-mapping-readonly-probe/run-20261003T054657Z-90240/processes/0001-default-measured-1/`.
 
@@ -1891,7 +1891,7 @@ no measured process was replaced. No warmup, separate preflight, alternative
 policy/dataset/platform or matrix ran. The durable schema now requires 179.
 
 The [full report](p12-materialized-admission-memory-probe.md) and
-[analysis/evidence index](evidence/p12-materialized-admission-memory-probe.json)
+local raw admission-memory analysis evidence
 record all lifecycles, actual native storage, natural and post-GC memory, frame
 statistics, paired deltas, source/build/package/process hashes and limitations.
 The repeated route reused 120-unit steps and 16 ms nominal cadence, down from 0
@@ -1991,4 +1991,3 @@ Future work in this repository should treat the P12 reports as historical
 evidence and build new diagnostic suites on top of the reusable runners,
 schemas, packaging and dataset contracts instead of reopening the completed
 causal investigation.
-

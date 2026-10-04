@@ -1940,3 +1940,55 @@ timing has only one process per condition, one host/dataset and fixed order.
 The retained 663-control list and lack of native-pressure-triggered collection
 limit generalization to recycled controls or other devices. Cheap post-run tests,
 diff checks and evidence verification complete this experiment; PR #1 stays open.
+
+## P12 closure: production candidate validated (2026-10-04)
+
+P12 is complete. Earlier sections that describe cache admission, production
+routing, or the final correction as unresolved are historical checkpoints and
+must not be read as the current project state.
+
+The investigation established three production-relevant causes and corrections:
+
+1. `copyRect(Image,...)` must treat the native draw-plan attempt as
+   physical-copy-only; a physical miss must return to Java final-raster
+   resolution rather than be consumed by generic/smooth drawing.
+2. Generic/transient final-raster resolution should retain second-observation
+   admission, while a deterministic persistent UI owner may admit the first
+   successful materialization immediately. The cache remains one exact final
+   raster per pipeline and native TARGET_COLOR/PHYSICAL admission is unchanged.
+3. The typed opaque device-1:1 `writePixels` path accounts for most of the
+   remaining warm regression and belongs in the production NativeImageBacking
+   path with conservative fallback.
+
+Those corrections were implemented and merged through TotalCross PR #488.
+The production candidate used for the final lab measurement is
+`bdd27273ead29bab320cba43b9ebad27be9b87ad`. The benchmark source is this lab
+at `264b9fba8581f08f3c0e4f31529831b7270d2c95`; preserving that SHA is part of
+the measurement provenance.
+
+Final candidate evidence:
+
+- static warm: paintTree 5.509 ms, cumulative ImageControl paint 4.984 ms,
+  18 cached-final hits, 0 misses, 0 generic-geometry draws, 0 smooth-resample
+  draws;
+- repeated scroll: 3 warmups and 10 measured runs; cold-forward p50/p95/max
+  70.456/73.900/98.178 ms, warm-reverse 16.348/16.743/30.483 ms,
+  warm-forward 16.313/16.627/47.995 ms;
+- 0 intervals above 100 ms across 9,720 measured frame intervals;
+- generic first-use regression confirms second-observation remains the generic
+  admission policy.
+
+The production package used for these runs does not expose the relevant runtime
+diagnostic counters. Repeated-scroll materialization/admission totals,
+`writePixels` hit counts, materialization time, and live/peak derived-raster
+memory are therefore not inferred. The dedicated Windows performance run was
+not executed; TotalCross PR #488 did pass final Windows and
+`windows-native-legacy` build validation.
+
+The concise final synthesis is
+[reports/p12-production-candidate-final.md](p12-production-candidate-final.md).
+Future work in this repository should treat the P12 reports as historical
+evidence and build new diagnostic suites on top of the reusable runners,
+schemas, packaging and dataset contracts instead of reopening the completed
+causal investigation.
+

@@ -19,7 +19,7 @@ PREFIX = "sqlite-plaintext-smoke"
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "tests/sqlite-plaintext/src/totalcross/lab/sqlite/SQLitePlaintextProbe.java"
 TARGETS = {"windows": "win32", "macos": "macos", "linux-x64": "linux",
-           "linux-arm64": "linux_arm", "linux-arm32": "linux_arm",
+           "linux-arm64": "linux_arm", "linux-arm32": "linux_arm", "linux-arm": "linux_arm",
            "android": "android", "ios": "ios"}
 DESKTOP = {"windows": ".exe", "macos": "", "linux-x64": ""}
 

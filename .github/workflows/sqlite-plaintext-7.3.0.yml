@@ -55,12 +55,23 @@ jobs:
       - name: Execute SQLite test in native TotalCross VM
         shell: bash
         run: python tools/sqlite_smoke.py execute --target ${{ matrix.target }} --out sqlite-smoke-results
+      - name: Print diagnostic logs on failure
+        if: failure()
+        shell: bash
+        run: |
+          for file in sqlite-smoke-results/compile.log sqlite-smoke-results/deploy.log sqlite-smoke-results/runtime.log; do
+            if test -f "$file"; then echo "=== $file ==="; tail -n 180 "$file"; fi
+          done
       - name: Archive deployed application and complete diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: sqlite-plaintext-7.3.0-${{ matrix.target }}
-          path: sqlite-smoke-results/
+          path: |
+            sqlite-smoke-results/
+            !sqlite-smoke-results/official-sdk/**
+            !sqlite-smoke-results/official-artifact.zip
+            !sqlite-smoke-results/classes/**
           retention-days: 30
           if-no-files-found: warn
 
@@ -96,11 +107,22 @@ jobs:
       - name: Deploy mobile application (no device execution)
         shell: bash
         run: python tools/sqlite_smoke.py build --target ${{ matrix.target }} --package sqlite-smoke-results/official-artifact.zip --out sqlite-smoke-results
+      - name: Print diagnostic logs on failure
+        if: failure()
+        shell: bash
+        run: |
+          for file in sqlite-smoke-results/compile.log sqlite-smoke-results/deploy.log sqlite-smoke-results/runtime.log; do
+            if test -f "$file"; then echo "=== $file ==="; tail -n 180 "$file"; fi
+          done
       - name: Archive mobile deploy and diagnostic logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: sqlite-plaintext-7.3.0-${{ matrix.target }}
-          path: sqlite-smoke-results/
+          path: |
+            sqlite-smoke-results/
+            !sqlite-smoke-results/official-sdk/**
+            !sqlite-smoke-results/official-artifact.zip
+            !sqlite-smoke-results/classes/**
           retention-days: 30
           if-no-files-found: warn

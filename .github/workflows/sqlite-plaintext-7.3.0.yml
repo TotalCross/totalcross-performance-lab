@@ -42,12 +42,12 @@ jobs:
           GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
         run: |
           mkdir -p sqlite-smoke-results
-          gh api /repos/TotalCross/totalcross/actions/runs/40878222908 --jq '{id,head_sha,conclusion,name}' | tee sqlite-smoke-results/upstream-run.json
-          test "$(gh api /repos/TotalCross/totalcross/actions/runs/40878222908 --jq .head_sha)" = "5464c21e3107e3f1ce9c287b724829e2bb870c1d"
-          test "$(gh api /repos/TotalCross/totalcross/actions/runs/40878222908 --jq .conclusion)" = "success"
-          gh api /repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq '{id,name,digest,size_in_bytes,expired}' | tee sqlite-smoke-results/upstream-artifact.json
-          test "$(gh api /repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq .name)" = "TotalCross-7.3.0"
-          gh api /repos/TotalCross/totalcross/actions/artifacts/12899147776/zip > sqlite-smoke-results/official-artifact.zip
+          gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq '{id,head_sha,conclusion,name}' | tee sqlite-smoke-results/upstream-run.json
+          test "$(gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq .head_sha)" = "5464c21e3107e3f1ce9c287b724829e2bb870c1d"
+          test "$(gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq .conclusion)" = "success"
+          gh api repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq '{id,name,digest,size_in_bytes,expired}' | tee sqlite-smoke-results/upstream-artifact.json
+          test "$(gh api repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq .name)" = "TotalCross-7.3.0"
+          gh api repos/TotalCross/totalcross/actions/artifacts/12899147776/zip > sqlite-smoke-results/official-artifact.zip
           python -m zipfile -t sqlite-smoke-results/official-artifact.zip
       - name: Build and deploy native application
         shell: bash
@@ -91,7 +91,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
         run: |
           mkdir -p sqlite-smoke-results
-          gh api /repos/TotalCross/totalcross/actions/artifacts/12899147776/zip > sqlite-smoke-results/official-artifact.zip
+          gh api repos/TotalCross/totalcross/actions/artifacts/12899147776/zip > sqlite-smoke-results/official-artifact.zip
           python -m zipfile -t sqlite-smoke-results/official-artifact.zip
       - name: Deploy mobile application (no device execution)
         shell: bash

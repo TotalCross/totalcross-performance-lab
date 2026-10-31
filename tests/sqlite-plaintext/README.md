@@ -7,7 +7,7 @@ This test uses **the exact upstream build**, not a Maven SDK or independently co
 - source revision: `5464c21e3107e3f1ce9c287b724829e2bb870c1d`
 - upstream GitHub artifact ID: `12899147776`, name `TotalCross-7.3.0`
 
-The GitHub Actions workflow `.github/workflows/sqlite-plaintext-7.3.0.yml` builds and deploys with the extracted **official SDK/TCVM** for Windows, macOS, Linux x64, Android and iOS. Only the three desktops are executed in CI; mobile packages are retained for device tests. Linux arm targets are not currently tested.
+The GitHub Actions workflow `.github/workflows/sqlite-plaintext-7.3.0.yml` builds and deploys with the extracted **official SDK/TCVM** for Windows, macOS, Linux x64, Linux ARM32, Linux ARM64, Android and iOS. Only the three desktops are executed in CI; mobile packages are retained for device tests. Linux ARM32 and ARM64 are deployed but not executed.
 
 ## Tests
 
@@ -39,3 +39,16 @@ python tools/sqlite_smoke.py execute --target linux-x64 --out sqlite-smoke-resul
 ```
 
 Available deployment targets: `windows`, `macos`, `linux-x64`, `android`, `ios`. For binaries, database fixtures, and diagnostic output see the GitHub Actions artifacts, not tracked Git files.
+
+## Linux x64 native startup issue observed (2026-10-31)
+
+On the exact 7.3.0 Linux runtime, the desktop test currently cannot reach its SQLite stages: the unmodified TCVM crashes on start with glibc `*** buffer overflow detected ***` and signal `SIGABRT`. The captured gdb stack is:
+
+```
+__realpath_chk
+startVM() from ./libtcvm.so
+executeProgram() from ./libtcvm.so
+main()
+```
+
+Upstream `TotalCrossVM/src/init/posix/startup_c.h` uses `char resolved[MAX_PATHNAME]` then `realpath(path, resolved)`; `MAX_PATHNAME` is 1024 in `TotalCrossVM/src/util/xtypes.h` on Linux. Modern glibc fortify expects a buffer at least `PATH_MAX` (commonly 4096) for the non-allocating `realpath` call and aborts in `__realpath_chk`. **This is a separate native startup failure, not a SQLite result.** The lab intentionally does not patch the official runtime; CI archives the native backtrace. Repair belongs upstream, preferably by using `realpath(path, NULL)` and freeing the allocation, then rebuilding and retesting.

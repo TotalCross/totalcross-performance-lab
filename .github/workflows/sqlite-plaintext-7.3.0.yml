@@ -35,7 +35,7 @@ jobs:
           python-version: '3.11'
       - name: Install Linux headless display dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1 libegl1 libgles2 libglu1-mesa libx11-6 libxext6 libxrender1 libfontconfig1
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1 gdb libegl1 libgles2 libglu1-mesa libx11-6 libxext6 libxrender1 libfontconfig1
       - name: Fetch the exact 7.3.0 SDK package artifact
         shell: bash
         env:
@@ -59,7 +59,7 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          for file in sqlite-smoke-results/compile.log sqlite-smoke-results/deploy.log sqlite-smoke-results/runtime.log; do
+          for file in sqlite-smoke-results/compile.log sqlite-smoke-results/deploy.log sqlite-smoke-results/runtime.log sqlite-smoke-results/runtime-gdb.log; do
             if test -f "$file"; then echo "=== $file ==="; tail -n 180 "$file"; fi
           done
       - name: Archive deployed application and complete diagnostics
@@ -111,7 +111,7 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          for file in sqlite-smoke-results/compile.log sqlite-smoke-results/deploy.log sqlite-smoke-results/runtime.log; do
+          for file in sqlite-smoke-results/compile.log sqlite-smoke-results/deploy.log sqlite-smoke-results/runtime.log sqlite-smoke-results/runtime-gdb.log; do
             if test -f "$file"; then echo "=== $file ==="; tail -n 180 "$file"; fi
           done
       - name: Archive mobile deploy and diagnostic logs

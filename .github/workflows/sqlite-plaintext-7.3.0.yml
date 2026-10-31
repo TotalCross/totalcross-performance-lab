@@ -76,11 +76,13 @@ jobs:
           if-no-files-found: warn
 
   mobile-deploy:
-    name: Mobile deploy / ${{ matrix.target }}
+    name: Deploy only / ${{ matrix.target }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          - target: linux-arm
+            os: ubuntu-24.04
           - target: android
             os: ubuntu-24.04
           - target: ios

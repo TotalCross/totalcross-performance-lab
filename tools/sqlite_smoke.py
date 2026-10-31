@@ -163,6 +163,14 @@ def main():
             try:
                 invoke(cmd, path, log, env, timeout=120)
             except Exception:
+                if args.target == "linux-x64" and shutil.which("gdb"):
+                    try:
+                        invoke(["xvfb-run", "-a", "gdb", "-q", "-batch",
+                                "-ex", "run", "-ex", "thread apply all bt",
+                                "--args", str(executable)],
+                               path, out / "runtime-gdb.log", env, timeout=90)
+                    except Exception:
+                        pass
                 pass  # Parse structured events even when the VM crashes or exits nonzero.
             output = log.read_text(encoding="utf-8", errors="replace")
             entries = []

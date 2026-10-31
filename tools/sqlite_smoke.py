@@ -125,7 +125,7 @@ def main():
             cp = os.pathsep.join([str(sdkjar), str(libs / "*")])
             invoke(["javac", "--release", "8", "-cp", cp, "-d", classes, SOURCE],
                    out, out / "compile.log", env)
-            jar = out / (PREFIX + ".jar")
+            jar = out / "SQLitePlaintextProbe.jar"
             invoke(["jar", "cf", jar, "-C", classes, "."], out, out / "compile.log", env)
             deployed = out / "deployed"
             deployed.mkdir(exist_ok=True)

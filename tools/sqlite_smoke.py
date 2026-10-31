@@ -16,7 +16,7 @@ RUN_ID = 40878222908
 ARTIFACT_ID = 12899147776
 SOURCE_SHA = "5464c21e3107e3f1ce9c287b724829e2bb870c1d"
 PREFIX = "sqlite-plaintext-smoke"
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "tests/sqlite-plaintext/src/totalcross/lab/sqlite/SQLitePlaintextProbe.java"
 TARGETS = {"windows": "win32", "macos": "macos", "linux-x64": "linux",
            "linux-arm64": "linux_arm", "linux-arm32": "linux_arm",

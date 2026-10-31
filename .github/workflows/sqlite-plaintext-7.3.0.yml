@@ -1,0 +1,106 @@
+name: SQLite plaintext 7.3.0 smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - test/sqlite-plaintext-7.3.0
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    name: Desktop SQLite / ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64
+            os: ubuntu-24.04
+          - target: macos
+            os: macos-15
+          - target: windows
+            os: windows-2022
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Linux headless display dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1 libglu1-mesa libx11-6 libxext6 libxrender1 libfontconfig1
+      - name: Fetch the exact 7.3.0 SDK package artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+        run: |
+          mkdir -p sqlite-smoke-results
+          gh api /repos/TotalCross/totalcross/actions/runs/40878222908 --jq '{id,head_sha,conclusion,name}' | tee sqlite-smoke-results/upstream-run.json
+          test "$(gh api /repos/TotalCross/totalcross/actions/runs/40878222908 --jq .head_sha)" = "5464c21e3107e3f1ce9c287b724829e2bb870c1d"
+          test "$(gh api /repos/TotalCross/totalcross/actions/runs/40878222908 --jq .conclusion)" = "success"
+          gh api /repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq '{id,name,digest,size_in_bytes,expired}' | tee sqlite-smoke-results/upstream-artifact.json
+          test "$(gh api /repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq .name)" = "TotalCross-7.3.0"
+          gh api /repos/TotalCross/totalcross/actions/artifacts/12899147776/zip > sqlite-smoke-results/official-artifact.zip
+          python -m zipfile -t sqlite-smoke-results/official-artifact.zip
+      - name: Build and deploy native application
+        shell: bash
+        run: python tools/sqlite_smoke.py build --target ${{ matrix.target }} --package sqlite-smoke-results/official-artifact.zip --out sqlite-smoke-results
+      - name: Execute SQLite test in native TotalCross VM
+        shell: bash
+        run: python tools/sqlite_smoke.py execute --target ${{ matrix.target }} --out sqlite-smoke-results
+      - name: Archive deployed application and complete diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sqlite-plaintext-7.3.0-${{ matrix.target }}
+          path: sqlite-smoke-results/
+          retention-days: 30
+          if-no-files-found: warn
+
+  mobile-deploy:
+    name: Mobile deploy / ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: android
+            os: ubuntu-24.04
+          - target: ios
+            os: macos-15
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fetch pinned official SDK package
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+        run: |
+          mkdir -p sqlite-smoke-results
+          gh api /repos/TotalCross/totalcross/actions/artifacts/12899147776/zip > sqlite-smoke-results/official-artifact.zip
+          python -m zipfile -t sqlite-smoke-results/official-artifact.zip
+      - name: Deploy mobile application (no device execution)
+        shell: bash
+        run: python tools/sqlite_smoke.py build --target ${{ matrix.target }} --package sqlite-smoke-results/official-artifact.zip --out sqlite-smoke-results
+      - name: Archive mobile deploy and diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sqlite-plaintext-7.3.0-${{ matrix.target }}
+          path: sqlite-smoke-results/
+          retention-days: 30
+          if-no-files-found: warn

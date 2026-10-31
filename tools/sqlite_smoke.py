@@ -142,7 +142,7 @@ def main():
         else:
             if args.target not in DESKTOP:
                 raise RuntimeError("Execution only supported for desktop; mobile artifacts are deploy-only")
-            path = out / "deployed" / ("install/macos" if args.target == "macos" else TARGETS[args.target])
+            path = out / "deployed" / "install" / TARGETS[args.target]
             executable = path / (PREFIX + DESKTOP[args.target])
             if not executable.is_file():
                 raise RuntimeError("Missing native executable: " + str(executable))

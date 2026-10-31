@@ -35,7 +35,7 @@ jobs:
           python-version: '3.11'
       - name: Install Linux headless display dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1 libglu1-mesa libx11-6 libxext6 libxrender1 libfontconfig1
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1 libegl1 libgles2 libglu1-mesa libx11-6 libxext6 libxrender1 libfontconfig1
       - name: Fetch the exact 7.3.0 SDK package artifact
         shell: bash
         env:

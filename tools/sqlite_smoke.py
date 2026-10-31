@@ -70,7 +70,21 @@ def extract(package_zip, target, out):
             if not dest.is_relative_to(target.resolve()):
                 raise RuntimeError("unsafe archive path: " + entry.filename)
         z.extractall(target)
-    home, dist = find_sdk(target)
+    try:
+        home, dist = find_sdk(target)
+    except RuntimeError:
+        nested = sorted(target.rglob("TotalCross-7.3.0.zip"))
+        if len(nested) != 1:
+            raise RuntimeError("Expected one nested TotalCross-7.3.0.zip in official GitHub artifact")
+        expanded = target / "package"
+        expanded.mkdir(exist_ok=True)
+        with zipfile.ZipFile(nested[0]) as z:
+            for entry in z.infolist():
+                dest = (expanded / entry.filename).resolve()
+                if not dest.is_relative_to(expanded.resolve()):
+                    raise RuntimeError("Unsafe nested archive entry")
+            z.extractall(expanded)
+        home, dist = find_sdk(expanded)
     inventory = {
         "workflowRunId": RUN_ID, "artifactId": ARTIFACT_ID, "sourceSha": SOURCE_SHA,
         "artifactZip": str(package_zip), "artifactZipSha256": sha(package_zip),

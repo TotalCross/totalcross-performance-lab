@@ -125,7 +125,15 @@ def main():
             raise RuntimeError("Android emulator doesn't advertise arm64-v8a translation; install would be invalid")
 
         # Must use the unmodified APK from the exact TotalCross SDK artifact.
-        install = command(["adb", "install", "-r", str(apk)], timeout=120)
+        # Official APK contains ABI folders beyond the native arm64 TCVM. Without
+        # an override Android can select x86_64 and fail to load libtcvm.so.
+        install = command(["adb", "install", "--abi", "arm64-v8a", "-r", str(apk)], timeout=120)
+        package_info = command(["adb", "shell", "dumpsys", "package", package], timeout=30)
+        write_text(out, "package-after-install.txt", package_info)
+        selected = re.search(r"primaryCpuAbi=([^\\s]+)", package_info)
+        result["installedPrimaryAbi"] = selected.group(1) if selected else "not-reported"
+        if selected and selected.group(1) != "arm64-v8a":
+            raise RuntimeError("Package Manager did not select arm64-v8a: " + selected.group(1))
         write_text(out, "install.log", install)
         command(["adb", "shell", "am", "force-stop", package], check=False)
         command(["adb", "logcat", "-c"], check=False)

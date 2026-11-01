@@ -10,6 +10,7 @@ import totalcross.sql.ResultSet;
 import totalcross.sql.Statement;
 import totalcross.sys.Convert;
 import totalcross.sys.Settings;
+import totalcross.sys.Vm;
 import totalcross.ui.MainWindow;
 
 /**
@@ -167,9 +168,18 @@ public final class SQLitePlaintextProbe extends MainWindow {
       record.put("detail", detail);
       record.put("platform", Settings.platform == null ? "unknown" : Settings.platform);
       record.put("databasePath", databasePath);
-      System.out.println("TC_SQLITE_JSON " + record.toString());
+      String event = "TC_SQLITE_JSON " + record.toString();
+      System.out.println(event);
+      // Android native VM diagnostics go to logcat; stdout may not be captured.
+      if (Settings.ANDROID.equals(Settings.platform)) {
+        Vm.debug(event);
+      }
     } catch (Throwable ignored) {
-      System.out.println("TC_SQLITE_EVENT " + name + " " + status + " " + detail);
+      String event = "TC_SQLITE_EVENT " + name + " " + status + " " + detail;
+      System.out.println(event);
+      if (Settings.ANDROID.equals(Settings.platform)) {
+        Vm.debug(event);
+      }
     }
     System.out.flush();
   }

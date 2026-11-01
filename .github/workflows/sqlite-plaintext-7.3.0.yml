@@ -75,6 +75,73 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
+  android-emulator:
+    name: Android 15 SQLite / emulator (ARM64 translation)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Enable KVM for Android emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm
+      - name: Fetch pinned official TotalCross 7.3.0 SDK
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+        run: |
+          mkdir -p sqlite-smoke-results
+          gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq '{id,head_sha,conclusion,name}' | tee sqlite-smoke-results/upstream-run.json
+          test "$(gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq .head_sha)" = "5464c21e3107e3f1ce9c287b724829e2bb870c1d"
+          gh api repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq '{id,name,digest,size_in_bytes,expired}' | tee sqlite-smoke-results/upstream-artifact.json
+          gh api repos/TotalCross/totalcross/actions/artifacts/12899147776/zip > sqlite-smoke-results/official-artifact.zip
+          python -m zipfile -t sqlite-smoke-results/official-artifact.zip
+      - name: Deploy official 7.3.0 Android APK
+        run: python tools/sqlite_smoke.py build --target android --package sqlite-smoke-results/official-artifact.zip --out sqlite-smoke-results
+      - name: Boot Android 15 Google APIs emulator and execute SQLite smoke
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          emulator-boot-timeout: 600
+          script: python3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 120
+      - name: Print Android diagnostics after failure
+        if: failure()
+        shell: bash
+        run: |
+          for file in sqlite-smoke-results/compile.log sqlite-smoke-results/deploy.log sqlite-smoke-results/install.log sqlite-smoke-results/launch.log sqlite-smoke-results/android-execution-summary.json sqlite-smoke-results/failure-hints.txt; do
+            if test -f "$file"; then echo "=== $file ==="; tail -n 100 "$file"; fi
+          done
+          if test -f sqlite-smoke-results/runtime-android.logcat; then
+            echo '=== Android logcat SQLite / crashes ==='
+            grep -iE 'TC_SQLITE|TotalCross|fatal exception|unsatisfiedlinkerror|dlopen failed|fatal signal|sqlite' sqlite-smoke-results/runtime-android.logcat | tail -n 180 || true
+          fi
+      - name: Archive Android APK and emulator diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sqlite-plaintext-7.3.0-android-emulator
+          path: |
+            sqlite-smoke-results/
+            !sqlite-smoke-results/official-sdk/**
+            !sqlite-smoke-results/official-artifact.zip
+            !sqlite-smoke-results/classes/**
+          retention-days: 30
+          if-no-files-found: warn
+
   mobile-deploy:
     name: Deploy only / ${{ matrix.target }}
     strategy:
@@ -82,8 +149,6 @@ jobs:
       matrix:
         include:
           - target: linux-arm
-            os: ubuntu-24.04
-          - target: android
             os: ubuntu-24.04
           - target: ios
             os: macos-15

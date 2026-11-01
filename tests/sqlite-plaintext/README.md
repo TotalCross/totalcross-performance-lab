@@ -7,7 +7,7 @@ This test uses **the exact upstream build**, not a Maven SDK or independently co
 - source revision: `5464c21e3107e3f1ce9c287b724829e2bb870c1d`
 - upstream GitHub artifact ID: `12899147776`, name `TotalCross-7.3.0`
 
-The GitHub Actions workflow `.github/workflows/sqlite-plaintext-7.3.0.yml` builds and deploys with the extracted **official SDK/TCVM** for Windows, macOS, Linux x64, Linux ARM32, Linux ARM64, Android and iOS. Only the three desktops are executed in CI; mobile packages are retained for device tests. Linux ARM32 and ARM64 are deployed but not executed.
+The GitHub Actions workflow `.github/workflows/sqlite-plaintext-7.3.0.yml` builds and deploys with the extracted **official SDK/TCVM** for Windows, macOS, Linux x64, Linux ARM32, Linux ARM64, Android and iOS. Windows and macOS run SQLite natively in CI; Linux x64 is attempted and reports a distinct pre-SQLite native startup error. The Android APK is also installed and run on an API 35 Google APIs x86_64 emulator with ARM64 native bridge. iOS packages remain for later device tests. Linux ARM32 and ARM64 are deployed but not executed.
 
 ## Tests
 
@@ -18,7 +18,7 @@ The GitHub Actions workflow `.github/workflows/sqlite-plaintext-7.3.0.yml` build
 3. Close and reopen: read, update, `PRAGMA integrity_check`.
 4. Verify first 16 bytes of generated database are `SQLite format 3\\0`, proving on-disk content is standard plaintext SQLite.
 
-The app logs the resolved `Settings.appPath`, platform, SQLite version, database path, stages, and exception stack on error. The runner records file hashes, source SHA, machine details, deployment logs, runtime stdout/stderr, structured events, and execution summary. The workflow uploads these even on failure.
+On Android the test mirrors its structured events into the TotalCross native debug channel so `adb logcat` can capture them (normal stdout alone is insufficient). A separate Python executor checks APK ABIs and emulator ABI support, installs and launches the APK, monitors logcat, and requires all five stage PASS records; it records installation, launch, ABI metadata, failures, screenshot and crash logcat.\n\nThe app logs the resolved `Settings.appPath`, platform, SQLite version, database path, stages, and exception stack on error. The runner records file hashes, source SHA, machine details, deployment logs, runtime stdout/stderr, structured events, and execution summary. The workflow uploads these even on failure.
 
 ## CI prerequisites
 
@@ -38,9 +38,9 @@ python tools/sqlite_smoke.py build --target linux-x64 \
 python tools/sqlite_smoke.py execute --target linux-x64 --out sqlite-smoke-results
 ```
 
-Available deployment targets: `windows`, `macos`, `linux-x64`, `android`, `ios`. For binaries, database fixtures, and diagnostic output see the GitHub Actions artifacts, not tracked Git files.
+Available deployment targets: `windows`, `macos`, `linux-x64`, `linux-arm`, `android`, `ios`. For binaries, database fixtures, and diagnostic output see the GitHub Actions artifacts, not tracked Git files.
 
-## Linux x64 native startup issue observed (2026-10-31)
+## Android emulator coverage\n\nCI uses `reactivecircus/android-emulator-runner@v2`, an API 35 `google_apis` `x86_64` image and KVM on Ubuntu 24.04. The official TotalCross APK contains an ARM64 native library, so the runner checks the image's `ro.product.cpu.abilist` for `arm64-v8a` before installation. Incompatible ABIs or native-bridge failures are reported separately from SQL errors, and **a successful emulator run is not a substitute for testing an ARM64 phone**. The Android action stores `runtime-android.logcat`, `events.json`, `android-execution-summary.json`, APK and device diagnostics.\n\nRun from an already-booted emulator after a successful deploy:\n\n```bash\npython3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 120\n```\n\n## Linux x64 native startup issue observed (2026-10-31)
 
 On the exact 7.3.0 Linux runtime, the desktop test currently cannot reach its SQLite stages: the unmodified TCVM crashes on start with glibc `*** buffer overflow detected ***` and signal `SIGABRT`. The captured gdb stack is:
 

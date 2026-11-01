@@ -94,7 +94,7 @@ def main():
               "emulatorImage": "google_apis/x86_64", "apkArchitecture": None}
     package = ""
     try:
-        apks = sorted((out / "deployed" / "android").glob("*.apk"))
+        apks = sorted((out / "deployed" / "install" / "android").glob("*.apk"))
         if len(apks) != 1:
             raise RuntimeError("Expected exactly one deployed APK; got " + repr(apks))
         apk = apks[0]

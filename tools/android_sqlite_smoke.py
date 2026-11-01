@@ -130,7 +130,7 @@ def main():
         install = command(["adb", "install", "--abi", "arm64-v8a", "-r", str(apk)], timeout=120)
         package_info = command(["adb", "shell", "dumpsys", "package", package], timeout=30)
         write_text(out, "package-after-install.txt", package_info)
-        selected = re.search(r"primaryCpuAbi=([^\\s]+)", package_info)
+        selected = re.search(r"primaryCpuAbi=([A-Za-z0-9_-]+)", package_info)
         result["installedPrimaryAbi"] = selected.group(1) if selected else "not-reported"
         if selected and selected.group(1) != "arm64-v8a":
             raise RuntimeError("Package Manager did not select arm64-v8a: " + selected.group(1))

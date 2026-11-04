@@ -112,6 +112,8 @@ def run_phase(out, package, phase, timeout):
 
     started = time.monotonic()
     events = []
+    settings_observations = []
+    last_back = 0.0
     while time.monotonic() - started < timeout:
         time.sleep(2)
         logcat = command(["adb", "logcat", "-d", "-v", "threadtime"],
@@ -125,12 +127,42 @@ def run_phase(out, package, phase, timeout):
         if any(e.get("stage") == "result" and e.get("status") == "FAIL"
                for e in events):
             break
-
+        if phase == "denied":
+            # TCVM's File.c retries EACCES via a blocking Android permission
+            # request. The request launches Android Settings and suspends the
+            # native thread until the user returns. Dismiss it through ADB,
+            # rather than letting the headless test hang for 120 seconds.
+            focused = command(["adb", "shell", "dumpsys", "window"], timeout=20,
+                              check=False)
+            focus_lines = [line.strip() for line in focused.splitlines()
+                           if "mCurrentFocus" in line or "mFocusedApp" in line]
+            if any("com.android.settings" in line for line in focus_lines):
+                now = time.monotonic()
+                if now - last_back > 4.0 and len(settings_observations) < 10:
+                    settings_observations.append({
+                        "atSeconds": round(now - started, 1),
+                        "focus": focus_lines})
+                    if len(settings_observations) == 1:
+                        try:
+                            snapshot = subprocess.run(
+                                ["adb", "exec-out", "screencap", "-p"],
+                                capture_output=True, timeout=15, check=False)
+                            if snapshot.returncode == 0 and snapshot.stdout.startswith(b"\\x89PNG"):
+                                (out / "permission-settings-denied.png").write_bytes(snapshot.stdout)
+                        except Exception:
+                            pass
+                    command(["adb", "shell", "input", "keyevent", "KEYCODE_BACK"],
+                            timeout=20, check=False)
+                    last_back = now
+    write_text(out, "permission-settings-" + phase + ".json",
+               json.dumps(settings_observations, indent=2))
     passed = {e.get("stage") for e in events if e.get("status") == "PASS"}
     failed = [e for e in events if e.get("status") == "FAIL"]
     summary = {"phase": phase, "elapsedSeconds": round(time.monotonic() - started, 1),
                "eventCount": len(events), "passedStages": sorted(passed),
-               "failedEvents": failed}
+               "failedEvents": failed,
+               "settingsPromptSeen": bool(settings_observations),
+               "settingsBackCount": len(settings_observations)}
     write_text(out, "summary-" + phase + ".json",
                json.dumps(summary, indent=2))
     return summary, events
@@ -217,17 +249,26 @@ def main():
         # Phase 1: special permission explicitly unavailable. Captures the
         # client's exact mkdir/delete call and any SQLite error on /sdcard.
         result["deniedAppOp"] = appop(out, package, "ignore")
-        denied, denied_events = run_phase(out, package, "denied", args.timeout)
+        denied, denied_events = run_phase(out, package, "denied", min(args.timeout, 55))
         result["denied"] = denied
         if "external-result" in denied["passedStages"]:
             raise RuntimeError("Negative control unexpectedly accessed external storage")
         denied_fail_stages = {e.get("stage") for e in denied["failedEvents"]}
         if "external-result" not in denied_fail_stages:
-            raise RuntimeError("Negative control inconclusive: no external-result FAIL event")
+            if denied["settingsPromptSeen"]:
+                result["deniedObservation"] = "Permission Settings UI opened; native I/O waited for response"
+            else:
+                raise RuntimeError("Negative control inconclusive: no error or permission Settings UI")
+        else:
+            result["deniedObservation"] = "Native filesystem/SQLite access denied"
 
         # Phase 2: MANAGE_EXTERNAL_STORAGE granted via appops, without changing
         # the APK or TCVM. No manual Settings UI automation is implied.
         result["grantedAppOp"] = appop(out, package, "allow")
+        # Ensure the next launch is foreground even if the prior phase left
+        # the special-permission Settings activity on screen.
+        command(["adb", "shell", "am", "force-stop", "com.android.settings"],
+                timeout=20, check=False)
         granted, granted_events = run_phase(out, package, "granted", args.timeout)
         result["granted"] = granted
         required = REQUIRED | {

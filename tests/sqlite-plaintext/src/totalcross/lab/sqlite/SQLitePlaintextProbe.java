@@ -228,6 +228,33 @@ public final class SQLitePlaintextProbe extends MainWindow {
       failures++;
     }
 
+    // External file is pre-created by the test runner using standard SQLite,
+    // simulating an existing client database outside the app sandbox.
+    stage = "external-existing-db";
+    String existingDb = Convert.appendPath(Settings.dataPath, "tc-sqlite-7_3_0-existing-probe.db");
+    databasePath = existingDb;
+    try {
+      Connection conn = DriverManager.getConnection("jdbc:sqlite:" + existingDb);
+      try {
+        Statement stmt = conn.createStatement();
+        try {
+          assertSingleValue(stmt, "SELECT value FROM fixture WHERE id=1", "preexisting-from-python");
+          stmt.executeUpdate("UPDATE fixture SET value='updated-by-totalcross' WHERE id=1");
+          assertSingleValue(stmt, "SELECT value FROM fixture WHERE id=1", "updated-by-totalcross");
+          assertSingleValue(stmt, "PRAGMA integrity_check", "ok");
+        } finally {
+          stmt.close();
+        }
+      } finally {
+        conn.close();
+      }
+      emit(stage, "PASS", "Read and updated existing unencrypted SQLite at " + existingDb);
+    } catch (Throwable error) {
+      externalFailure(stage, error);
+      failures++;
+    }
+
+    databasePath = externalDb;
     try {
       verifyPlaintextHeader("external-sqlite-header");
     } catch (Throwable error) {

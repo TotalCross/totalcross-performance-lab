@@ -32,7 +32,10 @@ public final class SQLitePlaintextProbe extends MainWindow {
       runMemory();
       runNewFile();
       runReopen();
-      verifyPlaintextHeader();
+      verifyPlaintextHeader("plaintext-header");
+      if (Settings.ANDROID.equals(Settings.platform)) {
+        runExternalStorage();
+      }
       emit("result", "PASS", "All plaintext SQLite checks passed");
       System.out.flush();
       MainWindow.exit(0);
@@ -80,8 +83,15 @@ public final class SQLitePlaintextProbe extends MainWindow {
     }
     databasePath = Convert.appendPath(Settings.appPath, "sqlite-plaintext-smoke.db");
     emit("database-path", "INFO", databasePath);
-    if (new File(databasePath).exists()) {
-      throw new IllegalStateException("Test database already exists: " + databasePath);
+    // The Android emulator runs this same APK twice (before and after granting
+    // MANAGE_EXTERNAL_STORAGE). Only delete the dedicated internal test database.
+    try (File existing = new File(databasePath)) {
+      if (existing.exists()) {
+        if (!Settings.ANDROID.equals(Settings.platform)) {
+          throw new IllegalStateException("Test database already exists: " + databasePath);
+        }
+        existing.delete();
+      }
     }
 
     Connection conn = DriverManager.getConnection("jdbc:sqlite:" + databasePath);
@@ -120,8 +130,8 @@ public final class SQLitePlaintextProbe extends MainWindow {
     emit(stage, "PASS", "Reopen, SELECT, UPDATE and PRAGMA integrity_check");
   }
 
-  private void verifyPlaintextHeader() throws Exception {
-    stage = "plaintext-header";
+  private void verifyPlaintextHeader(String checkStage) throws Exception {
+    stage = checkStage;
     File file = new File(databasePath, File.READ_ONLY);
     try {
       byte[] buffer = new byte[16];
@@ -141,6 +151,102 @@ public final class SQLitePlaintextProbe extends MainWindow {
     } finally {
       file.close();
     }
+  }
+
+  /**
+   * Minimal client reproducer: Settings.dataPath="/sdcard/" followed by
+   * new File(Convert.appendPath(Settings.dataPath, "asd")).createDir()/delete().
+   * In the same session, also exercise the SQLite driver on an external file.
+   * Each step logs independently so a filesystem denial cannot hide SQLite's error.
+   */
+  private void runExternalStorage() throws Exception {
+    Settings.dataPath = "/sdcard/";
+    String folder = Convert.appendPath(Settings.dataPath, "asd");
+    String externalDb = Convert.appendPath(Settings.dataPath, "tc-sqlite-7_3_0-external-probe.db");
+    emit("external-paths", "INFO", "dataPath=" + Settings.dataPath + "; folder=" + folder
+        + "; database=" + externalDb);
+    int failures = 0;
+
+    stage = "external-dir";
+    try (File dir = new File(folder)) {
+      // This is the exact file operation in the client's TestPermission.java.
+      dir.createDir();
+      dir.delete();
+      emit(stage, "PASS", "Created and deleted " + folder);
+    } catch (Throwable error) {
+      externalFailure(stage, error);
+      failures++;
+    }
+
+    stage = "external-sqlite-create";
+    databasePath = externalDb;
+    try {
+      // Never erase an unrelated file; this uniquely named fixture is owned by this test.
+      try (File old = new File(externalDb)) {
+        if (old.exists()) {
+          old.delete();
+        }
+      }
+      Connection conn = DriverManager.getConnection("jdbc:sqlite:" + externalDb);
+      try {
+        Statement stmt = conn.createStatement();
+        try {
+          stmt.executeUpdate("CREATE TABLE external_probe (id INTEGER PRIMARY KEY, value TEXT NOT NULL)");
+          stmt.executeUpdate("INSERT INTO external_probe (id, value) VALUES (1, 'external-plaintext-ok')");
+          assertSingleValue(stmt, "SELECT value FROM external_probe WHERE id=1", "external-plaintext-ok");
+        } finally {
+          stmt.close();
+        }
+      } finally {
+        conn.close();
+      }
+      emit(stage, "PASS", "CREATE, INSERT, SELECT at " + externalDb);
+    } catch (Throwable error) {
+      externalFailure(stage, error);
+      failures++;
+    }
+
+    stage = "external-sqlite-reopen";
+    try {
+      Connection conn = DriverManager.getConnection("jdbc:sqlite:" + externalDb);
+      try {
+        Statement stmt = conn.createStatement();
+        try {
+          assertSingleValue(stmt, "SELECT value FROM external_probe WHERE id=1", "external-plaintext-ok");
+          stmt.executeUpdate("UPDATE external_probe SET value='external-reopened-ok' WHERE id=1");
+          assertSingleValue(stmt, "SELECT value FROM external_probe WHERE id=1", "external-reopened-ok");
+          assertSingleValue(stmt, "PRAGMA integrity_check", "ok");
+        } finally {
+          stmt.close();
+        }
+      } finally {
+        conn.close();
+      }
+      emit(stage, "PASS", "Reopen, UPDATE, integrity_check");
+    } catch (Throwable error) {
+      externalFailure(stage, error);
+      failures++;
+    }
+
+    try {
+      verifyPlaintextHeader("external-sqlite-header");
+    } catch (Throwable error) {
+      externalFailure("external-sqlite-header", error);
+      failures++;
+    }
+
+    stage = "external-result";
+    if (failures != 0) {
+      emit(stage, "FAIL", failures + " failures while accessing shared storage");
+      throw new IllegalStateException("External storage checks failed: " + failures);
+    }
+    emit(stage, "PASS", "Client directory operation and external plaintext SQLite work");
+  }
+
+  private void externalFailure(String failedStage, Throwable error) {
+    emit(failedStage, "FAIL", error.toString());
+    error.printStackTrace();
+    System.err.flush();
   }
 
   private static void assertSingleValue(Statement statement, String sql, String expected)

@@ -132,6 +132,10 @@ def main():
             cmd = ["java", "-cp", os.pathsep.join([str(classes), cp]), "tc.Deploy",
                    jar, "-" + TARGETS[args.target], "/p", "/n", PREFIX,
                    "/o", str(deployed) + os.sep]
+            if args.target == "android":
+                # Required to reproduce shared-storage access. Manifest declaration
+                # alone does not grant Android's special all-files access.
+                cmd.append("/android_manage_external_storage")
             invoke(cmd, out, out / "deploy.log", env, timeout=1800)
             outputs = [f.relative_to(deployed).as_posix() for f in deployed.rglob("*") if f.is_file()]
             if not outputs:

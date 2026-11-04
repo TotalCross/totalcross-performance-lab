@@ -83,31 +83,88 @@ def capture(out, package):
         pass
 
 
+def appop(out, package, mode):
+    if mode not in ("ignore", "allow"):
+        raise ValueError(mode)
+    state = command(["adb", "shell", "appops", "set", package,
+                     "MANAGE_EXTERNAL_STORAGE", mode], timeout=30)
+    readback = command(["adb", "shell", "appops", "get", package,
+                        "MANAGE_EXTERNAL_STORAGE"], timeout=30)
+    write_text(out, "appops-" + mode + ".txt", state + "\\n" + readback)
+    if mode not in readback:
+        raise RuntimeError("MANAGE_EXTERNAL_STORAGE appop was not set to " +
+                           mode + ": " + readback)
+    return readback
+
+
+def run_phase(out, package, phase, timeout):
+    # Each launch starts in a fresh logging window; the app itself runs twice
+    # against its internal fixture, which it safely resets between launches.
+    command(["adb", "shell", "am", "force-stop", package], check=False)
+    command(["adb", "logcat", "-c"])
+    launch = command(["adb", "shell", "monkey", "-p", package, "-c",
+                      "android.intent.category.LAUNCHER", "1"], timeout=35)
+    write_text(out, "launch-" + phase + ".log", launch)
+    if "Events injected: 1" not in launch:
+        raise RuntimeError(phase + ": failed to launch application: " + launch)
+
+    started = time.monotonic()
+    events = []
+    while time.monotonic() - started < timeout:
+        time.sleep(2)
+        logcat = command(["adb", "logcat", "-d", "-v", "threadtime"],
+                         timeout=35, check=False)
+        write_text(out, "runtime-android-" + phase + ".logcat", logcat)
+        events = parse_events(logcat)
+        write_text(out, "events-" + phase + ".json",
+                   json.dumps(events, indent=2))
+        if any(e.get("stage") == "external-result" for e in events):
+            break
+        if any(e.get("stage") == "result" and e.get("status") == "FAIL"
+               for e in events):
+            break
+
+    passed = {e.get("stage") for e in events if e.get("status") == "PASS"}
+    failed = [e for e in events if e.get("status") == "FAIL"]
+    summary = {"phase": phase, "elapsedSeconds": round(time.monotonic() - started, 1),
+               "eventCount": len(events), "passedStages": sorted(passed),
+               "failedEvents": failed}
+    write_text(out, "summary-" + phase + ".json",
+               json.dumps(summary, indent=2))
+    return summary, events
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=Path("sqlite-smoke-results"))
-    ap.add_argument("--timeout", type=int, default=120)
+    ap.add_argument("--timeout", type=int, default=90)
     args = ap.parse_args()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
     result = {"status": "FAIL", "started": time.time(), "apiLevel": 35,
-              "emulatorImage": "google_apis/x86_64", "apkArchitecture": None}
+              "emulatorImage": "google_apis/x86_64", "apkArchitecture": None,
+              "case": "client /sdcard/asd directory and SQLite at /sdcard"}
     package = ""
     try:
         apks = sorted((out / "deployed" / "install" / "android").glob("*.apk"))
         if len(apks) != 1:
             raise RuntimeError("Expected exactly one deployed APK; got " + repr(apks))
         apk = apks[0]
-        with zipfile.ZipFile(apk) as f:
-            abis = sorted({item.split("/")[1] for item in f.namelist()
+        with zipfile.ZipFile(apk) as archive:
+            abis = sorted({item.split("/")[1] for item in archive.namelist()
                            if item.startswith("lib/") and item.endswith(".so")})
         result["apkAbis"] = abis
         if "arm64-v8a" not in abis:
-            raise RuntimeError("Official TotalCross APK does not contain arm64-v8a native .so files")
+            raise RuntimeError("APK does not contain ARM64 native libraries")
         result["apkArchitecture"] = "arm64-v8a"
 
-        badging = command([find_aapt(), "dump", "badging", str(apk)])
+        aapt = find_aapt()
+        badging = command([aapt, "dump", "badging", str(apk)])
         write_text(out, "apk-badging.txt", badging)
+        declared = command([aapt, "dump", "permissions", str(apk)])
+        write_text(out, "apk-permissions.txt", declared)
+        if "android.permission.MANAGE_EXTERNAL_STORAGE" not in declared:
+            raise RuntimeError("APK does not declare MANAGE_EXTERNAL_STORAGE; check /android_manage_external_storage")
         match = re.search(r"^package: name='([^']+)'", badging, re.M)
         if not match:
             raise RuntimeError("aapt cannot identify APK application ID")
@@ -120,63 +177,65 @@ def main():
         sdk = command(["adb", "shell", "getprop", "ro.build.version.sdk"]).strip()
         result["deviceAbis"] = abi_list
         result["deviceSdk"] = sdk
-        write_text(out, "emulator-abi.txt", "SDK={}\nABILIST={}\nAPK_ABIS={}\n".format(sdk, abi_list, abis))
+        write_text(out, "emulator-abi.txt",
+                   "SDK={}\\nABILIST={}\\nAPK_ABIS={}\\n".format(sdk, abi_list, abis))
         if "arm64-v8a" not in abi_list.split(","):
-            raise RuntimeError("Android emulator doesn't advertise arm64-v8a translation; install would be invalid")
+            raise RuntimeError("Emulator does not support arm64-v8a translation")
 
-        # Must use the unmodified APK from the exact TotalCross SDK artifact.
-        # Official APK contains ABI folders beyond the native arm64 TCVM. Without
-        # an override Android can select x86_64 and fail to load libtcvm.so.
-        install = command(["adb", "install", "--abi", "arm64-v8a", "-r", str(apk)], timeout=120)
+        install = command(["adb", "install", "--abi", "arm64-v8a", "-r", str(apk)],
+                          timeout=120)
+        write_text(out, "install.log", install)
         package_info = command(["adb", "shell", "dumpsys", "package", package], timeout=30)
         write_text(out, "package-after-install.txt", package_info)
         selected = re.search(r"primaryCpuAbi=([A-Za-z0-9_-]+)", package_info)
         result["installedPrimaryAbi"] = selected.group(1) if selected else "not-reported"
         if selected and selected.group(1) != "arm64-v8a":
-            raise RuntimeError("Package Manager did not select arm64-v8a: " + selected.group(1))
-        write_text(out, "install.log", install)
-        command(["adb", "shell", "am", "force-stop", package], check=False)
-        command(["adb", "logcat", "-c"], check=False)
+            raise RuntimeError("Android installed the wrong ABI: " + selected.group(1))
 
-        # Monkey uses manifest launch intent and avoids assuming TotalCross activity naming.
-        launch = command(["adb", "shell", "monkey", "-p", package, "-c",
-                          "android.intent.category.LAUNCHER", "1"], timeout=35)
-        write_text(out, "launch.log", launch)
-        if "Events injected: 1" not in launch:
-            raise RuntimeError("The emulator didn't launch the TotalCross test activity")
+        # Phase 1: special permission explicitly unavailable. Captures the
+        # client's exact mkdir/delete call and any SQLite error on /sdcard.
+        result["deniedAppOp"] = appop(out, package, "ignore")
+        denied, denied_events = run_phase(out, package, "denied", args.timeout)
+        result["denied"] = denied
+        if "external-result" in denied["passedStages"]:
+            raise RuntimeError("Negative control unexpectedly accessed external storage")
+        denied_fail_stages = {e.get("stage") for e in denied["failedEvents"]}
+        if "external-result" not in denied_fail_stages:
+            raise RuntimeError("Negative control inconclusive: no external-result FAIL event")
 
-        start = time.monotonic()
-        events = []
-        while time.monotonic() - start < args.timeout:
-            time.sleep(3)
-            logcat = command(["adb", "logcat", "-d", "-v", "threadtime"], timeout=35, check=False)
-            write_text(out, "runtime-android.logcat", logcat)
-            events = parse_events(logcat)
-            write_text(out, "events.json", json.dumps(events, indent=2))
-            status = {event.get("stage") for event in events if event.get("status") == "PASS"}
-            failures = [event for event in events if event.get("status") == "FAIL"]
-            if failures or REQUIRED.issubset(status):
-                break
-        result["events"] = len(events)
-        result["passedStages"] = sorted({e.get("stage") for e in events if e.get("status") == "PASS"})
-        result["failedStages"] = [e for e in events if e.get("status") == "FAIL"]
-        result["elapsedSeconds"] = round(time.monotonic() - start, 1)
-        if result["failedStages"]:
-            raise RuntimeError("SQLite application reported failure: " + str(result["failedStages"]))
-        missing = REQUIRED.difference(result["passedStages"])
-        if missing:
-            logcat = (out / "runtime-android.logcat").read_text(errors="replace")
-            suspects = [line for line in logcat.splitlines() if
-                        re.search(r"FATAL EXCEPTION|UnsatisfiedLinkError|dlopen failed|SIGSEGV|Fatal signal|SQLite|TC_SQLITE_EVENT", line, re.I)]
-            write_text(out, "failure-hints.txt", "\n".join(suspects[-200:]))
-            raise RuntimeError("SQLite result incomplete; missing " + ", ".join(sorted(missing))
-                               + ". See runtime-android.logcat and failure-hints.txt")
+        # Phase 2: MANAGE_EXTERNAL_STORAGE granted via appops, without changing
+        # the APK or TCVM. No manual Settings UI automation is implied.
+        result["grantedAppOp"] = appop(out, package, "allow")
+        granted, granted_events = run_phase(out, package, "granted", args.timeout)
+        result["granted"] = granted
+        required = REQUIRED | {
+            "external-dir", "external-sqlite-create", "external-sqlite-reopen",
+            "external-sqlite-header", "external-result"}
+        missing = required.difference(granted["passedStages"])
+        if granted["failedEvents"] or missing:
+            throwables = [e for e in granted_events if e.get("status") == "FAIL"]
+            write_text(out, "failure-hints.txt", json.dumps(throwables, indent=2))
+            raise RuntimeError("With MANAGE_EXTERNAL_STORAGE, SQLite smoke failed: "
+                               + ", ".join(sorted(missing))
+                               + "; failing events=" + str(throwables))
+
         result["status"] = "PASS"
-        print("Android SQLite plaintext PASS; stages: " + ", ".join(sorted(REQUIRED)))
+        print("Android external SQLite PASS: denied without permission, all "
+              "filesystem and SQLite tests passed with MANAGE_EXTERNAL_STORAGE")
     except Exception as ex:
         result["error"] = str(ex)
-        print("Android SQLite smoke failure: " + str(ex), file=sys.stderr)
+        print("Android external SQLite smoke failed: " + str(ex), file=sys.stderr)
     finally:
+        try:
+            result["finalAppOp"] = command(
+                ["adb", "shell", "appops", "get", package,
+                 "MANAGE_EXTERNAL_STORAGE"], timeout=20, check=False) if package else ""
+            write_text(out, "storage-paths.txt", command(
+                ["adb", "shell", "ls", "-lad", "/sdcard", "/sdcard/asd",
+                 "/sdcard/tc-sqlite-7_3_0-external-probe.db"],
+                timeout=25, check=False))
+        except Exception as ex:
+            result["diagnosticError"] = str(ex)
         capture(out, package)
         result["finished"] = time.time()
         write_text(out, "android-execution-summary.json", json.dumps(result, indent=2))

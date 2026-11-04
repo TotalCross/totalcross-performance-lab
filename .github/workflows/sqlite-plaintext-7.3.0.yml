@@ -76,7 +76,7 @@ jobs:
           if-no-files-found: warn
 
   android-emulator:
-    name: Android 15 SQLite / emulator (ARM64 translation)
+    name: Android 15 SQLite / shared storage permission
     runs-on: ubuntu-24.04
     timeout-minutes: 50
     steps:
@@ -117,17 +117,17 @@ jobs:
           emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
           emulator-boot-timeout: 600
-          script: python3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 120
+          script: python3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 90
       - name: Print Android diagnostics after failure
         if: failure()
         shell: bash
         run: |
-          for file in sqlite-smoke-results/compile.log sqlite-smoke-results/deploy.log sqlite-smoke-results/install.log sqlite-smoke-results/launch.log sqlite-smoke-results/android-execution-summary.json sqlite-smoke-results/failure-hints.txt; do
+          for file in sqlite-smoke-results/compile.log sqlite-smoke-results/deploy.log sqlite-smoke-results/install.log sqlite-smoke-results/launch.log sqlite-smoke-results/android-execution-summary.json sqlite-smoke-results/failure-hints.txt sqlite-smoke-results/appops-ignore.txt sqlite-smoke-results/appops-allow.txt sqlite-smoke-results/summary-denied.json sqlite-smoke-results/summary-granted.json sqlite-smoke-results/apk-permissions.txt; do
             if test -f "$file"; then echo "=== $file ==="; tail -n 100 "$file"; fi
           done
-          if test -f sqlite-smoke-results/runtime-android.logcat; then
+          if test -f sqlite-smoke-results/runtime-android-granted.logcat; then
             echo '=== Android logcat SQLite / crashes ==='
-            grep -iE 'TC_SQLITE|TotalCross|fatal exception|unsatisfiedlinkerror|dlopen failed|fatal signal|sqlite' sqlite-smoke-results/runtime-android.logcat | tail -n 180 || true
+            grep -iE 'TC_SQLITE|TotalCross|fatal exception|unsatisfiedlinkerror|dlopen failed|fatal signal|sqlite' sqlite-smoke-results/runtime-android-granted.logcat | tail -n 180 || true
           fi
       - name: Archive Android APK and emulator diagnostics
         if: always()

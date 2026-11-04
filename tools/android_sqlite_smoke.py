@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Run the official TotalCross 7.3.0 plaintext SQLite APK on a booted Android Emulator."""
 import argparse
+import hashlib
+import sqlite3
 import json
 import os
 from pathlib import Path
@@ -192,6 +194,26 @@ def main():
         if selected and selected.group(1) != "arm64-v8a":
             raise RuntimeError("Android installed the wrong ABI: " + selected.group(1))
 
+        # Push a *pre-existing* standard plaintext SQLite file into shared
+        # storage before denying access. It is created independently of TCVM.
+        fixture = out / "preexisting-before.db"
+        if fixture.exists():
+            fixture.unlink()
+        with sqlite3.connect(str(fixture)) as db:
+            db.execute("CREATE TABLE fixture (id INTEGER PRIMARY KEY, value TEXT NOT NULL)")
+            db.execute("INSERT INTO fixture (id, value) VALUES (1, 'preexisting-from-python')")
+            db.commit()
+        image_path = "/sdcard/tc-sqlite-7_3_0-existing-probe.db"
+        pushed = command(["adb", "push", str(fixture), image_path], timeout=45)
+        write_text(out, "preexisting-push.log", pushed)
+        write_text(out, "preexisting-source.json", json.dumps({
+            "hostFileSha256": hashlib.sha256(fixture.read_bytes()).hexdigest(),
+            "fileSize": fixture.stat().st_size,
+            "devicePath": image_path,
+            "expectedBefore": "preexisting-from-python",
+            "expectedAfter": "updated-by-totalcross"
+        }, indent=2))
+
         # Phase 1: special permission explicitly unavailable. Captures the
         # client's exact mkdir/delete call and any SQLite error on /sdcard.
         result["deniedAppOp"] = appop(out, package, "ignore")
@@ -210,7 +232,7 @@ def main():
         result["granted"] = granted
         required = REQUIRED | {
             "external-dir", "external-sqlite-create", "external-sqlite-reopen",
-            "external-sqlite-header", "external-result"}
+            "external-sqlite-header", "external-existing-db", "external-result"}
         missing = required.difference(granted["passedStages"])
         if granted["failedEvents"] or missing:
             throwables = [e for e in granted_events if e.get("status") == "FAIL"]
@@ -219,6 +241,18 @@ def main():
                                + ", ".join(sorted(missing))
                                + "; failing events=" + str(throwables))
 
+        # Independently read back the modified shared-storage database with
+        # host Python SQLite. This validates actual persistence/interoperability.
+        readback = out / "preexisting-after.db"
+        command(["adb", "pull", image_path, str(readback)], timeout=45)
+        with sqlite3.connect(str(readback)) as db:
+            rows = db.execute("SELECT value FROM fixture WHERE id=1").fetchall()
+            integrity = db.execute("PRAGMA integrity_check").fetchone()[0]
+        result["externalDatabaseReadback"] = {"rows": rows, "integrity": integrity,
+            "sha256": hashlib.sha256(readback.read_bytes()).hexdigest()}
+        if rows != [("updated-by-totalcross",)] or integrity != "ok":
+            raise RuntimeError("Shared-storage SQLite readback mismatch: " + str(rows)
+                               + "; integrity=" + integrity)
         result["status"] = "PASS"
         print("Android external SQLite PASS: denied without permission, all "
               "filesystem and SQLite tests passed with MANAGE_EXTERNAL_STORAGE")
@@ -232,7 +266,8 @@ def main():
                  "MANAGE_EXTERNAL_STORAGE"], timeout=20, check=False) if package else ""
             write_text(out, "storage-paths.txt", command(
                 ["adb", "shell", "ls", "-lad", "/sdcard", "/sdcard/asd",
-                 "/sdcard/tc-sqlite-7_3_0-external-probe.db"],
+                 "/sdcard/tc-sqlite-7_3_0-external-probe.db",
+                 "/sdcard/tc-sqlite-7_3_0-existing-probe.db"],
                 timeout=25, check=False))
         except Exception as ex:
             result["diagnosticError"] = str(ex)

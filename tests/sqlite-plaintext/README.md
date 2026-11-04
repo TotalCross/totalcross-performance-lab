@@ -40,6 +40,19 @@ python tools/sqlite_smoke.py execute --target linux-x64 --out sqlite-smoke-resul
 
 Available deployment targets: `windows`, `macos`, `linux-x64`, `linux-arm`, `android`, `ios`. For binaries, database fixtures, and diagnostic output see the GitHub Actions artifacts, not tracked Git files.
 
+## Client external storage reproducer (2026-11-04)
+
+The client-provided `Main.zip` contains `Main.java`, `TestPermission.java`, and an APK. **The Java sample does not use SQLite:** `TestPermission.initUI()` sets `Settings.dataPath = "/sdcard/"`, then `checkFolderPermission()` does `new File(Convert.appendPath(Settings.dataPath, "asd")).createDir(); ... delete();`. That operation exercises access to the root of shared storage, outside the application's sandbox.
+
+The Android smoke probe now executes this exact `/sdcard/asd` create/delete sequence, followed by **unencrypted** SQLite database create/insert/select, reopen/update/`integrity_check`, and SQLite header verification at `/sdcard/tc-sqlite-7_3_0-external-probe.db`. The existing in-app and in-memory tests remain as controls. No customer APK or customer data is committed into this repository.
+
+The APK is deployed with the TotalCross 7.3.0 `/android_manage_external_storage` flag, declaring `android.permission.MANAGE_EXTERNAL_STORAGE` in the manifest. The emulator then runs the *identical APK twice*, without changing TCVM binaries:
+
+1. **Permission denied:** `adb shell appops set PACKAGE MANAGE_EXTERNAL_STORAGE ignore`; expect a controlled `external-result FAIL` showing the access error while normal app-internal SQLite succeeds.
+2. **Permission granted:** `adb shell appops set PACKAGE MANAGE_EXTERNAL_STORAGE allow`; require `external-dir`, `external-sqlite-create`, `external-sqlite-reopen`, `external-sqlite-header`, and `external-result` all PASS, along with in-app tests.
+
+It captures `apk-permissions.txt`, `appops-ignore.txt`, `appops-allow.txt`, separate `events-denied.json`/`events-granted.json`, `runtime-android-denied.logcat`/`runtime-android-granted.logcat`, screenshots, and summary files even if a phase fails. The `adb appops` toggle validates permission-dependent behavior, **not** the user-facing special-permission Settings screen or a real user's consent flow. Android's special all-files access is not granted merely by adding the manifest permission.
+
 ## Android emulator coverage\n\nCI uses `reactivecircus/android-emulator-runner@v2`, an API 35 `google_apis` `x86_64` image and KVM on Ubuntu 24.04. The official TotalCross APK contains an ARM64 native library, so the runner checks the image's `ro.product.cpu.abilist` for `arm64-v8a` before installation. Incompatible ABIs or native-bridge failures are reported separately from SQL errors, and **a successful emulator run is not a substitute for testing an ARM64 phone**. The Android action stores `runtime-android.logcat`, `events.json`, `android-execution-summary.json`, APK and device diagnostics.\n\nRun from an already-booted emulator after a successful deploy:\n\n```bash\npython3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 120\n```\n\n## Linux x64 native startup issue observed (2026-10-31)
 
 On the exact 7.3.0 Linux runtime, the desktop test currently cannot reach its SQLite stages: the unmodified TCVM crashes on start with glibc `*** buffer overflow detected ***` and signal `SIGABRT`. The captured gdb stack is:

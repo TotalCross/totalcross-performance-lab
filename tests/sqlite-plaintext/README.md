@@ -101,7 +101,10 @@ The new [iOS AWS Device Farm GitHub workflow](../../.github/workflows/ios-device
 uses GitHub OIDC to assume a read/test-only IAM Role. **Pushes never schedule
 billable iPhones**; they only validate OIDC, the AWS project and the device pool.
 Paid execution requires a manual `workflow_dispatch` with `execute=true`,
-and the test runner additionally requires `--execute`. GitHub displays
+and the test runner additionally requires `--execute`. For first-run cost
+protection, the selected AWS device pool must have **Max devices = 1**;
+the scheduler refuses larger or unspecified pools, and each Device Farm job
+is capped at **15 minutes**, with video enabled. GitHub displays
 `workflow_dispatch` only after the workflow file exists on the repository's
 default branch; merge the PR first, then select the feature branch in **Run
 workflow**, keeping the IAM trust condition aligned with that selected branch.

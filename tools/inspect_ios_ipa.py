@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Inspect the TotalCross iOS IPA for real-device device farm test uploads.
 
-Does not modify or re-sign the IPA: the TotalCross SDK ships a placeholder
-provisioning profile; many device farms apply their own signing on upload.
+Optionally enables Documents file sharing in the IPA Info.plist so Appium on a
+physical device can download the test log and SQLite file. This changes only
+packaging metadata; the original 7.3.0 TotalCross VM binary remains untouched.
+The SDK ships a placeholder provision; Device Farm re-signs on upload.
 """
 import argparse
 from datetime import datetime, timezone
@@ -14,15 +16,49 @@ import sys
 import zipfile
 
 
+def enable_documents_file_sharing(ipa):
+    # A Device Farm test can inspect the app's private Documents via
+    # mobile: pullFile only when UIFileSharingEnabled is true. Keep the
+    # SDK's native executable and packaged TCZ byte-for-byte unchanged.
+    temporary = ipa.with_name(ipa.name + ".tmp")
+    try:
+        with zipfile.ZipFile(ipa) as source, zipfile.ZipFile(temporary, "w") as target:
+            names = source.namelist()
+            configs = [name for name in names if name.startswith("Payload/")
+                       and name.endswith(".app/Info.plist")]
+            if len(configs) != 1:
+                raise RuntimeError("Missing or ambiguous Payload/*.app/Info.plist")
+            changed = False
+            for member in source.infolist():
+                data = source.read(member.filename)
+                if member.filename == configs[0]:
+                    payload = plistlib.loads(data)
+                    payload["UIFileSharingEnabled"] = True
+                    payload["LSSupportsOpeningDocumentsInPlace"] = True
+                    data = plistlib.dumps(payload, fmt=plistlib.FMT_XML)
+                    changed = True
+                target.writestr(member, data)
+            if not changed:
+                raise RuntimeError("Info.plist not rewritten")
+        temporary.replace(ipa)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", required=True, type=Path)
+    parser.add_argument("--enable-file-sharing", action="store_true",
+                        help="Enable iOS Documents sharing for Appium file collection; Device Farm must re-sign IPA")
     args = parser.parse_args()
     out = args.out.resolve()
     artifacts = sorted((out / "deployed" / "install" / "ios").glob("*.ipa"))
     if len(artifacts) != 1:
         raise RuntimeError("Expected exactly one iOS .ipa; found: " + str(artifacts))
     ipa = artifacts[0]
+    if args.enable_file_sharing:
+        enable_documents_file_sharing(ipa)
     info = {
         "ipa": str(ipa.relative_to(out)),
         "ipaSha256": hashlib.sha256(ipa.read_bytes()).hexdigest(),
@@ -54,6 +90,8 @@ def main():
             "minIOS": settings.get("MinimumOSVersion"),
             "machoMagic": magic,
             "applicationTczIncluded": True,
+            "documentsFileSharingEnabled": settings.get("UIFileSharingEnabled") is True,
+            "iosDocsExportEnabledByScript": args.enable_file_sharing,
         })
         provision = app + "/embedded.mobileprovision"
         if provision in names:
@@ -99,6 +137,8 @@ def main():
         "create/reopen/integrity/header and result PASS.\n"
         "The app creates only tc-ios-file-smoke.tmp, tc-ios-dir-smoke,\n"
         "and sqlite-plaintext-smoke.db in its own appPath.\n"
+        "Automated Device Farm builds additionally enable Documents sharing\n"
+        "and create tc-ios-devicefarm-result.log for Appium pullFile.\n"
     )
     (out / "IOS-DEVICEFARM-README.txt").write_text(guide)
     print("iOS IPA verified:", ipa)

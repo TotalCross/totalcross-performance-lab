@@ -93,12 +93,31 @@ def verify_project_and_pool(client, project_arn, pool_arn):
                            + (". Suggested 'iphone' pool: " + suggestion if suggestion else "")
                            + ". Update GitHub AWS_DEVICE_FARM_DEVICE_POOL_ARN and the IAM ScheduleRun policy.")
     pool_max = match[0].get("maxDevices")
+    rules = match[0].get("rules", [])
+    explicit_devices = None
+    # A *static* private pool can omit maxDevices but enumerate one or more
+    # concrete device ARNs using a single ARN/EQUALS or ARN/IN rule.
+    if len(rules) == 1 and rules[0].get("attribute") == "ARN" and rules[0].get("operator") in ("EQUALS", "IN"):
+        try:
+            values = json.loads(rules[0]["value"])
+            if isinstance(values, str):
+                values = [values]
+            if isinstance(values, list) and values and all(
+                    isinstance(v, str) and ":device:" in v for v in values):
+                explicit_devices = len(set(values))
+        except (ValueError, TypeError, KeyError):
+            pass
+    safe_count = pool_max if isinstance(pool_max, int) and pool_max > 0 else explicit_devices
     print("Selected device pool:", match[0].get("name"), pool_arn,
-          "maxDevices:", pool_max, "type:", match[0].get("type"))
+          "maxDevices:", pool_max, "explicitArnDevices:", explicit_devices,
+          "safeDeviceCount:", safe_count, "type:", match[0].get("type"))
+    print("Device pool selection rules:", rules)
     return {"projectArn": project_arn, "projectName": project.get("name"),
             "devicePoolArn": pool_arn,
             "devicePoolName": match[0].get("name"),
             "poolMaxDevices": pool_max,
+            "poolExplicitArnDevices": explicit_devices,
+            "poolSafeDeviceCount": safe_count,
             "poolListedForProject": True,
             "awsRegion": REGION}
 
@@ -247,10 +266,12 @@ def main():
             return 0
         if not args.execute:
             raise RuntimeError("Paid device test requires explicit --execute")
-        if summary.get("poolMaxDevices") != 1:
-            raise RuntimeError("For cost protection, the selected pool must have maxDevices=1 "
-                               "(currently %r). Set Max devices to 1 in AWS Device Farm."
-                               % summary.get("poolMaxDevices"))
+        if summary.get("poolSafeDeviceCount") != 1:
+            raise RuntimeError("Cost protection: selected device pool must contain at most "
+                               "one eligible device (pool cap=%r, explicit ARN devices=%r). "
+                               "Set Max devices=1 or select exactly one concrete device."
+                               % (summary.get("poolMaxDevices"),
+                                  summary.get("poolExplicitArnDevices")))
         if not args.ipa or not args.ipa.is_file():
             raise RuntimeError("IPA missing; build from the pinned 7.3.0 SDK first")
         bundle = out / "devicefarm-appium-python.zip"

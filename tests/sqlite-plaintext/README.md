@@ -53,6 +53,26 @@ The APK is deployed with the TotalCross 7.3.0 `/android_manage_external_storage`
 
 It captures `apk-permissions.txt`, `appops-ignore.txt`, `appops-allow.txt`, separate `events-denied.json`/`events-granted.json`, `runtime-android-denied.logcat`/`runtime-android-granted.logcat`, screenshots, and summary files even if a phase fails. The `adb appops` toggle validates permission-dependent behavior; the test **observes** and dismisses the real special-permission Settings screen in the denied phase but does **not** automate a human's consent/grant through that screen. Android's special all-files access is not granted merely by adding the manifest permission.
 
+### Running the APK manually on a physical Android device
+
+The APK does not bundle the CI's *pre-existing* SQLite fixture. For direct APK installation on a phone, the `external-existing-db` stage now produces **SKIP** (rather than FAIL) when `/sdcard/tc-sqlite-7_3_0-existing-probe.db` is missing or does not contain the expected `fixture` table. This also handles an empty SQLite file left by older versions of the probe. All other checks remain required; `external-result` and `result` report PASS if they succeed, with the optional skip explicitly mentioned.
+
+The GitHub Actions Android runner always preloads this fixture independently of TotalCross and **still requires an actual PASS** from `external-existing-db`, plus host-side validation of its contents and integrity.
+
+To enable the pre-existing DB test on a physical phone, create and push the fixture using the following command on a computer with Python 3 and ADB, **before launching the app**:
+
+```bash
+python3 - <<'PY'
+import sqlite3
+with sqlite3.connect("tc-sqlite-7_3_0-existing-probe.db") as db:
+    db.execute("CREATE TABLE fixture (id INTEGER PRIMARY KEY, value TEXT NOT NULL)")
+    db.execute("INSERT INTO fixture (id, value) VALUES (1, 'preexisting-from-python')")
+PY
+adb push tc-sqlite-7_3_0-existing-probe.db /sdcard/tc-sqlite-7_3_0-existing-probe.db
+```
+
+The app modifies this *dedicated test fixture* in place, so recreate and push it before another test run if necessary. Never use a customer database for this fixture path.
+
 ### Verified emulator result (2026-11-04)
 
 [GitHub Actions run 41888918200](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/41888918200), [Android artifact 13352942109](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/41888918200/artifacts/13352942109):

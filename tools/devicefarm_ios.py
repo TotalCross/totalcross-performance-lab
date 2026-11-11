@@ -85,16 +85,18 @@ def verify_project_and_pool(client, project_arn, pool_arn):
             break
     match = [pool for pool in pools if pool.get("arn") == pool_arn]
     if not match:
-        # ListDevicePools may exclude an existing pool; ScheduleRun is the
-        # authority for validating whether this pool belongs to the project.
-        print("WARNING: Device pool is not listed for this project:", pool_arn)
-        print("Listed pools:", [(p.get("name"), p.get("arn")) for p in pools])
-    else:
-        print("Selected device pool:", match[0].get("name"), pool_arn)
+        print("Provided device pool ARN is not valid for this project:", pool_arn)
+        print("Available pools:", [(p.get("name"), p.get("arn")) for p in pools])
+        preferred = [p for p in pools if p.get("name", "").lower() == "iphone"]
+        suggestion = preferred[0].get("arn") if len(preferred) == 1 else None
+        raise RuntimeError("Device pool mismatch; choose a project-specific iOS pool"
+                           + (". Suggested 'iphone' pool: " + suggestion if suggestion else "")
+                           + ". Update GitHub AWS_DEVICE_FARM_DEVICE_POOL_ARN and the IAM ScheduleRun policy.")
+    print("Selected device pool:", match[0].get("name"), pool_arn)
     return {"projectArn": project_arn, "projectName": project.get("name"),
             "devicePoolArn": pool_arn,
-            "devicePoolName": match[0].get("name") if match else None,
-            "poolListedForProject": bool(match),
+            "devicePoolName": match[0].get("name"),
+            "poolListedForProject": True,
             "awsRegion": REGION}
 
 

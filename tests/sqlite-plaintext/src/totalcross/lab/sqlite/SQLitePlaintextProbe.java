@@ -12,6 +12,7 @@ import totalcross.sys.Convert;
 import totalcross.sys.Settings;
 import totalcross.sys.Vm;
 import totalcross.ui.MainWindow;
+import totalcross.ui.Label;
 
 /**
  * Plain SQLite smoke test for the official TotalCross 7.3.0 TCVM.
@@ -44,14 +45,24 @@ public final class SQLitePlaintextProbe extends MainWindow {
           ? "All applicable SQLite checks passed; pre-existing external fixture not provisioned (SKIP)"
           : "All plaintext SQLite checks passed");
       System.out.flush();
-      MainWindow.exit(0);
+      if (Settings.isIOS()) {
+        // Keep the app visible for interactive device-farm sessions, rather
+        // than exiting immediately (which can appear to be a launch failure).
+        add(new Label("PASS: iOS File + SQLite"), CENTER, CENTER);
+      } else {
+        MainWindow.exit(0);
+      }
     } catch (Throwable failure) {
       emit(stage, "FAIL", failure.toString());
       emit("result", "FAIL", "stage=" + stage + "; " + failure);
       failure.printStackTrace();
       System.err.flush();
       System.out.flush();
-      MainWindow.exit(1);
+      if (Settings.isIOS()) {
+        add(new Label("FAIL: " + stage), CENTER, CENTER);
+      } else {
+        MainWindow.exit(1);
+      }
     }
   }
 

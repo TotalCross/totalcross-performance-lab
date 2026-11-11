@@ -1,0 +1,134 @@
+name: iOS physical device / AWS Device Farm
+
+on:
+  # A branch push only verifies AWS permissions. It NEVER schedules a paid run.
+  push:
+    branches:
+      - test/sqlite-plaintext-7.3.0
+    paths:
+      - .github/workflows/ios-devicefarm.yml
+      - tools/devicefarm_ios.py
+      - tests/devicefarm-ios/**
+  workflow_dispatch:
+    inputs:
+      execute:
+        description: "Schedule a billable test on the selected physical iPhone pool"
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: devicefarm-ios-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-west-2
+  AWS_DEVICE_FARM_PROJECT_ARN: ${{ vars.AWS_DEVICE_FARM_PROJECT_ARN }}
+  AWS_DEVICE_FARM_DEVICE_POOL_ARN: ${{ vars.AWS_DEVICE_FARM_DEVICE_POOL_ARN }}
+
+jobs:
+  permissions-check:
+    name: Verify GitHub OIDC / Device Farm access (free)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Ensure IAM role and Device Farm project/pool are configured
+        shell: bash
+        env:
+          ROLE_ARN: ${{ vars.AWS_DEVICE_FARM_ROLE_ARN }}
+        run: |
+          test -n "$ROLE_ARN" || { echo "::error::Missing AWS_DEVICE_FARM_ROLE_ARN repository variable"; exit 1; }
+          test -n "$AWS_DEVICE_FARM_PROJECT_ARN" || { echo "::error::Missing AWS_DEVICE_FARM_PROJECT_ARN repository variable"; exit 1; }
+          test -n "$AWS_DEVICE_FARM_DEVICE_POOL_ARN" || { echo "::error::Missing AWS_DEVICE_FARM_DEVICE_POOL_ARN repository variable"; exit 1; }
+      - uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEVICE_FARM_ROLE_ARN }}
+          aws-region: us-west-2
+          role-session-name: TotalCrossDeviceFarm
+      - run: python -m pip install --disable-pip-version-check boto3
+      - name: Validate STS identity, project, and device pool without scheduling devices
+        shell: bash
+        run: |
+          aws sts get-caller-identity --query '{Account:Account,Arn:Arn}' --output json
+          python tools/devicefarm_ios.py validate --out sqlite-smoke-results
+      - name: Archive IAM validation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aws-devicefarm-oidc-diagnostics
+          path: sqlite-smoke-results/devicefarm-summary.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+  ios-devicefarm:
+    name: iOS 7.3.0 / physical Device Farm Appium test (billable)
+    # Never launch on branch pushes. A manual user action must explicitly
+    # select 'execute: true' before any device minutes can be consumed.
+    if: github.event_name == 'workflow_dispatch' && inputs.execute == true
+    needs: permissions-check
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEVICE_FARM_ROLE_ARN }}
+          aws-region: us-west-2
+          role-session-name: TotalCrossDeviceFarmIOS
+      - name: Install AWS client
+        run: python -m pip install --disable-pip-version-check boto3
+      - name: Fetch pinned official TotalCross 7.3.0 SDK
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+        run: |
+          mkdir -p sqlite-smoke-results
+          gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq '{id,head_sha,conclusion,name}' > sqlite-smoke-results/upstream-run.json
+          test "$(gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq .head_sha)" = "5464c21e3107e3f1ce9c287b724829e2bb870c1d"
+          test "$(gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq .conclusion)" = "success"
+          gh api repos/TotalCross/totalcross/actions/artifacts/12899147776/zip > sqlite-smoke-results/official-artifact.zip
+          python -m zipfile -t sqlite-smoke-results/official-artifact.zip
+      - name: Compile and deploy iOS IPA
+        shell: bash
+        run: |
+          python tools/sqlite_smoke.py build --target ios --package sqlite-smoke-results/official-artifact.zip --out sqlite-smoke-results
+          python tools/inspect_ios_ipa.py --out sqlite-smoke-results
+      - name: Build offline Appium Python test package
+        shell: bash
+        run: |
+          mkdir -p tests/devicefarm-ios/wheelhouse
+          python -m pip download --only-binary=:all: --dest tests/devicefarm-ios/wheelhouse --requirement tests/devicefarm-ios/requirements.txt
+          python tools/devicefarm_ios.py package --out sqlite-smoke-results
+      - name: Schedule, monitor, and collect AWS Device Farm artifacts
+        shell: bash
+        run: |
+          python tools/devicefarm_ios.py run --execute \
+            --ipa sqlite-smoke-results/deployed/install/ios/sqlite-plaintext-smoke.ipa \
+            --out sqlite-smoke-results
+      - name: Publish device-farm diagnostics and test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-devicefarm-execution-7.3.0
+          path: |
+            sqlite-smoke-results/
+            !sqlite-smoke-results/official-sdk/**
+            !sqlite-smoke-results/official-artifact.zip
+            !sqlite-smoke-results/classes/**
+          retention-days: 30
+          if-no-files-found: warn

@@ -9,7 +9,13 @@
         "devicefarm:ListDevicePools",
         "devicefarm:ListRuns",
         "devicefarm:CreateUpload",
-        "devicefarm:GetUpload"
+        "devicefarm:GetUpload",
+        "devicefarm:GetRun",
+        "devicefarm:ListJobs",
+        "devicefarm:GetJob",
+        "devicefarm:ListSuites",
+        "devicefarm:ListTests",
+        "devicefarm:ListArtifacts"
       ],
       "Resource": "arn:aws:devicefarm:us-west-2:801206326054:project:99ef1498-dd84-4764-b596-7f7d3d63b3cb"
     },

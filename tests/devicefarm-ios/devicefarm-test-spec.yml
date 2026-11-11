@@ -7,7 +7,8 @@ phases:
     commands:
       - devicefarm-cli use python 3.12
       - python --version
-      - devicefarm-cli use node 24
+      # Node 22 is supported on both macos_sequoia and macos_tahoe hosts.
+      - devicefarm-cli use node 22
       - devicefarm-cli use appium 3
       - appium --version
       - python -m pip install --no-index --find-links="$DEVICEFARM_TEST_PACKAGE_PATH/wheelhouse" -r "$DEVICEFARM_TEST_PACKAGE_PATH/requirements.txt"

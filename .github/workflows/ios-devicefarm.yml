@@ -113,7 +113,9 @@ jobs:
         shell: bash
         run: |
           python tools/sqlite_smoke.py build --target ios --package sqlite-smoke-results/official-artifact.zip --out sqlite-smoke-results
-          python tools/inspect_ios_ipa.py --out sqlite-smoke-results
+          # Only the Device Farm copy enables iOS Documents file sharing,
+          # so Appium can pull test logs and the database from the sandbox.
+          python tools/inspect_ios_ipa.py --out sqlite-smoke-results --enable-file-sharing
       - name: Build offline Appium Python test package
         shell: bash
         run: |

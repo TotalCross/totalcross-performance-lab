@@ -36,8 +36,8 @@ def instrument(source):
     source = source.replace(before, before + '\n\t\t\tVm.debug("TC_CLIENT_MAIN DELETED /sdcard/asd");', 1)
     before = 'e.printStackTrace();'
     source = source.replace(before, 'Vm.debug("TC_CLIENT_MAIN FAIL " + e.toString());\n\t\t\t' + before, 1)
-    if source.count(TRACED_MARKER) != 5:
-        # 4 logs + import constant marker
+    if source.count(TRACED_MARKER) != 4:
+        # Four Vm.debug calls, no changed File operations
         raise RuntimeError("Instrumentation did not insert exactly 4 diagnostic markers")
     return source
 

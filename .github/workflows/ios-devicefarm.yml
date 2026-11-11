@@ -12,6 +12,11 @@ on:
         type: boolean
         required: true
         default: false
+      collect_run_arn:
+        description: "Collect existing AWS Device Farm run (free, execute unchecked)"
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read

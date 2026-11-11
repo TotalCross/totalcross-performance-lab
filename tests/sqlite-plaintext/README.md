@@ -95,7 +95,33 @@ The GitHub workflow deploys an actual **device-target iOS IPA**, not a simulator
 
 On iOS, the app stays open when tests finish and displays a **PASS: iOS File + SQLite** or **FAIL: <stage>** label. After uploading the IPA, start the app and inspect the last `BEGIN` without a corresponding `PASS` if it hangs. If a `FAIL` appears, collect the exception and nearby system logs. No iOS execution or runtime PASS is asserted by CI; execution occurs on the selected device farm.
 
-## Android emulator coverage\n\nCI uses `reactivecircus/android-emulator-runner@v2`, an API 35 `google_apis` `x86_64` image and KVM on Ubuntu 24.04. The official TotalCross APK contains an ARM64 native library, so the runner checks the image's `ro.product.cpu.abilist` for `arm64-v8a` before installation. Incompatible ABIs or native-bridge failures are reported separately from SQL errors, and **a successful emulator run is not a substitute for testing an ARM64 phone**. The Android action stores separate denied/granted logcat and JSON events, both SQLite fixture files, permission screen screenshot/observations, `android-execution-summary.json`, APK and device diagnostics.\n\nRun from an already-booted emulator after a successful deploy:\n\n```bash\npython3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 90\n```\n\n## Automated AWS Device Farm integration (2026-11-11)
+## Android emulator coverage\n\nCI uses `reactivecircus/android-emulator-runner@v2`, an API 35 `google_apis` `x86_64` image and KVM on Ubuntu 24.04. The official TotalCross APK contains an ARM64 native library, so the runner checks the image's `ro.product.cpu.abilist` for `arm64-v8a` before installation. Incompatible ABIs or native-bridge failures are reported separately from SQL errors, and **a successful emulator run is not a substitute for testing an ARM64 phone**. The Android action stores separate denied/granted logcat and JSON events, both SQLite fixture files, permission screen screenshot/observations, `android-execution-summary.json`, APK and device diagnostics.\n\nRun from an already-booted emulator after a successful deploy:\n\n```bash\npython3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 90\n```\n\n## Device Farm run 43105118996: IAM GetUpload access (2026-11-11)
+
+The first user-triggered physical-test workflow built the exact official 7.3.0
+IPA, validated its device-target payload, assembled the offline Appium test
+package and assumed the AWS OIDC role successfully. The run failed **before**
+scheduling any physical device: `CreateUpload` succeeded and `GetUpload`
+returned an AWS `AccessDeniedException` for
+`arn:aws:devicefarm:us-west-2:801206326054:project:99ef1498-dd84-4764-b596-7f7d3d63b3cb`.
+
+This is a flaw in the IAM policy originally recommended for this integration:
+`devicefarm:GetUpload` had been granted on `upload:*` ARNs only, while the
+AWS authorization error explicitly named the **project** ARN. Update the
+existing inline IAM policy `TotalCrossDeviceFarmTestAccess` on the
+`GitHubActions-TotalCross-DeviceFarm` role. Either add
+`devicefarm:GetUpload` to the **AccessSelectedProject** statement, or
+replace that inline policy with [the corrected full least-privilege policy]
+(../devicefarm-ios/iam-policy.json). The full policy retains upload ARN
+scope and the single exact iPhone device pool; it does not grant unrestricted
+AWS API access. IAM changes cannot be performed by this GitHub OIDC role.
+
+Re-run the workflow manually with `execute=true` **only after** updating the
+IAM policy. The failed run created an upload object but scheduled **no**
+billable device test. Subsequent steps (upload status, ScheduleRun,
+Appium test execution and artifact downloads) have not yet been validated
+live. The script does not claim a passing iOS device test.
+
+## Automated AWS Device Farm integration (2026-11-11)
 
 The new [iOS AWS Device Farm GitHub workflow](../../.github/workflows/ios-devicefarm.yml)
 uses GitHub OIDC to assume a read/test-only IAM Role. **Pushes never schedule

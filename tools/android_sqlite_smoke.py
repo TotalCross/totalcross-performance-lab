@@ -114,6 +114,7 @@ def run_phase(out, package, phase, timeout):
     events = []
     settings_observations = []
     last_back = 0.0
+    granted_in_place = False
     while time.monotonic() - started < timeout:
         time.sleep(2)
         logcat = command(["adb", "logcat", "-d", "-v", "threadtime"],
@@ -127,11 +128,13 @@ def run_phase(out, package, phase, timeout):
         if any(e.get("stage") == "result" and e.get("status") == "FAIL"
                for e in events):
             break
-        if phase == "denied":
+        if phase in ("denied", "grant-in-place"):
             # TCVM's File.c retries EACCES via a blocking Android permission
             # request. The request launches Android Settings and suspends the
-            # native thread until the user returns. Dismiss it through ADB,
-            # rather than letting the headless test hang for 120 seconds.
+            # native thread until the user returns. In "denied", dismiss the
+            # dialog without granting; in "grant-in-place", grant the appop
+            # while Settings is foregrounded and return to the SAME process.
+            # The original File.createDir call must then complete by retry.
             focused = command(["adb", "shell", "dumpsys", "window"], timeout=20,
                               check=False)
             focus_lines = [line.strip() for line in focused.splitlines()
@@ -151,6 +154,14 @@ def run_phase(out, package, phase, timeout):
                                 (out / "permission-settings-denied.png").write_bytes(snapshot.stdout)
                         except Exception:
                             pass
+                    if phase == "grant-in-place" and not granted_in_place:
+                        # Set the equivalent system authorization while the
+                        # Android Settings UI is open. This tests the native
+                        # permission manager's callback and File.c retry
+                        # WITHOUT stopping/restarting the TotalCross app.
+                        readback = appop(out, package, "allow")
+                        write_text(out, "appops-grant-in-place.txt", readback)
+                        granted_in_place = True
                     command(["adb", "shell", "input", "keyevent", "KEYCODE_BACK"],
                             timeout=20, check=False)
                     last_back = now
@@ -162,7 +173,8 @@ def run_phase(out, package, phase, timeout):
                "eventCount": len(events), "passedStages": sorted(passed),
                "failedEvents": failed,
                "settingsPromptSeen": bool(settings_observations),
-               "settingsBackCount": len(settings_observations)}
+               "settingsBackCount": len(settings_observations),
+               "permissionGrantedInSameProcess": granted_in_place}
     write_text(out, "summary-" + phase + ".json",
                json.dumps(summary, indent=2))
     return summary, events
@@ -262,8 +274,30 @@ def main():
         else:
             result["deniedObservation"] = "Native filesystem/SQLite access denied"
 
-        # Phase 2: MANAGE_EXTERNAL_STORAGE granted via appops, without changing
-        # the APK or TCVM. No manual Settings UI automation is implied.
+        # Phase 2: verify real permission recovery without an app restart.
+        # Start DENIED, catch the Settings screen, grant the app-op there,
+        # return to the same process and assert that File.createDir() resumed.
+        result["inPlaceDeniedAppOp"] = appop(out, package, "ignore")
+        in_place, in_place_events = run_phase(out, package, "grant-in-place", args.timeout)
+        result["grantInPlace"] = in_place
+        required = REQUIRED | {
+            "external-dir", "external-sqlite-create", "external-sqlite-reopen",
+            "external-sqlite-header", "external-existing-db", "external-result"}
+        missing_in_place = required.difference(in_place["passedStages"])
+        result["grantInPlaceVerified"] = (
+            in_place["settingsPromptSeen"]
+            and in_place["permissionGrantedInSameProcess"]
+            and not in_place["failedEvents"] and not missing_in_place)
+        result["grantInPlaceMissing"] = sorted(missing_in_place)
+
+        # The in-place test can update the pre-existing fixture. Restore the
+        # original host SQLite file so the next fresh-start positive control
+        # still tests an unmodified pre-existing database.
+        write_text(out, "preexisting-repush.log",
+                   command(["adb", "push", str(fixture), image_path], timeout=45))
+
+        # Phase 3: independently confirm all operations on a fresh launch with
+        # the all-files permission already granted before app startup.
         result["grantedAppOp"] = appop(out, package, "allow")
         # Ensure the next launch is foreground even if the prior phase left
         # the special-permission Settings activity on screen.
@@ -271,9 +305,6 @@ def main():
                 timeout=20, check=False)
         granted, granted_events = run_phase(out, package, "granted", args.timeout)
         result["granted"] = granted
-        required = REQUIRED | {
-            "external-dir", "external-sqlite-create", "external-sqlite-reopen",
-            "external-sqlite-header", "external-existing-db", "external-result"}
         missing = required.difference(granted["passedStages"])
         if granted["failedEvents"] or missing:
             throwables = [e for e in granted_events if e.get("status") == "FAIL"]
@@ -294,9 +325,16 @@ def main():
         if rows != [("updated-by-totalcross",)] or integrity != "ok":
             raise RuntimeError("Shared-storage SQLite readback mismatch: " + str(rows)
                                + "; integrity=" + integrity)
+        if not result["grantInPlaceVerified"]:
+            raise RuntimeError("Android in-place grant did not resume File/SQLite: "
+                               "promptSeen=%r, grantApplied=%r, missing=%r, failed=%r"
+                               % (in_place["settingsPromptSeen"],
+                                  in_place["permissionGrantedInSameProcess"],
+                                  sorted(missing_in_place), in_place["failedEvents"]))
         result["status"] = "PASS"
-        print("Android external SQLite PASS: denied without permission, all "
-              "filesystem and SQLite tests passed with MANAGE_EXTERNAL_STORAGE")
+        print("Android external SQLite PASS: denied without permission; granting "
+              "in Android Settings resumed the original File/SQLite operation; "
+              "fresh-start control also passed")
     except Exception as ex:
         result["error"] = str(ex)
         print("Android external SQLite smoke failed: " + str(ex), file=sys.stderr)

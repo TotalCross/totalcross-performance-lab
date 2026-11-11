@@ -83,6 +83,18 @@ The app modifies this *dedicated test fixture* in place, so recreate and push it
 
 The customer-provided APK targets Android API 36, has minimum API 24, and declares `MANAGE_EXTERNAL_STORAGE`. Declaring it is not proof the user has granted special access; verify the actual permission state on the affected device.
 
+## iOS native File / SQLite device-farm probe (2026-11-11)
+
+The iOS build uses the same **official 7.3.0 TCVM** as the Android/desktop smoke tests. It runs **File operations before any SQLite call**, inside the iOS `Settings.appPath` (app's Documents sandbox). Every operation emits a `TC_SQLITE_JSON` event to the native debug console (`Vm.debug`) with a `BEGIN` followed by `PASS`. This identifies the last attempted operation if the VM freezes without an exception.
+
+Stages: `ios-file-open-create`, `ios-file-write`, `ios-file-flush`, `ios-file-size`, `ios-file-close`, `ios-file-open-read`, `ios-file-read`, `ios-file-delete`, `ios-directory-precheck`, `ios-directory-create`, `ios-directory-delete`, `ios-files-result`. Then the standard SQLite `:memory:`, on-disk CREATE/INSERT/SELECT, reopen/UPDATE/integrity and plaintext header checks run. All iOS files are prefixed with `tc-ios-` and contained within `Settings.appPath`; the SQLite file `sqlite-plaintext-smoke.db` is also contained in that directory. The app permits repeat runs on iOS by safely recreating its own SQLite fixture.
+
+The GitHub workflow deploys an actual **device-target iOS IPA**, not a simulator build, and uploads two artifacts: `sqlite-plaintext-7.3.0-ios-devicefarm` (IPA, provenance/validation JSON, use instructions) and `sqlite-plaintext-7.3.0-ios` (complete CI deploy logs and generated assets).
+
+**Signing notice:** the original SDK's iOS template has the dummy `com.application.name` bundle identifier and an expired `Dummy Provision` profile from 2015. CI validates and reports these values; it **does not claim that this IPA is directly installable**. A device farm that supports re-signing (e.g. AWS Device Farm, BrowserStack) can apply its own signing profile; otherwise re-sign with valid Apple credentials and a suitable bundle identifier before testing. Choose a **physical iOS device**, not a simulator. Capture the native device syslog/console, including all `TC_SQLITE_JSON` events.
+
+After uploading the IPA, start the app and inspect the last `BEGIN` without a corresponding `PASS` if it hangs. If a `FAIL` appears, collect the exception and nearby system logs. No iOS execution or runtime PASS is asserted by CI; execution occurs on the selected device farm.
+
 ## Android emulator coverage\n\nCI uses `reactivecircus/android-emulator-runner@v2`, an API 35 `google_apis` `x86_64` image and KVM on Ubuntu 24.04. The official TotalCross APK contains an ARM64 native library, so the runner checks the image's `ro.product.cpu.abilist` for `arm64-v8a` before installation. Incompatible ABIs or native-bridge failures are reported separately from SQL errors, and **a successful emulator run is not a substitute for testing an ARM64 phone**. The Android action stores separate denied/granted logcat and JSON events, both SQLite fixture files, permission screen screenshot/observations, `android-execution-summary.json`, APK and device diagnostics.\n\nRun from an already-booted emulator after a successful deploy:\n\n```bash\npython3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 90\n```\n\n## Linux x64 native startup issue observed (2026-10-31)
 
 On the exact 7.3.0 Linux runtime, the desktop test currently cannot reach its SQLite stages: the unmodified TCVM crashes on start with glibc `*** buffer overflow detected ***` and signal `SIGABRT`. The captured gdb stack is:

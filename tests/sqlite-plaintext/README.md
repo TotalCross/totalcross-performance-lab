@@ -102,9 +102,10 @@ uses GitHub OIDC to assume a read/test-only IAM Role. **Pushes never schedule
 billable iPhones**; they only validate OIDC, the AWS project and the device pool.
 Paid execution requires a manual `workflow_dispatch` with `execute=true`,
 and the test runner additionally requires `--execute`. For first-run cost
-protection, the selected AWS device pool must have **Max devices = 1**;
-the scheduler refuses larger or unspecified pools, and each Device Farm job
-is capped at **15 minutes**, with video enabled. GitHub displays
+protection, the selected AWS device pool must have **Max devices = 1**
+or have a single explicit device ARN in its rules. The scheduler rejects
+pools that could select multiple devices or have an unknown selection size.
+Each Device Farm job is capped at **15 minutes**, with video enabled. GitHub displays
 `workflow_dispatch` only after the workflow file exists on the repository's
 default branch; merge the PR first, then select the feature branch in **Run
 workflow**, keeping the IAM trust condition aligned with that selected branch.
@@ -140,8 +141,14 @@ physical iPhone(s), waits for completion and collects available Device Farm
 logs, video and screenshots into a GitHub Actions artifact. The Appium test
 asserts the literal final UI label `PASS: iOS File + SQLite`; a successful
 Appium session without that label is **FAIL**, not a false SQLite pass.
-The app's private SQLite database is **not** exported from the iOS sandbox
-without an additional app-side export mechanism.
+For the Device Farm-specific IPA only, the workflow enables
+`UIFileSharingEnabled` in `Info.plist` (without modifying the TCVM binary)
+and re-signs the IPA through Device Farm. The test writes a structured trace
+to `tc-ios-devicefarm-result.log` in its Documents sandbox. Appium uses
+`mobile: pullFile` to download that trace and the generated SQLite database,
+verifies all File/SQLite PASS stages, and independently checks the downloaded
+database's header, row and integrity. A missing report or failed pull
+is an explicit test failure, never a false PASS.
 
 ## Linux x64 native startup issue observed (2026-10-31)
 

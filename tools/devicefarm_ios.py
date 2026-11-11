@@ -92,20 +92,28 @@ def verify_project_and_pool(client, project_arn, pool_arn):
         raise RuntimeError("Device pool mismatch; choose a project-specific iOS pool"
                            + (". Suggested 'iphone' pool: " + suggestion if suggestion else "")
                            + ". Update GitHub AWS_DEVICE_FARM_DEVICE_POOL_ARN and the IAM ScheduleRun policy.")
-    print("Selected device pool:", match[0].get("name"), pool_arn)
+    pool_max = match[0].get("maxDevices")
+    print("Selected device pool:", match[0].get("name"), pool_arn,
+          "maxDevices:", pool_max, "type:", match[0].get("type"))
     return {"projectArn": project_arn, "projectName": project.get("name"),
             "devicePoolArn": pool_arn,
             "devicePoolName": match[0].get("name"),
+            "poolMaxDevices": pool_max,
             "poolListedForProject": True,
             "awsRegion": REGION}
 
 
 def upload(client, project, source, upload_type):
     print("Creating Device Farm upload:", upload_type, source.name)
-    obj = client.create_upload(projectArn=project, name=source.name, type=upload_type)["upload"]
+    mime_type = ("application/octet-stream" if source.suffix == ".ipa"
+                 else "application/zip" if source.suffix == ".zip"
+                 else "text/yaml")
+    obj = client.create_upload(projectArn=project, name=source.name,
+                               type=upload_type, contentType=mime_type)["upload"]
     url = obj["url"]
-    # Never log/persist this presigned S3 URL.
-    req = Request(url, data=source.read_bytes(), method="PUT")
+    # Never log/persist this presigned S3 URL. Match the Content-Type signed by S3.
+    req = Request(url, data=source.read_bytes(), method="PUT",
+                  headers={"Content-Type": mime_type})
     with urlopen(req, timeout=180) as response:
         if response.status not in (200, 201):
             raise RuntimeError("Upload PUT failed: HTTP " + str(response.status))
@@ -239,6 +247,10 @@ def main():
             return 0
         if not args.execute:
             raise RuntimeError("Paid device test requires explicit --execute")
+        if summary.get("poolMaxDevices") != 1:
+            raise RuntimeError("For cost protection, the selected pool must have maxDevices=1 "
+                               "(currently %r). Set Max devices to 1 in AWS Device Farm."
+                               % summary.get("poolMaxDevices"))
         if not args.ipa or not args.ipa.is_file():
             raise RuntimeError("IPA missing; build from the pinned 7.3.0 SDK first")
         bundle = out / "devicefarm-appium-python.zip"
@@ -256,6 +268,9 @@ def main():
             name="TotalCross-7.3.0-iOS-File-SQLite",
             test={"type": "APPIUM_PYTHON", "testPackageArn": test_arn,
                   "testSpecArn": spec_arn},
+            executionConfiguration={"jobTimeoutMinutes": 15,
+                                    "videoCapture": True,
+                                    "skipAppResign": False},
         )["run"]
         run_arn = run["arn"]
         summary["runArn"] = run_arn

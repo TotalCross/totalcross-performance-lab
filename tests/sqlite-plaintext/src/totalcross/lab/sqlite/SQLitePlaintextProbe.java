@@ -23,6 +23,7 @@ import totalcross.ui.MainWindow;
 public final class SQLitePlaintextProbe extends MainWindow {
   private String stage = "startup";
   private String databasePath = "";
+  private boolean skippedExistingFixture = false;
 
   @Override
   public void initUI() {
@@ -36,7 +37,9 @@ public final class SQLitePlaintextProbe extends MainWindow {
       if (Settings.ANDROID.equals(Settings.platform)) {
         runExternalStorage();
       }
-      emit("result", "PASS", "All plaintext SQLite checks passed");
+      emit("result", "PASS", skippedExistingFixture
+          ? "All applicable SQLite checks passed; pre-existing external fixture not provisioned (SKIP)"
+          : "All plaintext SQLite checks passed");
       System.out.flush();
       MainWindow.exit(0);
     } catch (Throwable failure) {
@@ -228,27 +231,55 @@ public final class SQLitePlaintextProbe extends MainWindow {
       failures++;
     }
 
-    // External file is pre-created by the test runner using standard SQLite,
-    // simulating an existing client database outside the app sandbox.
+    // The GitHub Actions runner preloads a SQLite fixture using host Python.
+    // A manually installed APK does NOT preload that file. Opening a missing
+    // SQLite URL creates an empty database, so absence/schema checks are
+    // essential to avoid reporting a false regression on real devices.
     stage = "external-existing-db";
     String existingDb = Convert.appendPath(Settings.dataPath, "tc-sqlite-7_3_0-existing-probe.db");
     databasePath = existingDb;
     try {
-      Connection conn = DriverManager.getConnection("jdbc:sqlite:" + existingDb);
-      try {
-        Statement stmt = conn.createStatement();
-        try {
-          assertSingleValue(stmt, "SELECT value FROM fixture WHERE id=1", "preexisting-from-python");
-          stmt.executeUpdate("UPDATE fixture SET value='updated-by-totalcross' WHERE id=1");
-          assertSingleValue(stmt, "SELECT value FROM fixture WHERE id=1", "updated-by-totalcross");
-          assertSingleValue(stmt, "PRAGMA integrity_check", "ok");
-        } finally {
-          stmt.close();
-        }
-      } finally {
-        conn.close();
+      boolean exists;
+      try (File candidate = new File(existingDb)) {
+        exists = candidate.exists();
       }
-      emit(stage, "PASS", "Read and updated existing unencrypted SQLite at " + existingDb);
+      if (!exists) {
+        skippedExistingFixture = true;
+        emit(stage, "SKIP", "Optional external fixture not found: " + existingDb
+            + ". The GitHub Actions runner creates it with Python sqlite3 and adb push.");
+      } else {
+        Connection conn = DriverManager.getConnection("jdbc:sqlite:" + existingDb);
+        try {
+          Statement stmt = conn.createStatement();
+          try {
+            boolean hasFixtureTable;
+            ResultSet schema = stmt.executeQuery(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='fixture'");
+            try {
+              hasFixtureTable = schema.next();
+            } finally {
+              schema.close();
+            }
+            if (!hasFixtureTable) {
+              // Handles a zero-byte DB left behind by an earlier manual test.
+              // Never modify or delete a file without our expected schema.
+              skippedExistingFixture = true;
+              emit(stage, "SKIP", "File exists, but table 'fixture' is missing: "
+                  + existingDb + ". Supply the pre-created SQLite fixture via adb push.");
+            } else {
+              assertSingleValue(stmt, "SELECT value FROM fixture WHERE id=1", "preexisting-from-python");
+              stmt.executeUpdate("UPDATE fixture SET value='updated-by-totalcross' WHERE id=1");
+              assertSingleValue(stmt, "SELECT value FROM fixture WHERE id=1", "updated-by-totalcross");
+              assertSingleValue(stmt, "PRAGMA integrity_check", "ok");
+              emit(stage, "PASS", "Read and updated existing unencrypted SQLite at " + existingDb);
+            }
+          } finally {
+            stmt.close();
+          }
+        } finally {
+          conn.close();
+        }
+      }
     } catch (Throwable error) {
       externalFailure(stage, error);
       failures++;
@@ -267,7 +298,9 @@ public final class SQLitePlaintextProbe extends MainWindow {
       emit(stage, "FAIL", failures + " failures while accessing shared storage");
       throw new IllegalStateException("External storage checks failed: " + failures);
     }
-    emit(stage, "PASS", "Client directory operation and external plaintext SQLite work");
+    emit(stage, "PASS", skippedExistingFixture
+        ? "Client filesystem and external plaintext SQLite tests passed; optional pre-existing fixture SKIPPED"
+        : "Client filesystem and external plaintext SQLite tests passed, including pre-existing fixture");
   }
 
   private void externalFailure(String failedStage, Throwable error) {

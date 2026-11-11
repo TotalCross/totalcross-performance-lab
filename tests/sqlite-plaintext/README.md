@@ -95,7 +95,52 @@ The GitHub workflow deploys an actual **device-target iOS IPA**, not a simulator
 
 On iOS, the app stays open when tests finish and displays a **PASS: iOS File + SQLite** or **FAIL: <stage>** label. After uploading the IPA, start the app and inspect the last `BEGIN` without a corresponding `PASS` if it hangs. If a `FAIL` appears, collect the exception and nearby system logs. No iOS execution or runtime PASS is asserted by CI; execution occurs on the selected device farm.
 
-## Android emulator coverage\n\nCI uses `reactivecircus/android-emulator-runner@v2`, an API 35 `google_apis` `x86_64` image and KVM on Ubuntu 24.04. The official TotalCross APK contains an ARM64 native library, so the runner checks the image's `ro.product.cpu.abilist` for `arm64-v8a` before installation. Incompatible ABIs or native-bridge failures are reported separately from SQL errors, and **a successful emulator run is not a substitute for testing an ARM64 phone**. The Android action stores separate denied/granted logcat and JSON events, both SQLite fixture files, permission screen screenshot/observations, `android-execution-summary.json`, APK and device diagnostics.\n\nRun from an already-booted emulator after a successful deploy:\n\n```bash\npython3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 90\n```\n\n## Linux x64 native startup issue observed (2026-10-31)
+## Android emulator coverage\n\nCI uses `reactivecircus/android-emulator-runner@v2`, an API 35 `google_apis` `x86_64` image and KVM on Ubuntu 24.04. The official TotalCross APK contains an ARM64 native library, so the runner checks the image's `ro.product.cpu.abilist` for `arm64-v8a` before installation. Incompatible ABIs or native-bridge failures are reported separately from SQL errors, and **a successful emulator run is not a substitute for testing an ARM64 phone**. The Android action stores separate denied/granted logcat and JSON events, both SQLite fixture files, permission screen screenshot/observations, `android-execution-summary.json`, APK and device diagnostics.\n\nRun from an already-booted emulator after a successful deploy:\n\n```bash\npython3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 90\n```\n\n## Automated AWS Device Farm integration (2026-11-11)
+
+The new [iOS AWS Device Farm GitHub workflow](../../.github/workflows/ios-devicefarm.yml)
+uses GitHub OIDC to assume a read/test-only IAM Role. **Pushes never schedule
+billable iPhones**; they only validate OIDC, the AWS project and the device pool.
+Paid execution requires a manual `workflow_dispatch` with `execute=true`,
+and the test runner additionally requires `--execute`. GitHub displays
+`workflow_dispatch` only after the workflow file exists on the repository's
+default branch; merge the PR first, then select the feature branch in **Run
+workflow**, keeping the IAM trust condition aligned with that selected branch.
+
+Configure these GitHub Actions repository **variables**:
+
+- `AWS_DEVICE_FARM_ROLE_ARN` — the IAM Role trusted by this repository/branch.
+- `AWS_DEVICE_FARM_PROJECT_ARN` — your AWS Device Farm project in `us-west-2`.
+- `AWS_DEVICE_FARM_DEVICE_POOL_ARN` — a device pool **returned by** the
+  project's `ListDevicePools` API; avoid the accountless generic `Top Devices`
+  pool if you want only iPhones.
+
+The workflow's free OIDC check was able to assume the AWS role and access the
+project `iPhone`. However, the supplied device-pool ARN was
+`arn:aws:devicefarm:us-west-2:801206326054:devicepool:082d10e5-d7d7-48a5-ba5c-b33d66efa1f5`.
+This does **not** match the pool returned by the AWS API: `Top Devices` has
+the accountless ARN `arn:aws:devicefarm:us-west-2::devicepool:082d10e5-d7d7-48a5-ba5c-b33d66efa1f5`.
+The project's dedicated `iphone` pool is:
+
+```
+arn:aws:devicefarm:us-west-2:801206326054:devicepool:99ef1498-dd84-4764-b596-7f7d3d63b3cb/0187f160-c74b-4615-ab08-dbf7b39a5628
+```
+
+**Correct both** the GitHub `AWS_DEVICE_FARM_DEVICE_POOL_ARN` variable **and**
+the `devicefarm:ScheduleRun` resource in the AWS IAM policy. The workflow
+fails closed until the provided pool is listed for the selected project.
+No billable test has been scheduled by this integration yet.
+
+For paid execution, the workflow builds the IPA against the exact official
+7.3.0 SDK, creates a custom Appium Python test package with an offline
+wheelhouse, uploads IPA/package/custom iOS test spec, starts the selected
+physical iPhone(s), waits for completion and collects available Device Farm
+logs, video and screenshots into a GitHub Actions artifact. The Appium test
+asserts the literal final UI label `PASS: iOS File + SQLite`; a successful
+Appium session without that label is **FAIL**, not a false SQLite pass.
+The app's private SQLite database is **not** exported from the iOS sandbox
+without an additional app-side export mechanism.
+
+## Linux x64 native startup issue observed (2026-10-31)
 
 On the exact 7.3.0 Linux runtime, the desktop test currently cannot reach its SQLite stages: the unmodified TCVM crashes on start with glibc `*** buffer overflow detected ***` and signal `SIGABRT`. The captured gdb stack is:
 

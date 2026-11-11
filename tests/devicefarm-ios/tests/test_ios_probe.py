@@ -144,7 +144,7 @@ class TotalCrossIosProbe(unittest.TestCase):
             database = pull_documents_file(driver, bundle, DATABASE_FILE)
             output_path = ROOT / "ios-sqlite-extracted.db"
             output_path.write_bytes(database)
-            if not database.startswith(b"SQLite format 3\\x00"):
+            if not database.startswith(b"SQLite format 3\x00"):
                 # The serialized output should be ordinary unencrypted SQLite.
                 report["result"] = "FAIL"
                 self.fail("Downloaded iOS SQLite file does not have SQLite format header")

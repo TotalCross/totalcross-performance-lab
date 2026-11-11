@@ -16,6 +16,11 @@ on:
         type: boolean
         required: true
         default: false
+      collect_run_arn:
+        description: "Collect an existing Device Farm run ARN (free; leave execute unchecked)"
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -74,11 +79,46 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+  collect-existing-run:
+    name: Collect existing AWS Device Farm run (free; no scheduling)
+    if: github.event_name == 'workflow_dispatch' && inputs.execute == false && inputs.collect_run_arn != ''
+    needs: permissions-check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    env:
+      DEVICEFARM_EXISTING_RUN_ARN: ${{ inputs.collect_run_arn }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEVICE_FARM_ROLE_ARN }}
+          aws-region: us-west-2
+          role-session-name: TotalCrossDeviceFarmCollect
+      - name: Install AWS client
+        run: python -m pip install --disable-pip-version-check boto3
+      - name: Recover an already-scheduled run without another device booking
+        shell: bash
+        run: |
+          python tools/devicefarm_ios.py collect \
+            --run-arn "$DEVICEFARM_EXISTING_RUN_ARN" \
+            --out sqlite-smoke-results
+      - name: Publish recovered iOS run diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-devicefarm-recovered-run
+          path: sqlite-smoke-results/
+          retention-days: 30
+          if-no-files-found: warn
+
   ios-devicefarm:
     name: iOS 7.3.0 / physical Device Farm Appium test (billable)
     # Never launch on branch pushes. A manual user action must explicitly
     # select 'execute: true' before any device minutes can be consumed.
-    if: github.event_name == 'workflow_dispatch' && inputs.execute == true
+    if: github.event_name == 'workflow_dispatch' && inputs.execute == true && inputs.collect_run_arn == ''
     needs: permissions-check
     runs-on: macos-15
     timeout-minutes: 60

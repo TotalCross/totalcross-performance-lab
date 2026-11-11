@@ -196,6 +196,58 @@ def artifact_dump(client, arn, out, kind, index):
     return entries
 
 
+def verify_read_permissions(client, project_arn):
+    """Preflight access before scheduling another paid physical device.
+
+    Device Farm's IAM authorizer can unexpectedly check project ARNs even for
+    GetRun/GetUpload; verify real reads against an existing run.
+    """
+    runs = paginate(client, "list_runs", "runs", arn=project_arn)
+    if not runs:
+        print("WARNING: No existing runs; GetRun permissions cannot be preflight-tested")
+        return
+    run_arn = runs[0]["arn"]
+    run = client.get_run(arn=run_arn)["run"]
+    jobs = paginate(client, "list_jobs", "jobs", arn=run_arn)
+    # Verify artifact permissions at run level while there are no new charges.
+    paginate(client, "list_artifacts", "artifacts", arn=run_arn, type="LOG")
+    print("Preflight read-only access passed:", run_arn,
+          "status:", run.get("status"), "jobs:", len(jobs))
+
+
+def wait_for_run(client, run_arn, out, summary):
+    deadline = time.monotonic() + 38 * 60
+    while time.monotonic() < deadline:
+        state = client.get_run(arn=run_arn)["run"]
+        summary["runStatus"] = state.get("status")
+        summary["runResult"] = state.get("result")
+        dump(out / "devicefarm-run.json", summary)
+        print("Device Farm:", state.get("status"), state.get("result"), flush=True)
+        if state.get("status") == "COMPLETED":
+            return
+        if state.get("status") == "STOPPING":
+            # Wait for actual completion so the artifact URLs are available.
+            time.sleep(15)
+        else:
+            time.sleep(20)
+    raise TimeoutError("Timed out waiting for pre-existing run: " + run_arn)
+
+
+def collect_completed_run(client, run_arn, out, summary):
+    """Never calls CreateUpload or ScheduleRun. Safe to rerun for recovery."""
+    summary["runArn"] = run_arn
+    dump(out / "devicefarm-run.json", summary)
+    wait_for_run(client, run_arn, out, summary)
+    details = get_details(client, run_arn, out)
+    result = details.get("run", {}).get("result")
+    summary["deviceFarmResult"] = result
+    summary["status"] = "PASS" if result == "PASSED" else "FAIL"
+    if result != "PASSED":
+        summary["error"] = "Device Farm returned " + str(result)
+    print("Recovered physical iOS Device Farm result:", result, flush=True)
+    return 0 if summary["status"] == "PASS" else 1
+
+
 def get_details(client, run_arn, out):
     summaries = {}
     for op, field, arg in [
@@ -240,9 +292,10 @@ def get_details(client, run_arn, out):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("operation", choices=("validate", "package", "run"))
+    parser.add_argument("operation", choices=("validate", "package", "run", "collect"))
     parser.add_argument("--project-arn", default=os.getenv("AWS_DEVICE_FARM_PROJECT_ARN"))
     parser.add_argument("--pool-arn", default=os.getenv("AWS_DEVICE_FARM_DEVICE_POOL_ARN"))
+    parser.add_argument("--run-arn", help="Previously scheduled AWS run to collect, never schedules a new device")
     parser.add_argument("--ipa", type=Path)
     parser.add_argument("--out", type=Path, default=Path("sqlite-smoke-results"))
     parser.add_argument("--execute", action="store_true",
@@ -261,9 +314,19 @@ def main():
         client = get_client()
         summary.update(verify_project_and_pool(client, args.project_arn, args.pool_arn))
         if args.operation == "validate":
+            verify_read_permissions(client, args.project_arn)
             summary["status"] = "PASS"
-            print("OIDC and project/device-pool access verified. No device run scheduled.")
+            print("OIDC, project, device pool and historical-run read access verified. No device run scheduled.")
             return 0
+        if args.operation == "collect":
+            if not args.run_arn:
+                raise RuntimeError("--run-arn is required for read-only collection")
+            prefix = args.project_arn.replace(":project:", ":run:") + "/"
+            if not args.run_arn.startswith(prefix):
+                raise RuntimeError("Selected run ARN does not belong to the configured Device Farm project")
+            print("Collecting existing AWS Device Farm run, NO NEW DEVICE SCHEDULED:", args.run_arn)
+            return collect_completed_run(client, args.run_arn, out, summary)
+        verify_read_permissions(client, args.project_arn)
         if not args.execute:
             raise RuntimeError("Paid device test requires explicit --execute")
         if summary.get("poolSafeDeviceCount") != 1:
@@ -298,25 +361,7 @@ def main():
         # Save the run identifier immediately, even if the runner later times out.
         dump(out / "devicefarm-run.json", summary)
         print("Scheduled physical iOS Device Farm test:", run_arn, flush=True)
-        deadline = time.monotonic() + 40 * 60
-        while time.monotonic() < deadline:
-            state = client.get_run(arn=run_arn)["run"]
-            summary["runStatus"] = state.get("status")
-            summary["runResult"] = state.get("result")
-            dump(out / "devicefarm-run.json", summary)
-            print("Device Farm:", state.get("status"), state.get("result"), flush=True)
-            if state.get("status") == "COMPLETED":
-                break
-            time.sleep(20)
-        else:
-            raise TimeoutError("Device Farm run took >40 minutes; run ARN: " + run_arn)
-        details = get_details(client, run_arn, out)
-        result = details.get("run", {}).get("result")
-        summary["status"] = "PASS" if result == "PASSED" else "FAIL"
-        if result != "PASSED":
-            summary["error"] = "Device Farm returned " + str(result)
-        print("Physical iOS Device Farm result:", result)
-        return 0 if summary["status"] == "PASS" else 1
+        return collect_completed_run(client, run_arn, out, summary)
     except Exception as exc:
         summary["error"] = str(exc)
         print("Device Farm error:", exc, file=sys.stderr)

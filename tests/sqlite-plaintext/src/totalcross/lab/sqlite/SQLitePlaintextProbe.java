@@ -30,6 +30,9 @@ public final class SQLitePlaintextProbe extends MainWindow {
     try {
       emit("startup", "PASS", "platform=" + Settings.platform + "; appPath=" + Settings.appPath
           + "; dataPath=" + Settings.dataPath);
+      if (Settings.isIOS()) {
+        runIosFileProbe();
+      }
       runMemory();
       runNewFile();
       runReopen();
@@ -50,6 +53,90 @@ public final class SQLitePlaintextProbe extends MainWindow {
       System.out.flush();
       MainWindow.exit(1);
     }
+  }
+
+  // The customer reports that *any* file operation in the iOS appPath
+  // can stall the VM. Keep one BEGIN/PASS pair around each native I/O call.
+  // Never touch customer data: all names below belong to this probe.
+  private void runIosFileProbe() throws Exception {
+    final String filePath = Convert.appendPath(Settings.appPath, "tc-ios-file-smoke.tmp");
+    final String dirPath = Convert.appendPath(Settings.appPath, "tc-ios-dir-smoke");
+    databasePath = filePath;
+    emit("ios-file-paths", "INFO", "appPath=" + Settings.appPath
+        + "; file=" + filePath + "; dir=" + dirPath);
+    stage = "ios-file-open-create";
+    emit(stage, "BEGIN", filePath);
+    try (File file = new File(filePath, File.CREATE_EMPTY)) {
+      emit(stage, "PASS", "File.CREATE_EMPTY returned");
+      stage = "ios-file-write";
+      emit(stage, "BEGIN", filePath);
+      byte[] payload = {1, 2, 3, 4, 5};
+      int written = file.writeBytes(payload, 0, payload.length);
+      if (written != payload.length) {
+        throw new IllegalStateException("Wrote " + written + " bytes; expected " + payload.length);
+      }
+      emit(stage, "PASS", "Wrote " + written + " bytes");
+      stage = "ios-file-flush";
+      emit(stage, "BEGIN", filePath);
+      file.flush();
+      emit(stage, "PASS", "Flush completed");
+      stage = "ios-file-size";
+      emit(stage, "BEGIN", filePath);
+      int bytes = file.getSize();
+      if (bytes != payload.length) {
+        throw new IllegalStateException("Size " + bytes + "; expected " + payload.length);
+      }
+      emit(stage, "PASS", "Size=" + bytes);
+      stage = "ios-file-close";
+      emit(stage, "BEGIN", filePath);
+    }
+    emit(stage, "PASS", "File closed");
+
+    stage = "ios-file-open-read";
+    emit(stage, "BEGIN", filePath);
+    try (File file = new File(filePath, File.READ_ONLY)) {
+      emit(stage, "PASS", "File.READ_ONLY returned");
+      stage = "ios-file-read";
+      emit(stage, "BEGIN", filePath);
+      byte[] buffer = new byte[5];
+      int read = file.readBytes(buffer, 0, buffer.length);
+      if (read != 5 || buffer[0] != 1 || buffer[1] != 2 || buffer[2] != 3
+          || buffer[3] != 4 || buffer[4] != 5) {
+        throw new IllegalStateException("Incorrect readback; bytes=" + read);
+      }
+      emit(stage, "PASS", "Read and checked 5 bytes");
+    }
+
+    stage = "ios-file-delete";
+    emit(stage, "BEGIN", filePath);
+    try (File file = new File(filePath)) {
+      file.delete();
+    }
+    emit(stage, "PASS", "Deleted test file");
+
+    // Clean up a prior interrupted execution before attempting createDir().
+    stage = "ios-directory-precheck";
+    emit(stage, "BEGIN", dirPath);
+    try (File dir = new File(dirPath)) {
+      if (dir.exists()) {
+        dir.delete();
+      }
+    }
+    emit(stage, "PASS", "Directory absent, ready to create");
+
+    stage = "ios-directory-create";
+    emit(stage, "BEGIN", dirPath);
+    try (File dir = new File(dirPath)) {
+      dir.createDir();
+      emit(stage, "PASS", "createDir returned");
+      stage = "ios-directory-delete";
+      emit(stage, "BEGIN", dirPath);
+      dir.delete();
+      emit(stage, "PASS", "delete returned");
+    }
+    databasePath = "";
+    stage = "ios-files-result";
+    emit(stage, "PASS", "All File operations inside iOS appPath completed");
   }
 
   private void runMemory() throws Exception {
@@ -90,7 +177,7 @@ public final class SQLitePlaintextProbe extends MainWindow {
     // MANAGE_EXTERNAL_STORAGE). Only delete the dedicated internal test database.
     try (File existing = new File(databasePath)) {
       if (existing.exists()) {
-        if (!Settings.ANDROID.equals(Settings.platform)) {
+        if (!Settings.ANDROID.equals(Settings.platform) && !Settings.isIOS()) {
           throw new IllegalStateException("Test database already exists: " + databasePath);
         }
         existing.delete();
@@ -336,8 +423,8 @@ public final class SQLitePlaintextProbe extends MainWindow {
       record.put("databasePath", databasePath);
       String event = "TC_SQLITE_JSON " + record.toString();
       System.out.println(event);
-      // Android native VM diagnostics go to logcat; stdout may not be captured.
-      if (Settings.ANDROID.equals(Settings.platform)) {
+      // iOS native console and Android logcat; stdout may not be captured.
+      if (Settings.ANDROID.equals(Settings.platform) || Settings.isIOS()) {
         Vm.debug(event);
       }
     } catch (Throwable ignored) {

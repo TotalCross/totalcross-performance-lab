@@ -95,7 +95,41 @@ The GitHub workflow deploys an actual **device-target iOS IPA**, not a simulator
 
 On iOS, the app stays open when tests finish and displays a **PASS: iOS File + SQLite** or **FAIL: <stage>** label. After uploading the IPA, start the app and inspect the last `BEGIN` without a corresponding `PASS` if it hangs. If a `FAIL` appears, collect the exception and nearby system logs. No iOS execution or runtime PASS is asserted by CI; execution occurs on the selected device farm.
 
-## Android emulator coverage\n\nCI uses `reactivecircus/android-emulator-runner@v2`, an API 35 `google_apis` `x86_64` image and KVM on Ubuntu 24.04. The official TotalCross APK contains an ARM64 native library, so the runner checks the image's `ro.product.cpu.abilist` for `arm64-v8a` before installation. Incompatible ABIs or native-bridge failures are reported separately from SQL errors, and **a successful emulator run is not a substitute for testing an ARM64 phone**. The Android action stores separate denied/granted logcat and JSON events, both SQLite fixture files, permission screen screenshot/observations, `android-execution-summary.json`, APK and device diagnostics.\n\nRun from an already-booted emulator after a successful deploy:\n\n```bash\npython3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 90\n```\n\n## Device Farm run 43105118996: IAM GetUpload access (2026-11-11)
+## Android emulator coverage\n\nCI uses `reactivecircus/android-emulator-runner@v2`, an API 35 `google_apis` `x86_64` image and KVM on Ubuntu 24.04. The official TotalCross APK contains an ARM64 native library, so the runner checks the image's `ro.product.cpu.abilist` for `arm64-v8a` before installation. Incompatible ABIs or native-bridge failures are reported separately from SQL errors, and **a successful emulator run is not a substitute for testing an ARM64 phone**. The Android action stores separate denied/granted logcat and JSON events, both SQLite fixture files, permission screen screenshot/observations, `android-execution-summary.json`, APK and device diagnostics.\n\nRun from an already-booted emulator after a successful deploy:\n\n```bash\npython3 tools/android_sqlite_smoke.py --out sqlite-smoke-results --timeout 90\n```\n\n## Device Farm run 43106467413: already scheduled, GetRun denied (2026-11-11)
+
+The second manually triggered run [43106467413](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43106467413)
+successfully uploaded the iOS IPA, Appium test package and test spec, then
+`ScheduleRun` **succeeded**:
+
+```
+arn:aws:devicefarm:us-west-2:801206326054:run:99ef1498-dd84-4764-b596-7f7d3d63b3cb/2c22f802-98ab-4ad2-b82f-e544cc02091a
+```
+
+**This run may incur device charges regardless of the GitHub job failure.**
+GitHub failed only because `GetRun` was denied on the project's ARN. The
+corrected [IAM policy](../devicefarm-ios/iam-policy.json) now grants
+GetRun/ListJobs/GetJob/ListSuites/ListTests/ListArtifacts on the **project**
+ARN in addition to the resource-specific ARNs, while leaving ScheduleRun
+limited to the chosen project and device pool. No extra write/admin access.
+
+To recover the already-scheduled test *without scheduling another device*:
+
+1. Replace the inline policy on AWS IAM role
+   `GitHubActions-TotalCross-DeviceFarm` with the updated JSON linked above.
+   Until this is done, the free permissions-check will fail on `GetRun`.
+2. From [iOS physical device / AWS Device Farm](https://github.com/TotalCross/totalcross-performance-lab/actions/workflows/ios-devicefarm.yml),
+   select branch `test/sqlite-plaintext-7.3.0` and Run workflow.
+3. **Leave `execute=false` (unchecked)** and paste the existing run ARN
+   above into `collect_run_arn`. The collector will read that same run,
+   poll it if necessary, download available artifacts and publish
+   `ios-devicefarm-recovered-run` on GitHub Actions. It does **not**
+   call `CreateUpload` or `ScheduleRun`.
+
+Future paid runs first perform free GetRun/ListJobs/ListArtifacts preflight
+against an existing run, refusing to schedule when read permissions are
+missing. This specifically prevents another failure after charging the user.
+
+## Device Farm run 43105118996: IAM GetUpload access (2026-11-11)
 
 The first user-triggered physical-test workflow built the exact official 7.3.0
 IPA, validated its device-target payload, assembled the offline Appium test

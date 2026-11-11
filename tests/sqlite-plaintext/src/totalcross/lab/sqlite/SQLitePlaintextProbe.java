@@ -25,6 +25,9 @@ public final class SQLitePlaintextProbe extends MainWindow {
   private String stage = "startup";
   private String databasePath = "";
   private boolean skippedExistingFixture = false;
+  // Retain the structured trace in memory: never add file operations around
+  // the individual File/SQLite checkpoints that we are trying to diagnose.
+  private String iosTrace = "";
 
   @Override
   public void initUI() {
@@ -46,6 +49,7 @@ public final class SQLitePlaintextProbe extends MainWindow {
           : "All plaintext SQLite checks passed");
       System.out.flush();
       if (Settings.isIOS()) {
+        persistIosTrace();
         // Keep the app visible for interactive device-farm sessions, rather
         // than exiting immediately (which can appear to be a launch failure).
         add(new Label("PASS: iOS File + SQLite"), CENTER, CENTER);
@@ -56,6 +60,15 @@ public final class SQLitePlaintextProbe extends MainWindow {
       emit(stage, "FAIL", failure.toString());
       emit("result", "FAIL", "stage=" + stage + "; " + failure);
       failure.printStackTrace();
+      if (Settings.isIOS()) {
+        try {
+          persistIosTrace();
+        } catch (Throwable persistenceFailure) {
+          // Original failure is more important; do not mask it with a
+          // second exception from the same filesystem under test.
+          System.err.println("Could not persist iOS failure trace: " + persistenceFailure);
+        }
+      }
       System.err.flush();
       System.out.flush();
       if (Settings.isIOS()) {
@@ -148,6 +161,19 @@ public final class SQLitePlaintextProbe extends MainWindow {
     databasePath = "";
     stage = "ios-files-result";
     emit(stage, "PASS", "All File operations inside iOS appPath completed");
+  }
+
+  private void persistIosTrace() throws Exception {
+    String filePath = Convert.appendPath(Settings.appPath, "tc-ios-devicefarm-result.log");
+    byte[] bytes = iosTrace.getBytes();
+    try (File file = new File(filePath, File.CREATE_EMPTY)) {
+      int written = file.writeBytes(bytes, 0, bytes.length);
+      if (written != bytes.length) {
+        throw new IllegalStateException("Incomplete iOS test trace: wrote "
+            + written + " of " + bytes.length);
+      }
+      file.flush();
+    }
   }
 
   private void runMemory() throws Exception {
@@ -434,6 +460,9 @@ public final class SQLitePlaintextProbe extends MainWindow {
       record.put("databasePath", databasePath);
       String event = "TC_SQLITE_JSON " + record.toString();
       System.out.println(event);
+      if (Settings.isIOS()) {
+        iosTrace += event + "\n";
+      }
       // iOS native console and Android logcat; stdout may not be captured.
       if (Settings.ANDROID.equals(Settings.platform) || Settings.isIOS()) {
         Vm.debug(event);
@@ -441,6 +470,9 @@ public final class SQLitePlaintextProbe extends MainWindow {
     } catch (Throwable ignored) {
       String event = "TC_SQLITE_EVENT " + name + " " + status + " " + detail;
       System.out.println(event);
+      if (Settings.isIOS()) {
+        iosTrace += event + "\n";
+      }
       if (Settings.ANDROID.equals(Settings.platform)) {
         Vm.debug(event);
       }

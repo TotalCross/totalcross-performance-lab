@@ -1,0 +1,29 @@
+# Bootstrap entrypoint: GitHub requires a workflow_dispatch workflow on the
+# default branch before allowing manual dispatch on a feature branch.
+# The complete AWS Device Farm integration intentionally stays on
+# test/sqlite-plaintext-7.3.0 until PR #4 is reviewed.
+name: iOS physical device / AWS Device Farm
+
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        description: "Schedule a billable iPhone run (select test/sqlite-plaintext-7.3.0)"
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  branch-selection:
+    name: Choose the test branch (no AWS calls, no billable tests)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Explain how to run the iOS test
+        run: |
+          echo "::error::Select branch test/sqlite-plaintext-7.3.0 in Run workflow."
+          echo "::error::The main branch is a non-billable workflow_dispatch entrypoint."
+          echo "The full test workflow is maintained on the feature branch."
+          exit 1

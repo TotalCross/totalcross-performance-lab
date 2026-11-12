@@ -91,6 +91,19 @@ def main():
         if native_bytes[:4].hex() not in (
                 "feedfacf", "cffaedfe", "cafebabe", "bebafeca", "cafebabf", "bfbafeca"):
             raise RuntimeError("Unrecognized native Mach-O")
+        # Guard against a successful deploy that accidentally embeds the old
+        # diagnostic executable rather than the surface-latch experiment.
+        required_markers = (
+            b"screen-change-noop-release",
+            b"screen-update-guard",
+            b"screen-change-apply",
+            b"vm-screen-update",
+        )
+        missing_markers = [marker.decode("ascii") for marker in required_markers
+                           if marker not in native_bytes]
+        if missing_markers:
+            raise RuntimeError("Experimental native executable missing markers: "
+                               + ", ".join(missing_markers))
         tcz_names = [name for name in archive.namelist()
                      if name.endswith("/" + APP_NAME + ".tcz")]
         if len(tcz_names) != 1:
@@ -122,6 +135,7 @@ def main():
             "tczAttributes": tcz_attributes,
             "tczContainsMainWindow": bool(tcz_attributes & 0x2),
             "nativeExecutableSha256": hashlib.sha256(native_bytes).hexdigest(),
+            "nativeDiagnosticMarkers": [item.decode("ascii") for item in required_markers],
             "bundleIdentifier": info.get("CFBundleIdentifier"),
             "minIOS": info.get("MinimumOSVersion"),
             "documentsFileSharingEnabled": info.get("UIFileSharingEnabled") is True,

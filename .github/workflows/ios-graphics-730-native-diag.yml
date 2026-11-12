@@ -29,7 +29,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: ios-graphics-730-native-diag-${{ github.ref }}-${{ github.event_name }}
+  group: ios-graphics-730-native-diag-v2-${{ github.ref }}-${{ github.event_name }}
   # Supersede obsolete push-only builds; never cancel manual Device Farm runs.
   # event_name is part of the group, so paid workflow_dispatch is isolated.
   cancel-in-progress: ${{ github.event_name == 'push' }}

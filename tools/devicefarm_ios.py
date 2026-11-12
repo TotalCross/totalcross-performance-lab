@@ -35,11 +35,11 @@ def safe_name(value):
     return re.sub(r"[^A-Za-z0-9_.-]", "_", str(value))[:100]
 
 
-def make_package(out):
+def make_package(out, test_root=TEST_ROOT):
     target = out / "devicefarm-appium-python.zip"
-    paths = [TEST_ROOT / "requirements.txt"]
-    paths += sorted((TEST_ROOT / "tests").glob("test_*.py"))
-    wheels = sorted((TEST_ROOT / "wheelhouse").glob("*.whl"))
+    paths = [test_root / "requirements.txt"]
+    paths += sorted((test_root / "tests").glob("test_*.py"))
+    wheels = sorted((test_root / "wheelhouse").glob("*.whl"))
     if not wheels:
         raise RuntimeError("wheelhouse missing; run pip download before packaging")
     incompatible = [p.name for p in wheels if not p.name.endswith("-none-any.whl")]
@@ -49,10 +49,10 @@ def make_package(out):
     paths.extend(wheels)
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as archive:
         for path in paths:
-            archive.write(path, path.relative_to(TEST_ROOT).as_posix())
+            archive.write(path, path.relative_to(test_root).as_posix())
     with zipfile.ZipFile(target) as archive:
         names = archive.namelist()
-        assert "requirements.txt" in names and "tests/test_ios_probe.py" in names
+        assert "requirements.txt" in names and any(name.startswith("tests/test_") and name.endswith(".py") for name in names)
         assert archive.testzip() is None
     print("Appium Python test bundle:", target, "(", len(wheels), "wheels )")
     return target
@@ -296,6 +296,10 @@ def main():
     parser.add_argument("--project-arn", default=os.getenv("AWS_DEVICE_FARM_PROJECT_ARN"))
     parser.add_argument("--pool-arn", default=os.getenv("AWS_DEVICE_FARM_DEVICE_POOL_ARN"))
     parser.add_argument("--run-arn", help="Previously scheduled AWS run to collect, never schedules a new device")
+    parser.add_argument("--test-root", type=Path, default=TEST_ROOT,
+                        help="Custom Appium test package directory (default: SQLite probe)")
+    parser.add_argument("--run-name", default="TotalCross-7.3.0-iOS-File-SQLite",
+                        help="Device Farm run label")
     parser.add_argument("--ipa", type=Path)
     parser.add_argument("--out", type=Path, default=Path("sqlite-smoke-results"))
     parser.add_argument("--execute", action="store_true",
@@ -306,7 +310,7 @@ def main():
     summary = {"operation": args.operation, "status": "FAIL"}
     try:
         if args.operation == "package":
-            summary["package"] = str(make_package(out))
+            summary["package"] = str(make_package(out, args.test_root.resolve()))
             summary["status"] = "PASS"
             return 0
         if not args.project_arn or not args.pool_arn:
@@ -340,7 +344,9 @@ def main():
         bundle = out / "devicefarm-appium-python.zip"
         if not bundle.is_file():
             raise RuntimeError("Appium package missing; execute 'package' first")
-        spec = TEST_ROOT / "devicefarm-test-spec.yml"
+        spec = args.test_root.resolve() / "devicefarm-test-spec.yml"
+        if not spec.is_file():
+            raise RuntimeError("Device Farm test spec missing: " + str(spec))
         app_arn = upload(client, args.project_arn, args.ipa, "IOS_APP")
         test_arn = upload(client, args.project_arn, bundle, "APPIUM_PYTHON_TEST_PACKAGE")
         spec_arn = upload(client, args.project_arn, spec, "APPIUM_PYTHON_TEST_SPEC")
@@ -349,7 +355,7 @@ def main():
             projectArn=args.project_arn,
             devicePoolArn=args.pool_arn,
             appArn=app_arn,
-            name="TotalCross-7.3.0-iOS-File-SQLite",
+            name=args.run_name,
             test={"type": "APPIUM_PYTHON", "testPackageArn": test_arn,
                   "testSpecArn": spec_arn},
             executionConfiguration={"jobTimeoutMinutes": 15,

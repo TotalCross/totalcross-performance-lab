@@ -5,6 +5,14 @@ on:
   push:
     branches:
       - test/sqlite-plaintext-7.3.0
+    # Avoid rerunning the entire SQLite/Android/macOS matrix after changes
+    # isolated to the graphics or Device Farm test infrastructure.
+    paths:
+      - .github/workflows/sqlite-plaintext-7.3.0.yml
+      - tools/sqlite_smoke.py
+      - tools/android_sqlite_smoke.py
+      - tools/inspect_ios_ipa.py
+      - tests/sqlite-plaintext/**
 
 permissions:
   contents: read
@@ -18,8 +26,9 @@ jobs:
         include:
           - target: linux-x64
             os: ubuntu-24.04
+          # Only execution of the native macOS TotalCross VM needs macOS.
           - target: macos
-            os: macos-15
+            os: macos-26
           - target: windows
             os: windows-2022
     runs-on: ${{ matrix.os }}
@@ -150,8 +159,9 @@ jobs:
         include:
           - target: linux-arm
             os: ubuntu-24.04
+          # The TotalCross deployer creates iOS IPA artifacts on Linux.
           - target: ios
-            os: macos-15
+            os: ubuntu-24.04
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:

@@ -30,7 +30,9 @@ permissions:
 
 concurrency:
   group: ios-graphics-${{ github.ref }}-${{ github.event_name }}
-  cancel-in-progress: false
+  # Replace obsolete queued builds after edits; NEVER interrupt manually
+  # scheduled, billable Device Farm runs.
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 env:
   AWS_REGION: us-west-2

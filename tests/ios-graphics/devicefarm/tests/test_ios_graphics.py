@@ -245,10 +245,10 @@ class IOSGraphicsTest(unittest.TestCase):
                 report["result"] = "FAIL"
                 self.fail("Native app did not initialize and paint all controls; inspect report")
             report["initialScreenshot"] = png_metrics(initial_png, "initial")
-            if not report["initialScreenshot"]["pass"]:
-                report["result"] = "FAIL"
-                self.fail("Graphics are not visibly rendered: initial PNG missing color panels "
-                          "(black screen or incorrect raster). See screenshot and JSON.")
+            # A black screen is a real test failure, but do NOT abort here:
+            # exercise the invisible button anyway to determine whether native
+            # touch handling and repaint work independently of presentation.
+            report["initialVisualPass"] = report["initialScreenshot"]["pass"]
 
             ratio_x = layout_ratio(initial, "buttonCenterRelX")
             ratio_y = layout_ratio(initial, "buttonCenterRelY")
@@ -283,16 +283,25 @@ class IOSGraphicsTest(unittest.TestCase):
                 report["updatedSourceError"] = repr(exc)
             report["finalStages"] = sorted(set(e.get("stage") for e in changed
                                                  if e.get("status") == "PASS"))
-            if not no_failures(changed) or not (
-                    has_pass(changed, "button-pressed")
-                    and has_pass(changed, "canvas-painted-updated")):
-                report["result"] = "FAIL"
-                self.fail("Button press / repaint not observed; see screenshot and trace")
             report["updatedScreenshot"] = png_metrics(updated_png, "updated")
-            if not report["updatedScreenshot"]["pass"]:
-                report["result"] = "FAIL"
-                self.fail("Native event ran but updated palette is not visible in screenshot")
-            report["result"] = "PASS"
+            report["buttonEventPass"] = (has_pass(changed, "button-pressed") and
+                                         has_pass(changed, "canvas-painted-updated"))
+            report["updatedVisualPass"] = report["updatedScreenshot"]["pass"]
+            # Report all three independent observations (initial frame, touch
+            # processing, updated frame), preserving both PNGs even on FAIL.
+            failures = []
+            if not report["initialVisualPass"]:
+                failures.append("initial framebuffer is black/missing RGBY palette")
+            if not report["buttonEventPass"]:
+                failures.append("native button event or updated onPaint missing")
+            if not report["updatedVisualPass"]:
+                failures.append("updated framebuffer is black/missing new palette")
+            if not no_failures(changed):
+                failures.append("native TC_GRAPHICS_JSON emitted a FAIL event")
+            report["failures"] = failures
+            report["result"] = "FAIL" if failures else "PASS"
+            if failures:
+                self.fail("; ".join(failures))
         except BaseException as error:
             report["error"] = repr(error)
             raise

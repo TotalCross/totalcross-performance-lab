@@ -3,7 +3,7 @@ name: iOS graphics / 7.3.0 direct-ChildView experiment / AWS Device Farm
 on:
   # Controlled 7.3.0 experiment: use source SHA a6e03d03 with only the
   # historical ChildView hierarchy restored. Push builds consume no AWS devices;
-  # only workflow_dispatch execute=true schedules a paid run.
+  # paid runs require manual execute=true or the single approved commit.
   push:
     branches:
       - test/sqlite-plaintext-7.3.0
@@ -31,9 +31,9 @@ permissions:
 
 concurrency:
   group: ios-graphics-${{ github.ref }}-${{ github.event_name }}
-  # Replace obsolete queued builds after edits; NEVER interrupt manually
-  # scheduled, billable Device Farm runs.
-  cancel-in-progress: ${{ github.event_name == 'push' }}
+  # An approved one-time push can schedule a billable run. Never cancel
+  # in-flight physical tests when additional commits arrive.
+  cancel-in-progress: false
 
 env:
   AWS_REGION: us-west-2
@@ -155,7 +155,11 @@ jobs:
 
   physical-graphics-test:
     name: Render graphics / physical iPhone Device Farm (billable, opt-in)
-    if: github.event_name == 'workflow_dispatch' && inputs.execute == true && inputs.collect_run_arn == ''
+    # Only the explicitly approved, single-purpose commit can also schedule on push.
+    # All future pushes are build-only; manual runs still require execute=true.
+    if: >
+      (github.event_name == 'workflow_dispatch' && inputs.execute == true && inputs.collect_run_arn == '') ||
+      (github.event_name == 'push' && github.event.head_commit.message == 'run(ios): approved one-time Device Farm view experiment')
     needs: build-graphics
     runs-on: ubuntu-24.04
     timeout-minutes: 55

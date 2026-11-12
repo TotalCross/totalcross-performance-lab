@@ -68,51 +68,48 @@ jobs:
           assert spec['version'] == 0.1 and 'test' in spec['phases']
           print('iOS graphics Appium test spec validated')
           PY
-      - name: Wait for pinned 7.3.0 native experiment package (no AWS charges)
+      - name: Fetch exact successful 7.3.0 experimental SDK build (no AWS charges)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
         run: |
           set -euo pipefail
           mkdir -p ios-graphics-results
-          run_id=43292158650
+          run_id=43297490948
+          artifact_id=13981700539
           expected_sha=a6e03d0327250a7992202b33799983386093da1c
-          for i in $(seq 1 90); do
-            gh api "repos/TotalCross/totalcross/actions/runs/${run_id}" \
-              --jq '{id,head_sha,status,conclusion}' > ios-graphics-results/sdk-run.json
-            sha="$(python -c 'import json;print(json.load(open("ios-graphics-results/sdk-run.json"))["head_sha"])')"
-            status="$(python -c 'import json;print(json.load(open("ios-graphics-results/sdk-run.json"))["status"])')"
-            conclusion="$(python -c 'import json;print(json.load(open("ios-graphics-results/sdk-run.json")).get("conclusion"))')"
-            test "${sha}" = "${expected_sha}" || { echo 'Pinned source SHA mismatch'; exit 1; }
-            if [ "${status}" = completed ]; then
-              test "${conclusion}" = success || { echo "Upstream package failed: ${conclusion}"; exit 1; }
-              break
-            fi
-            test "${i}" -lt 90 || { echo 'Upstream package not completed within 45 minutes'; exit 1; }
-            sleep 30
-          done
-          gh api "repos/TotalCross/totalcross/actions/runs/${run_id}/artifacts?per_page=100" \
-            --jq '.artifacts[] | select(.name == "TotalCross-7.3.0" and .expired == false) | {id,name,digest,size_in_bytes,expired}' \
-            > ios-graphics-results/sdk-artifact.json
+          expected_digest=sha256:c635dc37179d1e4e0ec13343421b52ba2565bad6870a217bbbbda143ceb5bae1
+          gh api "repos/TotalCross/totalcross/actions/runs/${run_id}" \
+            --jq '{id,head_sha,status,conclusion}' > ios-graphics-results/sdk-run.json
+          python - <<'PY'
+          import json
+          data=json.load(open("ios-graphics-results/sdk-run.json"))
+          assert data["id"] == 43297490948
+          assert data["head_sha"] == "a6e03d0327250a7992202b33799983386093da1c"
+          assert data["status"] == "completed" and data["conclusion"] == "success"
+          PY
+          gh api "repos/TotalCross/totalcross/actions/artifacts/${artifact_id}" \
+            --jq '{id,name,digest,size_in_bytes,expired,workflow_run: {id: .workflow_run.id, head_sha: .workflow_run.head_sha}}' > ios-graphics-results/sdk-artifact.json
           python - <<'PY'
           import json
           data=json.load(open("ios-graphics-results/sdk-artifact.json"))
+          assert data["id"] == 13981700539
           assert data["name"] == "TotalCross-7.3.0"
-          assert data["digest"].startswith("sha256:")
+          assert data["digest"] == "sha256:c635dc37179d1e4e0ec13343421b52ba2565bad6870a217bbbbda143ceb5bae1"
           assert data["expired"] is False
+          assert data["workflow_run"]["id"] == 43297490948
+          assert data["workflow_run"]["head_sha"] == "a6e03d0327250a7992202b33799983386093da1c"
           PY
-          artifact_id="$(python -c 'import json;print(json.load(open("ios-graphics-results/sdk-artifact.json"))["id"])')"
           gh api "repos/TotalCross/totalcross/actions/artifacts/${artifact_id}/zip" > ios-graphics-results/official-artifact.zip
           python - <<'PY'
-          import hashlib, json, pathlib, zipfile
+          import hashlib, pathlib, zipfile
           path=pathlib.Path("ios-graphics-results/official-artifact.zip")
-          metadata=json.load(open("ios-graphics-results/sdk-artifact.json"))
-          actual="sha256:"+hashlib.sha256(path.read_bytes()).hexdigest()
-          assert actual==metadata["digest"], f"Artifact digest mismatch: {actual}"
-          with zipfile.ZipFile(path) as z:
-              assert z.testzip() is None
-              assert z.namelist() == ["TotalCross-7.3.0.zip"]
-          print("Verified pinned experiment package:",metadata)
+          actual=hashlib.sha256(path.read_bytes()).hexdigest()
+          assert actual=="c635dc37179d1e4e0ec13343421b52ba2565bad6870a217bbbbda143ceb5bae1", f"Experimental SDK ZIP hash mismatch: {actual}"
+          with zipfile.ZipFile(path) as archive:
+              assert archive.testzip() is None
+              assert archive.namelist() == ["TotalCross-7.3.0.zip"]
+          print("Verified experimental SDK archive:", path, actual)
           PY
       - name: Compile and package only the graphics app for iOS
         shell: bash
@@ -159,7 +156,7 @@ jobs:
     # All future pushes are build-only; manual runs still require execute=true.
     if: >
       (github.event_name == 'workflow_dispatch' && inputs.execute == true && inputs.collect_run_arn == '') ||
-      (github.event_name == 'push' && github.event.head_commit.message == 'run(ios): approved one-time Device Farm view experiment')
+      (github.event_name == 'push' && github.event.head_commit.message == 'run(ios): one-time Device Farm experiment with verified 43297490948 SDK')
     needs: build-graphics
     runs-on: ubuntu-24.04
     timeout-minutes: 55

@@ -1,7 +1,7 @@
 # iOS 7.3.0 direct-ChildView / physical-device experiment
 
 This is a **one-time, explicitly approved, potentially billable** A/B run.
-Only the commit message `run(ios): approved one-time Device Farm view experiment`
+Only the commit message `run(ios): one-time Device Farm experiment with verified 43297490948 SDK`
 allows a push to schedule Device Farm. All other pushes build the IPA and Appium
 package only. Do not reuse that exact commit message.
 
@@ -12,7 +12,9 @@ package only. Do not reuse that exact commit message.
 - Experiment branch: `test/ios-graphics-730-revert-safearea-view`
 - Native commit: `a6e03d0327250a7992202b33799983386093da1c`
 - PR: https://github.com/TotalCross/totalcross/pull/540
-- SDK package workflow: https://github.com/TotalCross/totalcross/actions/runs/43292158650
+- SDK package workflow (successful): https://github.com/TotalCross/totalcross/actions/runs/43297490948
+- SDK artifact ID: `13981700539` (`sha256:c635dc37179d1e4e0ec13343421b52ba2565bad6870a217bbbbda143ceb5bae1`)
+- Previous package run `43292158650` failed its final package tests and was not used by Device Farm.
 - Control (7.2.2 passing): https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43277540910
 - Original (7.3.0 black screen): https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43265325205
 

@@ -30,7 +30,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: ios-graphics-${{ github.ref }}-${{ github.event_name }}
+  group: ios-graphics-730-directview-${{ github.ref }}-${{ github.event_name }}
   # An approved one-time push can schedule a billable run. Never cancel
   # in-flight physical tests when additional commits arrive.
   cancel-in-progress: false
@@ -156,7 +156,7 @@ jobs:
     # All future pushes are build-only; manual runs still require execute=true.
     if: >
       (github.event_name == 'workflow_dispatch' && inputs.execute == true && inputs.collect_run_arn == '') ||
-      (github.event_name == 'push' && github.event.head_commit.message == 'run(ios): one-time Device Farm experiment with verified 43297490948 SDK')
+      (github.event_name == 'push' && github.event.head_commit.message == 'run(ios): one-time Device Farm directview test with isolated concurrency')
     needs: build-graphics
     runs-on: ubuntu-24.04
     timeout-minutes: 55

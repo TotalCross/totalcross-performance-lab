@@ -231,6 +231,8 @@ class IOSGraphicsTest(unittest.TestCase):
                                        "canvas-painted-initial"}, seconds=60)
             report["initialStages"] = sorted(set(e.get("stage") for e in initial
                                                    if e.get("status") == "PASS"))
+            # onPaint may return before CoreAnimation presents the completed frame.
+            time.sleep(2)
             initial_png = driver.get_screenshot_as_png()
             (OUT / "ios-graphics-initial.png").write_bytes(initial_png)
             try:
@@ -271,6 +273,8 @@ class IOSGraphicsTest(unittest.TestCase):
                 if (has_pass(changed, "button-pressed")
                         and has_pass(changed, "canvas-painted-updated")):
                     break
+            # Allow the updated Skia frame to reach the iOS window surface.
+            time.sleep(2)
             updated_png = driver.get_screenshot_as_png()
             (OUT / "ios-graphics-after-button.png").write_bytes(updated_png)
             try:

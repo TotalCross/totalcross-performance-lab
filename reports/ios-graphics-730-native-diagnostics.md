@@ -71,3 +71,29 @@ or Java `onPaint` on their own as proof of visible rendering.
 
 **Do not ship this instrumentation**: it creates a diagnostic file and emits
 native GL lifecycle/touch metadata. Remove after diagnosing the regression.
+
+
+## Result — physical Device Farm run 43317087120 (2026-11-12)
+
+- **SDK:** 7.3.0 native diagnostic source `d1fa0fa4b9186cce4bc1d1f4bdf91872713a3954`, original baseline `5464c21e`.
+- **Workflow:** https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43317087120
+- **Evidence:** https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43317087120/artifacts/13990155992
+- **Device:** iPhone 17 (A3258), iOS 26.3.1, screenshot 1206×2622; GL safe-area drawable 1206×2334 (402×778 points, scale 3).
+- **Appium:** FAIL; initial `darkFraction=0.9976`, zero RGBY hits, `initialVisualPass=false`; button and updated-visual checks also fail.
+- **Native file collection:** PASS, `tc-ios-native-graphics.log` has **40 lines**; stages also listed in `ios-native-graphics-summary.json`.
+- **GL initialization:** `create-context selected=1`; `drawable storage=1 renderbuffer=1206x2334 fbStatus=0x8cd5` (complete), `surfaceReady=1`.
+- **Screen updates:** **No `graphics-update` or `present` stage** in the entire trace, so `graphicsUpdateScreenIOS` and `presentRenderbuffer:` were never reached by the existing instrumentation.
+- **Touch delivery:** all 8 UIKit touch events (4 taps × down/up) were enqueued as mouse events and drained by the VM. No Java `button-pressed` stage was observed. This could involve targeting/coordinate conversion; native delivery itself is operational.
+
+### Leading cause hypothesis — persistent surface-change guard
+
+The initial `viewDidLayoutSubviews` sets `surfaceWillChange=true` and queues a `screenChange` event. Before that event is processed, `setScreenValues` writes the **same** dimensions into `screen` and marks `surfaceReady=true`. When `screenChange` runs, `screenApplyConfiguration` can return `SCREEN_CHANGE_NONE`, and `screenChangeCommitted` exits immediately. The branch `graphicsScreenChange` which clears `surfaceWillChange` is therefore skipped. `graphicsUpdateScreen` then returns without `flushSkia` or `graphicsUpdateScreenIOS` whenever `surfaceWillChange` remains true.
+
+Evidence: `TotalCrossVM/src/nm/ui/darwin/mainview.m`,
+`TotalCrossVM/src/nm/ui/darwin/childview.m`,
+`TotalCrossVM/src/event/darwin/event.m`,
+`TotalCrossVM/src/nm/ui/GraphicsPrimitives_c.h`,
+`TotalCrossVM/src/nm/ui/backend/graphics/gles/gfx_Graphics_c.h`.
+
+**Confidence:** high but not yet proven at runtime, because `graphicsUpdateScreen` itself was not instrumented to print the guard. Recommended next experiment: add a sampled log at the `graphicsUpdateScreen` early-return branch and/or test a minimal iOS-only release of the initial `surfaceWillChange` guard after the drawable is ready. Keep this separate from PR #540 (the unsuccessful view-hierarchy rollback). Do not start another billable Device Farm run without explicit opt-in.
+

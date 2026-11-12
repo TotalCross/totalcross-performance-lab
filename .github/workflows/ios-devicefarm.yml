@@ -120,7 +120,9 @@ jobs:
     # select 'execute: true' before any device minutes can be consumed.
     if: github.event_name == 'workflow_dispatch' && inputs.execute == true && inputs.collect_run_arn == ''
     needs: permissions-check
-    runs-on: macos-15
+    # Cross-compile/deploy the iOS IPA with TotalCross's Java toolchain;
+    # AWS Device Farm re-signs and installs it on an actual iPhone.
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4

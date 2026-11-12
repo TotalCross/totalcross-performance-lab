@@ -68,7 +68,9 @@ phases:
     commands:
       - |-
         cd "$DEVICEFARM_TEST_PACKAGE_PATH"
-        python -m unittest discover -s tests -p 'test_*.py' -v 2>&1 | tee "$DEVICEFARM_LOG_DIR/unittest.log"
+        # pytest runs our unittest.TestCase as well, while emitting the JUnit XML
+        # expected by AWS Device Farm's test-insights parser.
+        python -m pytest tests -vv --junitxml="$DEVICEFARM_LOG_DIR/junit.xml" 2>&1 | tee "$DEVICEFARM_LOG_DIR/unittest.log"
         exit ${PIPESTATUS[0]}
 
   post_test:

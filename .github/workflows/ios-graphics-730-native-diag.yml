@@ -30,8 +30,9 @@ permissions:
 
 concurrency:
   group: ios-graphics-730-native-diag-${{ github.ref }}-${{ github.event_name }}
-  # Never cancel a physical test; no paid run starts from pushes.
-  cancel-in-progress: false
+  # Supersede obsolete push-only builds; never cancel manual Device Farm runs.
+  # event_name is part of the group, so paid workflow_dispatch is isolated.
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 env:
   AWS_REGION: us-west-2

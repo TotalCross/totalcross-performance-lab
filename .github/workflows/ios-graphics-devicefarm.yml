@@ -1,0 +1,33 @@
+# Safe GitHub Actions default-branch entrypoint. The full graphics workflow
+# is on the OIDC-authorized test/sqlite-plaintext-7.3.0 branch.
+# NEVER schedules a physical device on main.
+name: iOS graphics / AWS Device Farm
+
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        description: "Schedule a billable graphics test on one iPhone (choose test branch)"
+        type: boolean
+        required: true
+        default: false
+      collect_run_arn:
+        description: "Existing graphics Device Farm run ARN to recover (free)"
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  select-graphics-feature-branch:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Explain required branch and billing guard
+        run: |
+          echo "::error::Select branch test/sqlite-plaintext-7.3.0 in Run workflow."
+          echo "::error::Do not run on main: this safe bootstrap job never contacts AWS."
+          echo "On the test branch, execute=false builds only the IPA; execute=true"
+          echo "submits one physical device test after verifying the iPhone pool."
+          exit 1

@@ -84,6 +84,9 @@ jobs:
       - name: Package offline Appium graphics assertions
         shell: bash
         run: |
+          # The common Device Farm helper imports boto3 for API operations.
+          # Packaging itself remains offline/no AWS requests.
+          python -m pip install --disable-pip-version-check boto3
           mkdir -p tests/ios-graphics/devicefarm/wheelhouse
           python -m pip download --only-binary=:all: \
             --dest tests/ios-graphics/devicefarm/wheelhouse \

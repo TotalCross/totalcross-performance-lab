@@ -1,0 +1,32 @@
+# Register the opt-in iOS surface-latch experiment in the GitHub Actions UI.
+# This default-branch file deliberately has no AWS jobs. To execute the real
+# experiment, select test/sqlite-plaintext-7.3.0 in the Run workflow dialog.
+name: iOS graphics / 7.3.0 surface-latch experiment / AWS Device Farm
+
+on:
+  workflow_dispatch:
+    inputs:
+      execute:
+        description: "Run a billable graphics test on one physical iPhone"
+        type: boolean
+        required: true
+        default: false
+      collect_run_arn:
+        description: "Recover an existing Device Farm run without scheduling a new device"
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  select-experiment-branch:
+    name: Choose the experiment branch (no AWS calls)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Reject use of default-branch registration stub
+        run: |
+          echo "::error::Select branch test/sqlite-plaintext-7.3.0 to use the real 7.3.0 latch experiment workflow."
+          echo "::error::No AWS Device Farm session was scheduled."
+          exit 1

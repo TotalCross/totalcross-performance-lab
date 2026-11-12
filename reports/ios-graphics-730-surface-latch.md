@@ -16,9 +16,9 @@ contain any `graphics-update` or `present` entries.
 - Working control: 7.2.2 (2026-08-24) — Device Farm **PASS**.
 - Failed 7.3.0 baseline: `5464c21e3107e3f1ce9c287b724829e2bb870c1d`.
 - Instrumented 7.3.0 baseline: `d1fa0fa4b9186cce4bc1d1f4bdf91872713a3954`.
-- Fix + additional trace: `901966ea900e61eb238d5bc9a1153650a0da46b9`.
+- Fix + additional trace: `791e8c465ccfb8c9e0d34588a5467ea9d033c762`.
 - Native experiment: https://github.com/TotalCross/totalcross/pull/542
-- SDK package: https://github.com/TotalCross/totalcross/actions/runs/43324910947
+- SDK package: https://github.com/TotalCross/totalcross/actions/runs/43326093367
 - Graphic IPA workflow: `.github/workflows/ios-graphics-730-surface-latch.yml`
 - IPA builder: `tools/ios_graphics_730_surface_latch_build.py`.
 
@@ -34,10 +34,11 @@ button assertions have **not** changed.
 The only behavior change is conditional on iOS:
 
 If `screenChangeCommitted` receives `SCREEN_CHANGE_NONE` for a ready
-surface **and** `surfaceWillChange` is still set, the experiment marks the
-screen dirty, invokes `graphicsScreenChange` (which clears the flag and
-updates projection), and repaints the active window. The regular handling of
-non-empty screen changes is unchanged.
+surface **and** `surfaceWillChange` is still set, the experiment treats
+the event as `SCREEN_CHANGE_INITIAL` and uses the normal commit path.
+This updates tcSettings, GL projection, dirty flags, `SK_SCREEN_CHANGE`
+and the window repaint together. `SCREEN_CHANGE_INITIAL` alone does not
+recreate the native surface. Normal non-empty screen changes are unchanged.
 
 Sampling logs `screen-change-event`, `screen-change-apply`,
 `screen-change-noop-release`, `screen-change-committed`,

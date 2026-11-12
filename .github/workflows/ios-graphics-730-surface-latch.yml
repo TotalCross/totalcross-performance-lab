@@ -74,8 +74,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ios-graphics-results
-          expected_run=43324910947
-          expected_sha=901966ea900e61eb238d5bc9a1153650a0da46b9
+          expected_run=43326093367
+          expected_sha=791e8c465ccfb8c9e0d34588a5467ea9d033c762
           # The SDK package is pinned to an immutable run and source commit.
           # Poll only the iOS + packaging jobs, not unrelated macOS desktop tests.
           for i in $(seq 1 160); do
@@ -87,7 +87,7 @@ jobs:
           import json
           run=json.load(open("ios-graphics-results/sdk-run.json"))
           jobs=json.load(open("ios-graphics-results/sdk-jobs.json"))
-          assert run["id"]==43324910947 and run["head_sha"]=="901966ea900e61eb238d5bc9a1153650a0da46b9"
+          assert run["id"]==43326093367 and run["head_sha"]=="791e8c465ccfb8c9e0d34588a5467ea9d033c762"
           assert run["name"]=="Packages `totalcross`"
           state=[]
           for label in ("build / Build `iOS`","Package TotalCross"):
@@ -117,8 +117,8 @@ jobs:
           selected=[x for x in a if x["name"]=="TotalCross-7.3.0" and not x["expired"]]
           assert len(selected)==1, f"Expected exactly one package artifact, got {len(selected)}"
           item=selected[0]
-          assert item["workflow_run"]["id"]==43324910947
-          assert item["workflow_run"]["head_sha"]=="901966ea900e61eb238d5bc9a1153650a0da46b9"
+          assert item["workflow_run"]["id"]==43326093367
+          assert item["workflow_run"]["head_sha"]=="791e8c465ccfb8c9e0d34588a5467ea9d033c762"
           assert item["digest"].startswith("sha256:")
           with open("ios-graphics-results/sdk-artifact.json","w") as f:
               json.dump({k:item[k] for k in ("id","name","digest","size_in_bytes","expired")},f,indent=2)

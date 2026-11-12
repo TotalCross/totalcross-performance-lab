@@ -20,8 +20,8 @@ from inspect_ios_ipa import enable_documents_file_sharing
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "tests/ios-graphics/src/totalcross/lab/graphics/GraphicsSmokeProbe.java"
 APP_NAME = "ios-graphics-smoke"
-SOURCE_SHA = "901966ea900e61eb238d5bc9a1153650a0da46b9"
-SDK_RUN_ID = 43324910947
+SOURCE_SHA = "791e8c465ccfb8c9e0d34588a5467ea9d033c762"
+SDK_RUN_ID = 43326093367
 SDK_BASE_SHA = "5464c21e3107e3f1ce9c287b724829e2bb870c1d"
 
 

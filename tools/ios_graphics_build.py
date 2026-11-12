@@ -44,7 +44,9 @@ def main():
     classes.mkdir(exist_ok=True)
     invoke(["javac", "--release", "8", "-cp", cp, "-d", classes, SOURCE],
            out, out / "compile.log", env, timeout=120)
-    jar = out / (APP_NAME + ".jar")
+    # TotalCross deployer discovers MainWindow by the *input JAR basename*.
+    # /n controls the packaged app name, not class detection.
+    jar = out / "GraphicsSmokeProbe.jar"
     invoke(["jar", "cf", jar, "-C", classes, "."], out, out / "compile.log", env)
     deployed = out / "deployed"
     deployed.mkdir(exist_ok=True)
@@ -75,8 +77,21 @@ def main():
         if native_bytes[:4].hex() not in (
                 "feedfacf", "cffaedfe", "cafebabe", "bebafeca", "cafebabf", "bfbafeca"):
             raise RuntimeError("Unrecognized native Mach-O")
-        if not any(name.endswith("/" + APP_NAME + ".tcz") for name in archive.namelist()):
-            raise RuntimeError("Missing embedded graphics-test TCZ")
+        tcz_names = [name for name in archive.namelist()
+                     if name.endswith("/" + APP_NAME + ".tcz")]
+        if len(tcz_names) != 1:
+            raise RuntimeError("Missing/ambiguous graphics-test TCZ")
+        tcz_header = archive.read(tcz_names[0])[:4]
+        if len(tcz_header) != 4:
+            raise RuntimeError("Truncated graphics TCZ header")
+        tcz_version = int.from_bytes(tcz_header[:2], "little")
+        tcz_attributes = int.from_bytes(tcz_header[2:], "little")
+        # TCZ.ATTR_HAS_MAINWINDOW is bit 0x2. A deployer warning alone is
+        # not a reliable check; library-only TCZs can still produce an IPA.
+        if tcz_version != 200 or not (tcz_attributes & 0x2):
+            raise RuntimeError("Graphics TCZ is library-only (attr=0x%x); "
+                               "main class GraphicsSmokeProbe was not detected"
+                               % tcz_attributes)
         if args.enable_file_sharing and info.get("UIFileSharingEnabled") is not True:
             raise RuntimeError("Cannot collect app-private log: file sharing is disabled")
         metadata = {
@@ -86,6 +101,9 @@ def main():
             "ipa": str(ipa.relative_to(out)),
             "ipaSha256": hashlib.sha256(ipa.read_bytes()).hexdigest(),
             "ipaBytes": ipa.stat().st_size,
+            "tczVersion": tcz_version,
+            "tczAttributes": tcz_attributes,
+            "tczContainsMainWindow": bool(tcz_attributes & 0x2),
             "nativeExecutableSha256": hashlib.sha256(native_bytes).hexdigest(),
             "bundleIdentifier": info.get("CFBundleIdentifier"),
             "minIOS": info.get("MinimumOSVersion"),

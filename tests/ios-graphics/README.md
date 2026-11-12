@@ -8,6 +8,53 @@ Motivation: the previous iOS File/SQLite probe completed successfully on an
 iPhone 17, yet its Appium screenshot was entirely black. A native `onPaint`
 callback or a Device Farm `PASSED` status is **not** proof of visible output.
 
+## First physical iPhone graphics result (2026-11-12)
+
+[GitHub Actions run 43265325205](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43265325205)
+— [Device Farm artifacts 13965903581](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43265325205/artifacts/13965903581).
+The device pool ARN was valid and uploads/scheduling/Appium succeeded.
+The AWS physical run was `COMPLETED FAILED` on **Apple iPhone 14 Pro Max,
+iOS 26.5**, Device Farm run ID
+`d0b99d2d-5f9d-4592-8627-87432239eab9`.
+
+**This is a confirmed gross rendering failure**, not an AWS ARN/build/signing
+failure. The app was installed and foregrounded (XCUITest
+`XCUIElementTypeApplication visible=true`). Its private Documents report
+was successfully pulled and contained `startup=PASS`,
+`controls-created=PASS`, `canvas-painted-initial=PASS` and layout
+`screen=430x839` with no reported Java exception. However the native
+`ios-graphics-initial.png` captured by Appium at 1290×2796 px contained
+**99.80% dark sampled pixels, 0 matching red, green, blue or yellow sampled
+pixels**. The Device Farm video separately shows a black app viewport.
+The original XCUITest assert stopped before tapping the button, so the
+button's touch behavior is **not tested in this first run**.
+
+The next revision of the Appium script captures **both** the initial screenshot
+and a post-tap screenshot even when the first is black. It records independent
+`initialVisualPass`, `buttonEventPass`, and `updatedVisualPass`
+results so event handling can be distinguished from framebuffer presentation.
+The Device Farm spec also writes JUnit XML for result inspection. This
+revision was committed after the physical run; **no new paid run has
+been triggered**.
+
+### Native implementation hypothesis (not proven)
+
+In the SDK 7.3.0 source
+`TotalCrossVM/src/nm/ui/darwin/childview.m`, `-[ChildView updateScreen]`
+starts with `static int ignoreWhiteBackground = 2`, suppressing the first
+**two** `[glcontext presentRenderbuffer:GL_RENDERBUFFER]` calls.
+`graphicsUpdateScreenIOS()` in `mainview.m` routes frames through this
+method. A minimal static app might issue too few complete screen updates,
+leaving the `CAEAGLLayer` black despite successful `onPaint` calls.
+A separate possibility is an OpenGL ES/Skia framebuffer presentation or
+layer issue on iOS 26.5. The current Device Farm logs do not count
+`presentRenderbuffer` calls, and this theory must be verified before changing
+the TCVM. Suggested next native diagnostic: log the number of attempted
+presentations, the `presentRenderbuffer` return value, framebuffer status
+and EAGL context while painting, or make a controlled native test variant
+that forces a third redraw. Do not conflate with the Android File permissions
+investigation.
+
 ## On-screen content
 
 `GraphicsSmokeProbe.java` extends `MainWindow` and draws a simple static UI:

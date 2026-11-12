@@ -39,9 +39,11 @@ env:
 
 jobs:
   build-graphics:
-    name: Compile UI sample + validate iOS IPA and Appium package (free)
+    name: Build cross-platform iOS graphics IPA and Appium package (Linux)
     if: github.event_name == 'push' || (inputs.collect_run_arn == '')
-    runs-on: macos-15
+    # The TotalCross Java deployer cross-packages the iOS IPA on Linux;
+    # no Apple toolchain, local signing, or simulator is used.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4

@@ -1,8 +1,9 @@
-name: iOS graphics / AWS Device Farm
+name: iOS graphics / 2026-08-24 baseline / AWS Device Farm
 
 on:
-  # Every push can verify the source, IPA and Appium package without
-  # consuming paid Device Farm minutes.
+  # Baseline control: use exactly the 24-Aug official SDK and the same
+  # application/visual assertions as the 7.3.0 test. Push builds are free:
+  # only workflow_dispatch execute=true schedules a paid Device Farm run.
   push:
     branches:
       - test/sqlite-plaintext-7.3.0
@@ -67,16 +68,20 @@ jobs:
           assert spec['version'] == 0.1 and 'test' in spec['phases']
           print('iOS graphics Appium test spec validated')
           PY
-      - name: Download immutable official TotalCross 7.3.0 SDK artifact
+      - name: Download immutable official TotalCross 7.2.2 SDK artifact (2026-08-24)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
         run: |
           mkdir -p ios-graphics-results
-          gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq '{id,head_sha,conclusion}' > ios-graphics-results/sdk-run.json
-          test "$(gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq .head_sha)" = "5464c21e3107e3f1ce9c287b724829e2bb870c1d"
-          test "$(gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq .conclusion)" = "success"
-          gh api repos/TotalCross/totalcross/actions/artifacts/12899147776/zip > ios-graphics-results/official-artifact.zip
+          gh api repos/TotalCross/totalcross/actions/runs/32682363876 --jq '{id,head_sha,conclusion}' > ios-graphics-results/sdk-run.json
+          test "$(gh api repos/TotalCross/totalcross/actions/runs/32682363876 --jq .head_sha)" = "452213ae7fdf483f443aa73153f0bdce6dcecf6f"
+          test "$(gh api repos/TotalCross/totalcross/actions/runs/32682363876 --jq .conclusion)" = "success"
+          gh api repos/TotalCross/totalcross/actions/artifacts/9504578512 --jq '{id,name,digest,size_in_bytes,expired}' > ios-graphics-results/sdk-artifact.json
+          test "$(gh api repos/TotalCross/totalcross/actions/artifacts/9504578512 --jq .name)" = "TotalCross-7.2.2"
+          test "$(gh api repos/TotalCross/totalcross/actions/artifacts/9504578512 --jq .expired)" = "false"
+          gh api repos/TotalCross/totalcross/actions/artifacts/9504578512/zip > ios-graphics-results/official-artifact.zip
+          echo '15c614b62c580cfd3bc684c5be599d7ff15e133cb13147ea26a962723ecf919f  ios-graphics-results/official-artifact.zip' | sha256sum -c -
           python -m zipfile -t ios-graphics-results/official-artifact.zip
       - name: Compile and package only the graphics app for iOS
         shell: bash
@@ -102,7 +107,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ios-graphics-7.3.0-build
+          name: ios-graphics-20260824-build
           path: |
             ios-graphics-results/
             !ios-graphics-results/official-sdk/**
@@ -130,7 +135,7 @@ jobs:
           python-version: '3.12'
       - uses: actions/download-artifact@v4
         with:
-          name: ios-graphics-7.3.0-build
+          name: ios-graphics-20260824-build
           path: ios-graphics-results
       - uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
@@ -146,14 +151,14 @@ jobs:
         run: |
           python tools/devicefarm_ios.py run --execute \
             --test-root tests/ios-graphics/devicefarm \
-            --run-name "TotalCross-7.3.0-iOS-Graphics-Smoke" \
+            --run-name "TotalCross-7.2.2-20260824-iOS-Graphics-Control" \
             --ipa ios-graphics-results/deployed/install/ios/ios-graphics-smoke.ipa \
             --out ios-graphics-results
       - name: Publish graphics Device Farm execution and artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ios-graphics-7.3.0-physical-device
+          name: ios-graphics-20260824-physical-device
           path: |
             ios-graphics-results/
             !ios-graphics-results/deployed/**
@@ -189,7 +194,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ios-graphics-7.3.0-recovered
+          name: ios-graphics-20260824-recovered
           path: ios-graphics-results/
           retention-days: 30
           if-no-files-found: warn

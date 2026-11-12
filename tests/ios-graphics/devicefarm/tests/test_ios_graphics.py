@@ -24,6 +24,7 @@ from appium.options.ios import XCUITestOptions
 OUT = Path(os.environ.get("DEVICEFARM_LOG_DIR", "/tmp"))
 OUT.mkdir(parents=True, exist_ok=True)
 TRACE_NAME = "tc-ios-graphics-report.log"
+NATIVE_TRACE_NAME = "tc-ios-native-graphics.log"
 PALETTE = {
     "initial": {"red": (255, 0, 0), "green": (0, 255, 0),
                 "blue": (0, 0, 255), "yellow": (255, 255, 0)},
@@ -173,6 +174,32 @@ def pull_trace(driver, bundle):
     return events
 
 
+def pull_native_graphics_trace(driver, bundle):
+    """Collect the opt-in Objective-C trace even when screenshot assertions fail.
+
+    The trace is created only by the dedicated native-diagnostics build.
+    Missing it is recorded, not treated as a failure of earlier A/B controls.
+    """
+    payload = driver.execute_script("mobile: pullFile", {
+        "remotePath": "@%s:documents/%s" % (bundle, NATIVE_TRACE_NAME),
+    })
+    if not isinstance(payload, str):
+        raise ValueError("native pullFile did not return base64")
+    contents = base64.b64decode(payload, validate=True).decode(
+        "utf-8", errors="replace")
+    save(NATIVE_TRACE_NAME, contents)
+    stages = {}
+    for line in contents.splitlines():
+        match = re.search(r"(?:^| )stage=([a-z-]+)(?: |$)", line)
+        if line.startswith("TC_IOS_GFX ") and match:
+            stage = match.group(1)
+            stages[stage] = stages.get(stage, 0) + 1
+    summary = {"lines": len(contents.splitlines()), "bytes": len(contents.encode("utf-8")),
+               "stages": stages}
+    save("ios-native-graphics-summary.json", json.dumps(summary, indent=2))
+    return summary
+
+
 def has_pass(events, name):
     return any(e.get("stage") == name and e.get("status") == "PASS"
                for e in events)
@@ -214,6 +241,7 @@ class IOSGraphicsTest(unittest.TestCase):
         report = {"result": "INCONCLUSIVE", "source": "TotalCross 7.3.0 iOS graphics",
                   "tests": ["4 colored shapes, Label, Edit, Button, button repaint"]}
         driver = None
+        bundle = None
         try:
             options = XCUITestOptions()
             options.platform_name = "iOS"
@@ -306,6 +334,14 @@ class IOSGraphicsTest(unittest.TestCase):
             report["error"] = repr(error)
             raise
         finally:
+            # Pull the native trace before driver.quit(), even on a black screen,
+            # failed events, or an assertion raised by Appium.
+            if driver is not None and bundle:
+                try:
+                    report["nativeGraphicsTrace"] = pull_native_graphics_trace(driver, bundle)
+                except Exception as exc:
+                    report["nativeGraphicsTraceError"] = repr(exc)
+                    save("ios-native-graphics-pull-error.txt", repr(exc))
             save("ios-graphics-appium-summary.json", json.dumps(report, indent=2))
             if driver is not None:
                 try:

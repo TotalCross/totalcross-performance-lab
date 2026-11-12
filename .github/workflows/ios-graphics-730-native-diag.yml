@@ -45,7 +45,7 @@ jobs:
     # The TotalCross Java deployer cross-packages the iOS IPA on Linux;
     # no Apple toolchain, local signing, or simulator is used.
     runs-on: ubuntu-24.04
-    timeout-minutes: 130
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -66,65 +66,56 @@ jobs:
           assert spec['version'] == 0.1 and 'test' in spec['phases']
           print('iOS graphics Appium test spec validated')
           PY
-      - name: Verify and download the pinned instrumented 7.3.0 SDK
+      - name: Verify iOS and packaging jobs, then download the exact diagnostic SDK
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
         run: |
           set -euo pipefail
           mkdir -p ios-graphics-results
-          run_id=43306936627
-          expected_sha=d1fa0fa4b9186cce4bc1d1f4bdf91872713a3954
-
-          # Wait only for this specific successful build, never for a branch's
-          # latest package. This job does not interact with AWS at all.
-          for i in $(seq 1 180); do
-            gh api "repos/TotalCross/totalcross/actions/runs/${run_id}" \
-              --jq '{id,head_sha,status,conclusion}' > ios-graphics-results/sdk-run.json
-            status="$(python -c 'import json;print(json.load(open("ios-graphics-results/sdk-run.json"))["status"])')"
-            sha="$(python -c 'import json;print(json.load(open("ios-graphics-results/sdk-run.json"))["head_sha"])')"
-            test "${sha}" = "${expected_sha}" || { echo "Unexpected SDK SHA"; exit 1; }
-            if [ "${status}" = completed ]; then
-              python - <<'PY'
+          # The iOS archive and packaged SDK are complete. Do not require
+          # unrelated macOS desktop smoke tests that may wait for a runner.
+          gh api repos/TotalCross/totalcross/actions/runs/43306936627 \
+            --jq '{id,head_sha,name,event,status,conclusion}' > ios-graphics-results/sdk-run.json
+          gh api 'repos/TotalCross/totalcross/actions/runs/43306936627/jobs?per_page=100' \
+            --jq '.jobs' > ios-graphics-results/sdk-jobs.json
+          python - <<'PY'
           import json
           run=json.load(open("ios-graphics-results/sdk-run.json"))
-          assert run["id"] == 43306936627
-          assert run["head_sha"] == "d1fa0fa4b9186cce4bc1d1f4bdf91872713a3954"
-          assert run["conclusion"] == "success", f"SDK CI failed: {run['conclusion']}"
+          assert run["id"]==43306936627
+          assert run["head_sha"]=="d1fa0fa4b9186cce4bc1d1f4bdf91872713a3954"
+          assert run["name"]=="Packages `totalcross`"
+          jobs=json.load(open("ios-graphics-results/sdk-jobs.json"))
+          for expected in ("build / Build `iOS`","Package TotalCross"):
+              matches=[job for job in jobs if job["name"]==expected]
+              assert len(matches)==1, f"Expected exactly one {expected}: {matches}"
+              job=matches[0]
+              assert job["status"]=="completed" and job["conclusion"]=="success", (
+                  f"Required {expected} job did not pass: {job['status']}/{job['conclusion']}")
           PY
-              break
-            fi
-            test "${i}" -lt 180 || { echo "SDK not completed within 90 minutes"; exit 1; }
-            sleep 30
-          done
-
-          gh api "repos/TotalCross/totalcross/actions/runs/${run_id}/artifacts?per_page=100" \
-            --jq '.artifacts' > ios-graphics-results/sdk-artifacts.json
+          gh api repos/TotalCross/totalcross/actions/artifacts/13985350106 \
+            --jq '{id,name,digest,size_in_bytes,expired,workflow_run: {id: .workflow_run.id, head_sha: .workflow_run.head_sha}}' \
+            > ios-graphics-results/sdk-artifact.json
           python - <<'PY'
           import json
-          a=json.load(open("ios-graphics-results/sdk-artifacts.json"))
-          matches=[x for x in a if x["name"]=="TotalCross-7.3.0" and not x["expired"]]
-          assert len(matches)==1, f"Expected one immutable packaged SDK artifact: {matches}"
-          artifact=matches[0]
+          artifact=json.load(open("ios-graphics-results/sdk-artifact.json"))
+          assert artifact["id"]==13985350106
+          assert artifact["name"]=="TotalCross-7.3.0"
+          assert artifact["digest"]=="sha256:34c20bb7242f7ff28c6458a79ff30b043bc2b4ec05c59e13de6e4a2bb01a9a24"
+          assert artifact["expired"] is False
           assert artifact["workflow_run"]["id"]==43306936627
           assert artifact["workflow_run"]["head_sha"]=="d1fa0fa4b9186cce4bc1d1f4bdf91872713a3954"
-          assert artifact["digest"].startswith("sha256:")
-          with open("ios-graphics-results/sdk-artifact.json","w") as f:
-              json.dump({k:artifact[k] for k in ("id","name","digest","size_in_bytes","expired")},f,indent=2)
           PY
-          artifact_id="$(python -c 'import json;print(json.load(open("ios-graphics-results/sdk-artifact.json"))["id"])')"
-          gh api "repos/TotalCross/totalcross/actions/artifacts/${artifact_id}/zip" \
+          gh api repos/TotalCross/totalcross/actions/artifacts/13985350106/zip \
             > ios-graphics-results/official-artifact.zip
           python - <<'PY'
-          import hashlib,json,zipfile
+          import hashlib,zipfile
           p="ios-graphics-results/official-artifact.zip"
-          d=json.load(open("ios-graphics-results/sdk-artifact.json"))
-          with open(p,"rb") as f: digest="sha256:"+hashlib.sha256(f.read()).hexdigest()
-          assert digest==d["digest"],f"SDK artifact digest mismatch: {digest}"
+          with open(p,"rb") as f: actual=hashlib.sha256(f.read()).hexdigest()
+          assert actual=="34c20bb7242f7ff28c6458a79ff30b043bc2b4ec05c59e13de6e4a2bb01a9a24", f"Unexpected artifact bytes: {actual}"
           with zipfile.ZipFile(p) as z:
               assert z.testzip() is None
               assert z.namelist()==["TotalCross-7.3.0.zip"]
-          print("Verified 7.3.0 native-diagnostic SDK",d)
           PY
       - name: Compile and package only the graphics app for iOS
         shell: bash

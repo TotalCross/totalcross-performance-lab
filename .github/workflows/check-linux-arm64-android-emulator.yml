@@ -1,0 +1,110 @@
+name: Probe Linux ARM64 runner / Android Emulator capability
+
+on:
+  push:
+    branches:
+      - test/android-storage-api-24-29-35
+    paths:
+      - .github/workflows/check-linux-arm64-android-emulator.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect ARM64 host, kernel virtualization and Android SDK
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p arm64-probe
+          {
+            echo "=== Timestamp and runner ==="
+            date -u
+            echo "RUNNER_OS=$RUNNER_OS RUNNER_ARCH=$RUNNER_ARCH"
+            uname -a
+            uname -m
+            cat /etc/os-release
+            echo "=== CPU, virtualization ==="
+            lscpu || true
+            grep -Ei '(^features|hypervisor|^processor|^model name)' /proc/cpuinfo | head -n 24 || true
+            echo "=== KVM device and modules ==="
+            ls -l /dev/kvm || true
+            stat /dev/kvm || true
+            lsmod | grep -Ei '^kvm|^vhost' || true
+            test -d /sys/module/kvm && ls -la /sys/module/kvm || true
+            echo "=== Check /dev/kvm open and kernel KVM API ==="
+            python3 - <<'PY'
+          import os, fcntl
+          KVM_GET_API_VERSION = 0xAE00
+          try:
+              fd = os.open('/dev/kvm', os.O_RDWR | os.O_CLOEXEC)
+          except OSError as exc:
+              print(f'KVM_OPEN=FAIL errno={exc.errno} reason={exc.strerror}')
+          else:
+              try:
+                  version = fcntl.ioctl(fd, KVM_GET_API_VERSION, 0)
+                  print(f'KVM_OPEN=PASS KVM_API_VERSION={version}')
+              except OSError as exc:
+                  print(f'KVM_IOCTL=FAIL errno={exc.errno} reason={exc.strerror}')
+              finally:
+                  os.close(fd)
+          PY
+            echo "=== Installed Android SDK and emulator ==="
+            echo "ANDROID_HOME=${ANDROID_HOME:-} ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-}"
+            for x in sdkmanager avdmanager emulator adb qemu-system-aarch64; do
+              command -v "$x" || true
+            done
+            for root in "${ANDROID_HOME:-/nonexistent}" "${ANDROID_SDK_ROOT:-/nonexistent}" /opt/android-sdk /usr/local/lib/android/sdk "$HOME/Android/Sdk"; do
+              if test -d "$root"; then
+                echo "SDK_ROOT $root"
+                ls -la "$root" | head -n 35
+                if test -d "$root/emulator"; then
+                  ls -l "$root/emulator" | head -n 30
+                  file "$root/emulator/emulator" || true
+                fi
+              fi
+            done
+            if command -v emulator >/dev/null 2>&1; then
+              echo "=== emulator host binary ==="
+              file "$(command -v emulator)" || true
+              timeout 15 emulator -version || true
+              timeout 15 emulator -accel-check || true
+            fi
+            if command -v sdkmanager >/dev/null 2>&1; then
+              echo "=== available Android SDK packages for APIs 24/29/35 ==="
+              timeout 75 sdkmanager --list --channel=0 2>&1 | grep -Ei '(^ *emulator|system-images;android-(24|29|35);google_apis;arm64-v8a|^ +Path|^Installed packages:|^Available Packages:)' | head -n 90 || true
+            fi
+            echo "=== Runner virtualization indicators ==="
+            for p in /sys/class/misc/kvm/dev /proc/sys/kernel/osrelease /sys/hypervisor/type /sys/firmware/devicetree/base/hypervisor/compatible; do
+              if test -e "$p"; then echo "$p"; cat "$p" 2>/dev/null || true; fi
+            done
+            echo "=== End probe ==="
+          } 2>&1 | tee arm64-probe/diagnostics.txt
+          python3 - <<'PY'
+          import json, os, pathlib, platform
+          p=pathlib.Path('/dev/kvm')
+          summary={
+            'architecture':platform.machine(),
+            'kernel':platform.release(),
+            'kvmDeviceExists':p.exists(),
+            'kvmReadable':os.access(p,os.R_OK),
+            'kvmWritable':os.access(p,os.W_OK),
+            'androidHome':os.environ.get('ANDROID_HOME'),
+            'androidSdkRoot':os.environ.get('ANDROID_SDK_ROOT')
+          }
+          pathlib.Path('arm64-probe/summary.json').write_text(json.dumps(summary, indent=2))
+          print('SUMMARY:',json.dumps(summary))
+          PY
+      - name: Preserve full proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-arm64-android-emulator-capability
+          path: arm64-probe/
+          retention-days: 30
+          if-no-files-found: error

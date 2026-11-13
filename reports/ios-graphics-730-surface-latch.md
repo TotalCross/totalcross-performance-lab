@@ -75,3 +75,46 @@ then manually select `test/sqlite-plaintext-7.3.0` and `execute=true`.
 This is a diagnostic test, **not a production fix**. Keep the native PR
 in draft and do not merge until the platform lifecycle, rendering and
 interaction behavior have been verified.
+
+
+## Physical outcome — 2026-11-13, run 43359967677
+
+**Status: initial graphics PASS, button interaction FAIL.** The experiment
+restores the initial visible iOS 7.3.0 graphics frame; the full test does
+not pass because the native pen coordinates are not converted to Java
+logical coordinates.
+
+- Run: https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43359967677
+- Physical evidence ZIP: https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43359967677/artifacts/14008865868
+- SDK: source `791e8c465ccfb8c9e0d34588a5467ea9d033c762`, upstream run `43326093367`, artifact `13993740050`.
+- Test source: rebased performance-lab commit `6dfc139c18b1b2ca42e30a9f74ae47cd7f991b65`.
+- Device: iPhone, iOS 26.3, window 402×874 points, ChildView 402×778
+  points, renderbuffer 1206×2334 pixels.
+- `ios-graphics-appium-summary.json`: `initialVisualPass=true`,
+  `darkFraction=0.1253`, expected red/green/blue/yellow sampled hits
+  538/467/474/546.
+- `tc-ios-native-graphics.log`: 117 lines, `screen-change-event
+  changes=0x0 latch=1`, `screen-change-noop-release forcingInitial=1`,
+  `screen-change-committed latchBefore=1`, then
+  `screen-update-guard surfaceWillChange=0 ready=1`.
+- 5 graphics update and present records: first two `suppressed=1`
+  intentionally, three later `presented=1` with `fbStatus=0x8cd5`.
+- UIKit delivers 4 taps × down/up to the native VM queue; all eight
+  events are drained, but the Java `button-pressed` stage never runs and
+  `updatedVisualPass=false`.
+
+### Separate pen coordinate mismatch
+
+The first tap is child-local (201,559) **points** but is forwarded to the
+VM as (603,1677) **physical pixels**. Java's `Settings.screenWidth` is
+402 logical points, and `Window._postEvent` consumes the pen coordinates
+without another scale transform. The native iOS `event.m` passes these
+pixel coordinates directly to `postEvent`, so the Java button cannot
+be hit-tested. This is unlike Android's `androidPhysicalToLogical`
+conversion. Recommended next experiment: in iOS `event.m`, convert
+down/up/drag coordinates by `screen.contentScale` before `postEvent`,
+instrument the conversion, and verify press/repaint. Do not change Appium
+assertions to mask the bug.
+
+The existing surface-latch PR #542 remains a **draft diagnostic**, not a
+verified final release fix. No new paid device run has been initiated.

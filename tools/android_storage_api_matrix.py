@@ -187,6 +187,10 @@ def main():
             abis = sorted({p.split("/")[1] for p in z.namelist()
                            if p.startswith("lib/") and p.endswith(".so")})
         result["apkAbis"] = abis
+        with zipfile.ZipFile(apk) as z:
+            native_abis = sorted({p.split("/")[1] for p in z.namelist()
+                                  if p.startswith("lib/") and p.endswith("/libtcvm.so")})
+        result["nativeVmAbis"] = native_abis
         aapt = find_aapt()
         badging = record(out, "apk-badging.txt", [aapt, "dump", "badging", str(apk)])
         permissions = record(out, "apk-permissions.txt", [aapt, "dump", "permissions", str(apk)])
@@ -210,9 +214,9 @@ def main():
         result["device"] = {"api": device_api, "release": device_version, "abis": device_abis}
         if int(device_api) != args.api_level:
             raise RuntimeError("Emulator API mismatch, got " + device_api)
-        selected = next((abi for abi in device_abis if abi in abis), None)
+        selected = next((abi for abi in device_abis if abi in native_abis), None)
         if not selected:
-            raise RuntimeError("No shared APK/emulator ABI: APK=" + str(abis) + " emulator=" + str(device_abis))
+            raise RuntimeError("No native VM ABI available: VM=" + str(native_abis) + " emulator=" + str(device_abis))
         result["installedAbi"] = selected
         install = record(out, "install.txt",
                          ["adb", "install", "--abi", selected, "-r", str(apk)], timeout=160)

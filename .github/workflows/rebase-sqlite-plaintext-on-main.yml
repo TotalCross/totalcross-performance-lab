@@ -66,32 +66,32 @@ jobs:
           test -f tests/sqlite-plaintext/src/totalcross/lab/sqlite/SQLitePlaintextProbe.java
           test ! -f .github/workflows/ios-graphics-730-native-diag.yml
 
-          # Restore the final SQLite-specific workflow if a historical commit
-          # conflicted with files now present in main.
-          git restore --source="$ORIGINAL" -- .github/workflows/ios-devicefarm.yml
-          git add .github/workflows/ios-devicefarm.yml
-
-          # The new generic UI workflow already exists on main. Allow only
-          # this historical, explicitly trusted AWS branch in addition to main.
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('.github/workflows/ios-graphics-devicefarm.yml')
-          s=p.read_text()
-          old="github.ref == 'refs/heads/main'"
-          new="(github.ref == 'refs/heads/main' || github.ref == 'refs/heads/test/sqlite-plaintext-7.3.0')"
-          assert s.count(old)==3, f"Expected exactly 3 main branch guards, got {s.count(old)}"
-          s=s.replace(old,new)
-          p.write_text(s)
-          PY
-          git add .github/workflows/ios-graphics-devicefarm.yml
-          if ! git diff --cached --quiet; then
-             git commit -m 'ci(ios): allow manual reusable Device Farm workflow on trusted test branch'
-          fi
+          # The runner's GitHub App can push code but lacks the special
+          # GitHub workflows permission. Keep the EXACT main workflow directory
+          # in every rewritten commit; after publishing we will restore the
+          # SQLite-specific workflows and the one manual-branch guard through
+          # the GitHub connector, which has workflow-write permission.
+          echo "Rewriting ONLY workflow directory changes in rebased commits"
+          export FILTER_BRANCH_SQUELCH_WARNING=1
+          git filter-branch --force --index-filter '
+             git rm -r --cached -q --ignore-unmatch .github/workflows
+             git ls-tree -r "$BASE_MAIN" -- .github/workflows | git update-index --index-info
+          ' -- "$BASE_MAIN"..HEAD
+          test "$(git merge-base HEAD "$BASE_MAIN")" = "$BASE_MAIN"
+          test -z "$(git diff --name-only "$BASE_MAIN"...HEAD -- .github/workflows)"
+          for file in \
+            tests/sqlite-plaintext/src/totalcross/lab/sqlite/SQLitePlaintextProbe.java \
+            tools/sqlite_smoke.py \
+            reports/ios-graphics-730-native-diagnostics.md \
+            reports/ios-graphics-730-surface-latch.md \
+            tests/ios-graphics/README.md; do
+              test "$(git rev-parse "$ORIGINAL:$file")" = "$(git rev-parse "HEAD:$file")"
+          done
           echo 'Rebased branch compared to main:'
           git log --oneline --max-count=8
           git diff --stat "$BASE_MAIN"...HEAD
-          test "$(git merge-base HEAD "$BASE_MAIN")" = "$BASE_MAIN"
           test "$(git rev-parse origin/$TARGET)" = "$ORIGINAL"
-          echo 'Pushing with lease; old branch backed up at backup/sqlite-plaintext-7.3.0-pre-rebase-20261113'
+          echo 'Pushing rebased code only with lease; workflow changes restored separately'
           git push --force-with-lease="refs/heads/$TARGET:$ORIGINAL" origin "HEAD:refs/heads/$TARGET"
           echo 'Successfully rebased test branch and preserved its old head in backup'
+

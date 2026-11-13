@@ -37,11 +37,24 @@ jobs:
           git checkout -B local-rebased "$ORIGINAL"
           export GIT_EDITOR=true GIT_SEQUENCE_EDITOR=true
           if ! git rebase --onto "$BASE_MAIN" "$MERGE_BASE" local-rebased -X ours; then
-             echo "::error::Rebase conflict: no remote branch has been modified"
-             git status --short || true
-             git ls-files -u || true
-             git rebase --abort || true
-             exit 1
+             # The final historical cleanup commit deleted the former graphics
+             # workflow, while main now owns its reusable replacement. Preserve
+             # main's file, and refuse to resolve ANY other unanticipated conflict.
+             conflict="$(git diff --name-only --diff-filter=U)"
+             rebasing="$(git rev-parse REBASE_HEAD)"
+             if [ "$conflict" = ".github/workflows/ios-graphics-devicefarm.yml" ] &&
+                [ "$rebasing" = "$ORIGINAL" ]; then
+                 echo "Resolving known final cleanup modify/delete conflict by preserving main workflow"
+                 test -f .github/workflows/ios-graphics-devicefarm.yml
+                 git add .github/workflows/ios-graphics-devicefarm.yml
+                 git rebase --continue
+             else
+                 echo "::error::Unexpected rebase conflict. No remote branch was modified."
+                 git status --short || true
+                 git ls-files -u || true
+                 git rebase --abort || true
+                 exit 1
+             fi
           fi
           echo 'Rebase finished; verifying essential files'
           test -f .github/workflows/ios-graphics-devicefarm.yml

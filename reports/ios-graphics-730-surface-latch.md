@@ -118,3 +118,30 @@ assertions to mask the bug.
 
 The existing surface-latch PR #542 remains a **draft diagnostic**, not a
 verified final release fix. No new paid device run has been initiated.
+
+
+## Independent pen-coordinate fix experiment — 2026-11-13
+
+The black-screen latch experiment has passed the initial-visual check but
+failed Java button dispatch. A **separate, stacked draft PR** addresses this:
+
+- Native PR: https://github.com/TotalCross/totalcross/pull/543
+- Source SHA: `fa293b030c17be55d2672cf37475491a760bb8cd`
+- Upstream package run: https://github.com/TotalCross/totalcross/actions/runs/43365318319
+- Native marker: `pen-coordinate-conversion`
+
+The iOS event bridge converts physical native touch positions to Java
+logical coordinates using `screenContentScale`. For example, at 3×,
+`physical=603,1677` must become `logical=201,559`. This applies only
+to `PEN_DOWN`, `PEN_UP`, and `PEN_DRAG`; multitouch, keyboard, and
+safe-area event coordinates are unchanged.
+
+Use the existing **single** performance-lab graphics workflow on the
+authorized `test/sqlite-plaintext-7.3.0` branch. Pin the SDK source SHA
+and run; set `native_markers=screen-change-noop-release,pen-coordinate-conversion`.
+First execute with `execute=false` to verify the IPA, then only an
+explicitly approved physical AWS run may use `execute=true`.
+
+Acceptance requires all three existing Appium checks to pass, and native
+trace confirmation of the logical pen coordinates. Until a physical run
+passes, PR #543 is a hypothesis test, **not a verified production fix**.

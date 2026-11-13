@@ -1,3 +1,5 @@
+> **Current workflow (November 2026):** [iOS graphics / reusable Device Farm](https://github.com/TotalCross/totalcross-performance-lab/actions/workflows/ios-graphics-devicefarm.yml) on `main`. Supply the SDK run ID, source SHA, version, and `test_ref`; do not add experiment-specific YAMLs. See [instructions](https://github.com/TotalCross/totalcross-performance-lab/blob/main/docs/ios-graphics-devicefarm.md). Old workflows/scripts remain in Git history for auditability, but have been removed from this branch. The separate SQLite test is unchanged.
+
 # iOS 7.3.0 — basic Skia and UI visibility probe
 
 This is a **standalone, graphical smoke test** for the pinned official

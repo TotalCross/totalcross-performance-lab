@@ -145,3 +145,47 @@ explicitly approved physical AWS run may use `execute=true`.
 Acceptance requires all three existing Appium checks to pass, and native
 trace confirmation of the logical pen coordinates. Until a physical run
 passes, PR #543 is a hypothesis test, **not a verified production fix**.
+
+
+## Physical end-to-end PASS — 2026-11-13, run 43366672321
+
+The graphics + pen scaling experiment in
+[PR #543](https://github.com/TotalCross/totalcross/pull/543)
+has now **passed all Appium assertions** on one physical iPhone.
+
+- Workflow: https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43366672321
+- Device Farm physical evidence: https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43366672321/artifacts/14010778620
+- Build artifact: https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43366672321/artifacts/14010512601
+- Native SDK source: `fa293b030c17be55d2672cf37475491a760bb8cd`;
+  build `43365318319`, artifact `14010830270`, SHA-256
+  `a881725796af1371cb02dad47184a464feb54349b45a36693168fe9e082cc680`.
+- Java test commit: `0bb5c002bd8ad426aee3b3202517dda2ebd5cc02`.
+- Device: **Apple iPhone 16 Pro (A3083), iOS 26.0**,
+  1206×2622 screenshot, 402×874 logical points; GL child 402×778 points,
+  1206×2334 native drawable at scale 3×.
+- Appium: `initialVisualPass=true`, `buttonEventPass=true`,
+  `updatedVisualPass=true`, `failures=[]`.
+- Event trace: `button-pressed changed=true;edit=EDIT UPDATED` and
+  `canvas-painted-updated` after **one tap**.
+- Native surface trace: `screen-change-event changes=0x0 latch=1` then
+  `screen-change-noop-release forcingInitial=1`, followed by
+  `surfaceWillChange=0` and 9 successful presents (first 2 intentionally
+  suppressed); framebuffer `0x8cd5` complete.
+- Native input trace: `touch local=201,559 vm=603,1677 scale=3`;
+  `pen-coordinate-conversion` reported
+  `PEN_DOWN physical=603,1677 logical=201,559` and
+  `PEN_UP physical=603,1677 logical=201,559`.
+- Initial palette RGBY passed; updated palette CMOP passed.
+- Appium pytest: **1 test passed** in 24.23 seconds.
+
+**Interpretation:** Both targeted regressions have now been experimentally
+validated in combination: the initial surface flag suppressed rendering, and
+physical pen coordinates prevented logical Java button hit-testing. The final
+diagnostic SDK resolves both on the tested device/OS configuration. The
+experiment does **not** establish that all other iOS models, rotations,
+screen scales, multi-touch or keyboard paths are regression-free.
+
+**Production follow-up:** Extract only the functional fixes from PRs #542/#543
+and remove all `TC_IOS_GFX` tracing/file writes and temporary CI branch
+triggers before a release PR. Preserve this diagnostic report for reference.
+No additional paid Device Farm run has been scheduled.

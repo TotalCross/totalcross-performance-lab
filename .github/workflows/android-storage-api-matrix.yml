@@ -1,0 +1,116 @@
+name: Android 7 / 10 / 15 filesystem and SQLite permission matrix
+run-name: Pinned TC 7.3.0 storage regression / Android API 24, 29, 35
+
+on:
+  push:
+    branches:
+      - test/android-storage-api-24-29-35
+    paths:
+      - .github/workflows/android-storage-api-matrix.yml
+      - tools/android_storage_api_matrix.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-storage:
+    name: SQLite and permissions / Android API ${{ matrix.api }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - api: 24
+            version: '7.0'
+          - api: 29
+            version: '10'
+          - api: 35
+            version: '15'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate investigation script
+        shell: bash
+        run: |
+          python -m py_compile tools/android_storage_api_matrix.py
+          python tools/android_storage_api_matrix.py --help
+      - name: Enable KVM for Android emulator
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          ls -l /dev/kvm
+      - name: Retrieve *identical* prior-build Android APK for each API
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p sqlite-smoke-results
+          gh api repos/TotalCross/totalcross-performance-lab/actions/runs/43359416885             --jq '{id,head_sha,status,conclusion}' | tee sqlite-smoke-results/source-run.json
+          test "$(gh api repos/TotalCross/totalcross-performance-lab/actions/runs/43359416885 --jq .conclusion)" = "failure"
+          # The overall upstream workflow was marked failed by unrelated jobs;
+          # its Android 15 emulator job succeeded and published this artifact.
+          gh api repos/TotalCross/totalcross-performance-lab/actions/artifacts/14007058527             --jq '{id,name,digest,expired,size_in_bytes}' | tee sqlite-smoke-results/source-artifact.json
+          test "$(gh api repos/TotalCross/totalcross-performance-lab/actions/artifacts/14007058527 --jq .name)" = "sqlite-plaintext-7.3.0-android-emulator"
+          test "$(gh api repos/TotalCross/totalcross-performance-lab/actions/artifacts/14007058527 --jq .expired)" = "false"
+          gh api repos/TotalCross/totalcross-performance-lab/actions/artifacts/14007058527/zip             > sqlite-smoke-results/previous-android15-artifact.zip
+          python -m zipfile -t sqlite-smoke-results/previous-android15-artifact.zip
+          python - <<'PY'
+          import hashlib,json,pathlib
+          d=pathlib.Path('sqlite-smoke-results')
+          artifact=json.loads((d/'source-artifact.json').read_text())
+          digest='sha256:'+hashlib.sha256((d/'previous-android15-artifact.zip').read_bytes()).hexdigest()
+          assert digest == artifact['digest'], (digest,artifact['digest'])
+          print('Verified previous official APK artifact',artifact['id'],digest)
+          PY
+          unzip -q sqlite-smoke-results/previous-android15-artifact.zip             'deployed/install/android/*' -d sqlite-smoke-results
+          test -f sqlite-smoke-results/deployed/install/android/sqlite-plaintext-smoke.apk
+          python - <<'PY'
+          import hashlib,pathlib
+          p=pathlib.Path('sqlite-smoke-results/deployed/install/android/sqlite-plaintext-smoke.apk')
+          print('Exact Android APK SHA256:',hashlib.sha256(p.read_bytes()).hexdigest())
+          PY
+      - name: Boot Android ${{ matrix.version }} emulator and collect real I/O observations
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          emulator-options: -no-snapshot-load -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          emulator-boot-timeout: 600
+          script: python3 tools/android_storage_api_matrix.py --api-level ${{ matrix.api }} --out sqlite-smoke-results --timeout 55
+      - name: Print condensed result for each Android API
+        if: always()
+        shell: bash
+        run: |
+          test ! -f sqlite-smoke-results/android-api-matrix-summary.json ||             python - <<'PY'
+          import json
+          r=json.load(open('sqlite-smoke-results/android-api-matrix-summary.json'))
+          print('TEST STATUS:',r['status'],'Android API:',r['requestedApi'],'APK:',r.get('apkSha256'))
+          print('Manifest:',r.get('manifest'))
+          for name,phase in r.get('phases',{}).items():
+              print(name,'internal:',phase['internalPassed'],'external:',phase['externalResult'],
+                    'permission UI:',phase['sawPermissionUI'])
+              for f in phase['failedEvents']:
+                  print(' FAILED',f['stage'],repr(f['detail'])[:900])
+          if 'error' in r:
+              print('INFRA ERROR',r['error'])
+          PY
+      - name: Archive emulator API-specific proof (including failing results)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-storage-sqlite-api-${{ matrix.api }}
+          path: |
+            sqlite-smoke-results/
+            !sqlite-smoke-results/previous-android15-artifact.zip
+          retention-days: 30
+          if-no-files-found: warn

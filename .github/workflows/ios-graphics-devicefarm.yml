@@ -1,33 +1,307 @@
-# Safe GitHub Actions default-branch entrypoint. The full graphics workflow
-# is on the OIDC-authorized test/sqlite-plaintext-7.3.0 branch.
-# NEVER schedules a physical device on main.
-name: iOS graphics / AWS Device Farm
+# Stable default-branch workflow for all iOS graphics regression experiments.
+# A user chooses an immutable SDK run/source and a test source ref.
+# No AWS device is ever scheduled unless the manual execute=true input is set.
+name: iOS graphics / reusable Device Farm
+run-name: iOS graphics / ${{ inputs.sdk_version || 'recovery' }} / SDK ${{ inputs.sdk_run_id || 'existing run' }} / ${{ inputs.execute && 'physical device' || 'build or collect' }}
 
 on:
   workflow_dispatch:
     inputs:
+      sdk_run_id:
+        description: "TotalCross/totalcross SDK package workflow run ID"
+        type: string
+        required: false
+        default: ''
+      sdk_source_sha:
+        description: "Exact 40-character TotalCross SDK source commit SHA"
+        type: string
+        required: false
+        default: ''
+      sdk_version:
+        description: "SDK version, e.g. 7.2.2 or 7.3.0"
+        type: string
+        required: true
+        default: '7.3.0'
+      sdk_artifact_id:
+        description: "Optional exact SDK artifact ID (auto-detect if empty)"
+        type: string
+        required: false
+        default: ''
+      expected_sdk_digest:
+        description: "Optional SDK artifact sha256: digest"
+        type: string
+        required: false
+        default: ''
+      test_ref:
+        description: "Branch or commit containing GraphicsSmokeProbe/Appium tests"
+        type: string
+        required: true
+        default: 'test/sqlite-plaintext-7.3.0'
+      native_markers:
+        description: "Optional comma-separated Mach-O strings to verify (e.g. screen-change-noop-release)"
+        type: string
+        required: false
+        default: ''
       execute:
-        description: "Schedule a billable graphics test on one iPhone (choose test branch)"
+        description: "Schedule one billable physical iPhone run in AWS Device Farm"
         type: boolean
         required: true
         default: false
       collect_run_arn:
-        description: "Existing graphics Device Farm run ARN to recover (free)"
+        description: "Optional existing Device Farm ARN (retrieve only, no new device)"
         type: string
         required: false
         default: ''
+  pull_request:
+    paths:
+      - .github/workflows/ios-graphics-devicefarm.yml
+      - tools/ios_graphics_sdk_build.py
+      - tools/verify_ios_sdk_artifact.py
+      - tools/devicefarm_ios.py
+      - tools/inspect_ios_ipa.py
+      - tests/ios-graphics/**
+      - docs/ios-graphics-devicefarm.md
 
 permissions:
   contents: read
 
+env:
+  AWS_REGION: us-west-2
+  AWS_DEVICE_FARM_PROJECT_ARN: ${{ vars.AWS_DEVICE_FARM_PROJECT_ARN }}
+  AWS_DEVICE_FARM_DEVICE_POOL_ARN: ${{ vars.AWS_DEVICE_FARM_DEVICE_POOL_ARN }}
+
 jobs:
-  select-graphics-feature-branch:
+  lint-workflow:
+    name: Validate shared workflow and helpers (no AWS)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     steps:
-      - name: Explain required branch and billing guard
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check Python syntax, CLI and workflow YAML
         run: |
-          echo "::error::Select branch test/sqlite-plaintext-7.3.0 in Run workflow."
-          echo "::error::Do not run on main: this safe bootstrap job never contacts AWS."
-          echo "On the test branch, execute=false builds only the IPA; execute=true"
-          echo "submits one physical device test after verifying the iPhone pool."
-          exit 1
+          set -euo pipefail
+          python -m py_compile tools/ios_graphics_sdk_build.py tools/verify_ios_sdk_artifact.py tools/devicefarm_ios.py tools/inspect_ios_ipa.py tests/ios-graphics/devicefarm/tests/test_ios_graphics.py
+          python tools/ios_graphics_sdk_build.py --help > /dev/null
+          python tools/verify_ios_sdk_artifact.py --help > /dev/null
+          python -m pip install --disable-pip-version-check PyYAML
+          python - <<'PY'
+          import pathlib, yaml
+          p=pathlib.Path('.github/workflows/ios-graphics-devicefarm.yml')
+          d=yaml.safe_load(p.read_text())
+          triggers=d.get('on',d.get(True,{}))
+          assert 'workflow_dispatch' in triggers and 'pull_request' in triggers
+          assert {'execute','sdk_source_sha','sdk_run_id','test_ref'}.issubset(triggers['workflow_dispatch']['inputs'])
+          assert {'build-graphics','physical-graphics-test','collect-graphics-run'}.issubset(d['jobs'])
+          assert "inputs.execute == true" in p.read_text()
+          print('Generic iOS workflow and billing guard validated')
+          PY
+
+  build-graphics:
+    name: Build graphics IPA with selected SDK and test ref (no AWS)
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.collect_run_arn == ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    env:
+      SDK_RUN_ID: ${{ inputs.sdk_run_id }}
+      SDK_SOURCE_SHA: ${{ inputs.sdk_source_sha }}
+      SDK_VERSION: ${{ inputs.sdk_version }}
+      SDK_ARTIFACT_ID: ${{ inputs.sdk_artifact_id }}
+      SDK_DIGEST: ${{ inputs.expected_sdk_digest }}
+      TEST_REF: ${{ inputs.test_ref }}
+      NATIVE_MARKERS: ${{ inputs.native_markers }}
+    steps:
+      - name: Checkout trusted utilities from main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Checkout selected test source separately
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.test_ref }}
+          path: experiment-source
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Select test sources and record the actual commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f experiment-source/tests/ios-graphics/src/totalcross/lab/graphics/GraphicsSmokeProbe.java
+          test -f experiment-source/tests/ios-graphics/devicefarm/tests/test_ios_graphics.py
+          test -n "$SDK_RUN_ID"
+          test -n "$SDK_SOURCE_SHA"
+          test_sha="$(git -C experiment-source rev-parse HEAD)"
+          echo "TEST_SOURCE_SHA=$test_sha" >> "$GITHUB_ENV"
+          mkdir -p ios-graphics-results
+          printf '{"requestedRef":"%s","resolvedCommit":"%s"}\n' "$TEST_REF" "$test_sha" > ios-graphics-results/test-source.json
+          rm -rf tests/ios-graphics/src tests/ios-graphics/devicefarm/tests
+          cp -a experiment-source/tests/ios-graphics/src tests/ios-graphics/src
+          cp -a experiment-source/tests/ios-graphics/devicefarm/tests tests/ios-graphics/devicefarm/tests
+          python -m py_compile tools/ios_graphics_sdk_build.py tools/verify_ios_sdk_artifact.py tests/ios-graphics/devicefarm/tests/test_ios_graphics.py
+          python -m pip install --disable-pip-version-check PyYAML
+          python - <<'PY'
+          import yaml
+          spec=yaml.safe_load(open("tests/ios-graphics/devicefarm/devicefarm-test-spec.yml"))
+          assert spec["version"]==0.1 and "test" in spec["phases"]
+          print("Selected test ref and stable Appium test specification validated")
+          PY
+      - name: Verify upstream iOS package run, SHA and SDK archive
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          python tools/verify_ios_sdk_artifact.py \
+            --sdk-run-id "$SDK_RUN_ID" \
+            --sdk-source-sha "$SDK_SOURCE_SHA" \
+            --sdk-version "$SDK_VERSION" \
+            --sdk-artifact-id "$SDK_ARTIFACT_ID" \
+            --expected-digest "$SDK_DIGEST" \
+            --out ios-graphics-results \
+            --wait-seconds 4800
+      - name: Compile selected Java smoke and package iOS IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact_id="$(python -c 'import json;print(json.load(open("ios-graphics-results/sdk-artifact.json"))["id"])')"
+          python tools/ios_graphics_sdk_build.py \
+            --package ios-graphics-results/official-artifact.zip \
+            --sdk-run-id "$SDK_RUN_ID" \
+            --sdk-source-sha "$SDK_SOURCE_SHA" \
+            --sdk-version "$SDK_VERSION" \
+            --sdk-artifact-id "$artifact_id" \
+            --test-ref "$TEST_REF" \
+            --test-sha "$TEST_SOURCE_SHA" \
+            --required-markers "$NATIVE_MARKERS" \
+            --out ios-graphics-results \
+            --enable-file-sharing
+      - name: Create offline Appium package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check boto3
+          mkdir -p tests/ios-graphics/devicefarm/wheelhouse
+          python -m pip download --only-binary=:all: \
+            --dest tests/ios-graphics/devicefarm/wheelhouse \
+            --requirement tests/ios-graphics/devicefarm/requirements.txt
+          python tools/devicefarm_ios.py package \
+            --test-root tests/ios-graphics/devicefarm \
+            --out ios-graphics-results
+      - name: Preserve build, provenance, IPA and Appium evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-graphics-build
+          path: |
+            ios-graphics-results/
+            !ios-graphics-results/official-sdk/**
+            !ios-graphics-results/official-artifact.zip
+            !ios-graphics-results/classes/**
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Show failed build logs
+        if: failure()
+        shell: bash
+        run: |
+          for file in ios-graphics-results/compile.log ios-graphics-results/deploy.log; do
+            if test -f "$file"; then echo "=== $file ==="; tail -n 100 "$file"; fi
+          done
+
+  physical-graphics-test:
+    name: Render graphics on AWS Device Farm (billable; manual opt-in)
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.execute == true && inputs.collect_run_arn == ''
+    needs: build-graphics
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-graphics-build
+          path: ios-graphics-results
+      - uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEVICE_FARM_ROLE_ARN }}
+          aws-region: us-west-2
+          role-session-name: TotalCrossGraphicsIOS
+      - name: Validate selected physical iPhone pool
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check boto3
+          python tools/devicefarm_ios.py validate --out ios-graphics-results
+      - name: Execute Appium graphics test and collect physical evidence
+        shell: bash
+        run: |
+          python tools/devicefarm_ios.py run --execute \
+            --test-root tests/ios-graphics/devicefarm \
+            --run-name "TotalCross-${{ inputs.sdk_version }}-iOS-Graphics-${{ github.run_id }}" \
+            --ipa ios-graphics-results/deployed/install/ios/ios-graphics-smoke.ipa \
+            --out ios-graphics-results
+      - name: Preserve complete Device Farm evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-graphics-physical-device
+          path: |
+            ios-graphics-results/
+            !ios-graphics-results/deployed/**
+            !ios-graphics-results/devicefarm-appium-python.zip
+          retention-days: 30
+          if-no-files-found: warn
+
+  collect-graphics-run:
+    name: Recover existing AWS Device Farm run (no scheduling)
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.execute == false && inputs.collect_run_arn != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      EXISTING_RUN_ARN: ${{ inputs.collect_run_arn }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEVICE_FARM_ROLE_ARN }}
+          aws-region: us-west-2
+          role-session-name: TotalCrossGraphicsCollect
+      - run: python -m pip install --disable-pip-version-check boto3
+      - name: Recover logs/screenshots without new uploads or device scheduling
+        shell: bash
+        run: |
+          python tools/devicefarm_ios.py collect \
+            --run-arn "$EXISTING_RUN_ARN" \
+            --out ios-graphics-results
+      - name: Preserve recovered artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-graphics-recovered
+          path: ios-graphics-results/
+          retention-days: 30
+          if-no-files-found: warn

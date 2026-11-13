@@ -1,0 +1,81 @@
+version: 0.1
+# Use a supported macOS host appropriate for the selected physical iPhone.
+ios_test_host: default
+
+phases:
+  install:
+    commands:
+      - devicefarm-cli use python 3.12
+      - python --version
+      # Node 22 is supported on both macos_sequoia and macos_tahoe hosts.
+      - devicefarm-cli use node 22
+      - devicefarm-cli use appium 3
+      - appium --version
+      - python -m pip install --no-index --find-links="$DEVICEFARM_TEST_PACKAGE_PATH/wheelhouse" -r "$DEVICEFARM_TEST_PACKAGE_PATH/requirements.txt"
+
+  pre_test:
+    commands:
+      - |-
+        set -e
+        # Device Farm provides prebuilt WDA bundles for supported XCUITest drivers.
+        APPIUM_DRIVER_MAJOR="$(appium driver list --installed --json | jq -r '.xcuitest.version' | cut -d . -f 1)"
+        WDA_VAR="DEVICEFARM_APPIUM_WDA_DERIVED_DATA_PATH_V$APPIUM_DRIVER_MAJOR"
+        WDA_PATH="$(printenv "$WDA_VAR" || true)"
+        if [ -z "$WDA_PATH" ]; then
+          WDA_VAR="$(env | grep '^DEVICEFARM_APPIUM_WDA_DERIVED_DATA_PATH_V' | cut -d = -f 1 | sort -V -r | head -n 1)"
+          WDA_PATH="$(printenv "$WDA_VAR" || true)"
+        fi
+        echo "Prebuilt WDA: ${WDA_VAR:-none}"
+        DEVICE_UDID="$DEVICEFARM_DEVICE_UDID"
+        if [ "${DEVICEFARM_DEVICE_OS_VERSION%%.*}" -le 16 ]; then
+          DEVICE_UDID="$(echo "$DEVICE_UDID" | tr -d '-')"
+        fi
+        # Expose the physical device and the IPA provided by Device Farm.
+        python -c 'import os,json; print(json.dumps({k:os.environ.get(k) for k in ("DEVICEFARM_DEVICE_PLATFORM_NAME","DEVICEFARM_DEVICE_OS_VERSION","DEVICEFARM_DEVICE_NAME","DEVICEFARM_APP_PATH")},indent=2))'
+        export DEVICE_UDID WDA_PATH
+        python - <<'PY' > "$DEVICEFARM_LOG_DIR/appium-default-capabilities.json"
+        import json, os
+        data = {
+            "platformName": "iOS",
+            "appium:deviceName": os.environ["DEVICEFARM_DEVICE_NAME"],
+            "appium:app": os.environ["DEVICEFARM_APP_PATH"],
+            "appium:udid": os.environ["DEVICE_UDID"],
+            "appium:platformVersion": os.environ["DEVICEFARM_DEVICE_OS_VERSION"],
+            "appium:automationName": "XCUITest",
+        }
+        if os.environ.get("WDA_PATH"):
+            data.update({"appium:derivedDataPath": os.environ["WDA_PATH"],
+                         "appium:usePrebuiltWDA": True})
+        print(json.dumps(data))
+        PY
+        appium --log-timestamp --log-no-colors --default-capabilities "$(cat "$DEVICEFARM_LOG_DIR/appium-default-capabilities.json")" > "$DEVICEFARM_LOG_DIR/appium.log" 2>&1 &
+        APPIUM_PID=$!
+        echo "Appium PID: $APPIUM_PID"
+        for n in $(seq 1 60); do
+          if curl --silent --fail http://127.0.0.1:4723/status >/dev/null; then
+            echo "Appium server ready"
+            break
+          fi
+          if [ "$n" -eq 60 ]; then
+            echo "Appium server did not start"
+            tail -n 100 "$DEVICEFARM_LOG_DIR/appium.log"
+            exit 1
+          fi
+          sleep 2
+        done
+
+  test:
+    commands:
+      - |-
+        cd "$DEVICEFARM_TEST_PACKAGE_PATH"
+        # pytest runs our unittest.TestCase as well, while emitting the JUnit XML
+        # expected by AWS Device Farm's test-insights parser.
+        python -m pytest tests -vv --junitxml="$DEVICEFARM_LOG_DIR/junit.xml" 2>&1 | tee "$DEVICEFARM_LOG_DIR/unittest.log"
+        exit ${PIPESTATUS[0]}
+
+  post_test:
+    commands:
+      - echo "Collected Appium, unittest, screenshot and XML artifacts"
+
+artifacts:
+  - $DEVICEFARM_LOG_DIR

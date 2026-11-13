@@ -140,3 +140,34 @@ on the existing Linux/KVM runners.
 **Caveat:** The summary's `readExternal=false` comes from `aapt dump permissions`; Android's `dumpsys package` shows `READ_EXTERNAL_STORAGE` in the requested-permissions list. This discrepancy must be investigated before using aapt-derived absence of READ as definitive proof of a manifest omission.
 
 **Unchanged limitation:** API **24** and **29** remain *untested at runtime* on this exact APK due to the preceding ABI and GitHub-hosted HVF limitations. A local physical Apple Silicon host with working virtualization, or another suitable ARM64 host, is still needed.
+
+
+## GitHub-hosted Linux ARM64 runner capability probe — 2026-11-13
+
+[Workflow 43480766868](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43480766868)
+completed successfully with `runs-on: ubuntu-24.04-arm`.
+[Diagnostic artifact 14064647940](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43480766868/artifacts/14064647940).
+
+Observed on the actual runner:
+- `RUNNER_ARCH=ARM64`; `uname -m=aarch64`.
+- Azure kernel: `7.0.0-1017-azure`.
+- `/dev/kvm` **does not exist** (`stat` and `ls`: ENOENT);
+  `os.open('/dev/kvm', O_RDWR)` returns `errno=2` / no such file.
+- Neither `ANDROID_HOME` nor `ANDROID_SDK_ROOT` set;
+  no Android SDK, `sdkmanager`, `adb` or `emulator` preinstalled.
+
+**Conclusion:** GitHub-hosted Ubuntu ARM64 can run ARM64 userland and the
+TotalCross ABI but cannot run a **KVM-accelerated Android Emulator** on
+this runner. This directly confirms the nested-virtualization limitation,
+not an Android SDK runtime result. The probe did not install or boot an
+unaccelerated/custom-built Linux ARM64 emulator.
+
+Android Emulator documentation describes Linux ARM64 *source* cross
+compilation and requires KVM for accelerated ARM64 system images. Linux
+ARM64 emulator binaries are not conventionally packaged in Google's
+SDK Manager; a custom build would be required. Running an emulator with
+software emulation, if configured, is a separate slow experiment and has
+not been attempted.
+
+This does not change the inconclusive Android 7 (API 24) / Android 10
+(API 29) permission regression result.

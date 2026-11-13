@@ -18,6 +18,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: true
+          token: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
       - name: Rebase locally, verify it, and update only the test branch
         shell: bash
         env:

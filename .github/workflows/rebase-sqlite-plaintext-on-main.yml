@@ -1,0 +1,83 @@
+name: One-time rebase of SQLite test branch onto main
+on:
+  push:
+    branches:
+      - rebase/sqlite-plaintext-7.3.0-on-main-20261113
+    paths:
+      - .github/workflows/rebase-sqlite-plaintext-on-main.yml
+
+permissions:
+  contents: write
+
+jobs:
+  rebase:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Rebase locally, verify it, and update only the test branch
+        shell: bash
+        env:
+          ORIGINAL: c39ef61cde7b91310be6bdbf116a6ad733ab2295
+          BASE_MAIN: 39fa3ffa8e412df0504f5fc5712dd74e9eeeb69a
+          MERGE_BASE: fa4a65b7553553acaadeac107fd199968167d254
+          TARGET: test/sqlite-plaintext-7.3.0
+        run: |
+          set -euo pipefail
+          git config user.name 'TotalCross CI Rebase'
+          git config user.email 'actions@users.noreply.github.com'
+          git fetch origin '+refs/heads/main:refs/remotes/origin/main' '+refs/heads/test/sqlite-plaintext-7.3.0:refs/remotes/origin/test/sqlite-plaintext-7.3.0'
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          test "$(git rev-parse "origin/$TARGET")" = "$ORIGINAL"
+          test "$(git merge-base "$ORIGINAL" "$BASE_MAIN")" = "$MERGE_BASE"
+          echo 'Rebasing 107 original, linear commits onto main with git rebase'
+          git checkout -B local-rebased "$ORIGINAL"
+          export GIT_EDITOR=true GIT_SEQUENCE_EDITOR=true
+          if ! git rebase --onto "$BASE_MAIN" "$MERGE_BASE" local-rebased -X ours; then
+             echo "::error::Rebase conflict: no remote branch has been modified"
+             git status --short || true
+             git ls-files -u || true
+             git rebase --abort || true
+             exit 1
+          fi
+          echo 'Rebase finished; verifying essential files'
+          test -f .github/workflows/ios-graphics-devicefarm.yml
+          test -f tools/ios_graphics_sdk_build.py
+          test -f tools/verify_ios_sdk_artifact.py
+          test -f .github/workflows/sqlite-plaintext-7.3.0.yml
+          test -f reports/ios-graphics-730-surface-latch.md
+          test -f tests/sqlite-plaintext/src/totalcross/lab/sqlite/SQLitePlaintextProbe.java
+          test ! -f .github/workflows/ios-graphics-730-native-diag.yml
+
+          # Restore the final SQLite-specific workflow if a historical commit
+          # conflicted with files now present in main.
+          git restore --source="$ORIGINAL" -- .github/workflows/ios-devicefarm.yml
+          git add .github/workflows/ios-devicefarm.yml
+
+          # The new generic UI workflow already exists on main. Allow only
+          # this historical, explicitly trusted AWS branch in addition to main.
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/ios-graphics-devicefarm.yml')
+          s=p.read_text()
+          old="github.ref == 'refs/heads/main'"
+          new="(github.ref == 'refs/heads/main' || github.ref == 'refs/heads/test/sqlite-plaintext-7.3.0')"
+          assert s.count(old)==3, f"Expected exactly 3 main branch guards, got {s.count(old)}"
+          s=s.replace(old,new)
+          p.write_text(s)
+          PY
+          git add .github/workflows/ios-graphics-devicefarm.yml
+          if ! git diff --cached --quiet; then
+             git commit -m 'ci(ios): allow manual reusable Device Farm workflow on trusted test branch'
+          fi
+          echo 'Rebased branch compared to main:'
+          git log --oneline --max-count=8
+          git diff --stat "$BASE_MAIN"...HEAD
+          test "$(git merge-base HEAD "$BASE_MAIN")" = "$BASE_MAIN"
+          test "$(git rev-parse origin/$TARGET)" = "$ORIGINAL"
+          echo 'Pushing with lease; old branch backed up at backup/sqlite-plaintext-7.3.0-pre-rebase-20261113'
+          git push --force-with-lease="refs/heads/$TARGET:$ORIGINAL" origin "HEAD:refs/heads/$TARGET"
+          echo 'Successfully rebased test branch and preserved its old head in backup'

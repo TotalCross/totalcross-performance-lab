@@ -37,11 +37,39 @@ def main():
             "scheduleInvoked":False,"devices":[],"existingPools":[]}
     try:
         client=boto3.client("devicefarm",region_name=REGION)
+        project=os.getenv("AWS_DEVICE_FARM_PROJECT_ARN", "")
+        if project:
+            try:
+                client.get_project(arn=project)
+                pools=paginate(client,"list_device_pools","devicePools",arn=project)
+                report["existingPools"]=[{
+                    "arn":p.get("arn"),"name":p.get("name"),
+                    "maxDevices":p.get("maxDevices"),"type":p.get("type"),
+                    "rules":p.get("rules")
+                } for p in pools]
+                report["projectPoolLookup"]="PASS"
+                print("Existing project pools:",[(p["name"],p["rules"]) for p in report["existingPools"]])
+            except ClientError as err:
+                report["projectPoolLookup"]="DENIED_OR_FAILED"
+                report["projectPoolErrorCode"]=err.response["Error"].get("Code")
+        else:
+            report["projectPoolLookup"]="NOT_CONFIGURED"
+
         # Explicitly avoid discovering only AVAILABLE phones: a BUSY device
         # is still a useful model for a later test and may soon be available.
-        devices=paginate(client,"list_devices","devices",filters=[
-            {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]}
-        ])
+        # ListDevices may require a read-only IAM permission missing from the
+        # existing (iOS-oriented) Device Farm OIDC role. Preserve pool findings.
+        try:
+            devices=paginate(client,"list_devices","devices",filters=[
+                {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]}
+            ])
+            report["deviceLookup"]="PASS"
+        except ClientError as err:
+            devices=[]
+            report["deviceLookup"]="DENIED_OR_FAILED"
+            report["deviceLookupErrorCode"]=err.response["Error"].get("Code")
+            report["deviceLookupError"]=str(err)[:1200]
+            print("Device list unavailable:",report["deviceLookupError"],file=sys.stderr)
         inventory=[]
         for d in devices:
             version=str(d.get("os", ""))
@@ -59,23 +87,6 @@ def main():
                 "instanceArn":d.get("instanceArn"),
             })
         report["devices"]=sorted(inventory,key=lambda x:(int(x["osMajor"]),x["name"] or ""))
-        report["deviceLookup"]="PASS"
-        project=os.getenv("AWS_DEVICE_FARM_PROJECT_ARN", "")
-        if project:
-            try:
-                client.get_project(arn=project)
-                pools=paginate(client,"list_device_pools","devicePools",arn=project)
-                report["existingPools"]=[{
-                    "arn":p.get("arn"),"name":p.get("name"),
-                    "maxDevices":p.get("maxDevices"),"type":p.get("type"),
-                    "rules":p.get("rules")
-                } for p in pools]
-                report["projectPoolLookup"]="PASS"
-            except ClientError as err:
-                report["projectPoolLookup"]="DENIED_OR_FAILED"
-                report["projectPoolErrorCode"]=err.response["Error"].get("Code")
-        else:
-            report["projectPoolLookup"]="NOT_CONFIGURED"
         report["byVersion"]={version: [
             {"name":d["name"],"model":d["model"],
              "osVersion":d["osVersion"],
@@ -85,6 +96,9 @@ def main():
             for d in inventory if d["osMajor"]==version] for version in VERSIONS}
         print("ANDROID_DEVICE_FARM_INVENTORY_BEGIN")
         for ver,found in report["byVersion"].items():
+            if report["deviceLookup"]!="PASS":
+                print(f"Android {ver}: UNKNOWN (ListDevices denied, not zero available)")
+                continue
             print(f"Android {ver}: {len(found)} device models")
             for d in found:
                 print(f"  {d['name']} | Android {d['osVersion']} | {d['availability']} | {d['arn']}")
@@ -101,7 +115,7 @@ def main():
         print("Device Farm inventory failed:",str(err),file=sys.stderr)
     finally:
         (out/"inventory.json").write_text(json.dumps(report,indent=2,default=str)+"\n")
-    return 0 if report["deviceLookup"]=="PASS" else 1
+    return 0 if (report["deviceLookup"]=="PASS" or report["projectPoolLookup"]=="PASS") else 1
 
 
 if __name__=="__main__":

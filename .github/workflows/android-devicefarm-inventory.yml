@@ -1,0 +1,49 @@
+name: Android physical devices / AWS Device Farm inventory
+
+on:
+  push:
+    branches:
+      - test/sqlite-plaintext-7.3.0
+    paths:
+      - .github/workflows/android-devicefarm-inventory.yml
+      - tools/devicefarm_android_inventory.py
+  workflow_dispatch:
+
+# This workflow is read-only, never books a device or uploads an application.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  discover:
+    name: List Android 8, 10, 12 and 15 physical device catalog (free)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      AWS_DEVICE_FARM_PROJECT_ARN: ${{ vars.AWS_DEVICE_FARM_PROJECT_ARN }}
+      AWS_REGION: us-west-2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Lint inventory code
+        run: python -m py_compile tools/devicefarm_android_inventory.py
+      - name: Authenticate through pre-approved GitHub AWS OIDC role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEVICE_FARM_ROLE_ARN }}
+          aws-region: us-west-2
+          role-session-name: TotalCrossAndroidInventory
+      - name: Install boto3
+        run: python -m pip install --disable-pip-version-check boto3
+      - name: Discover physical devices without scheduling
+        run: python tools/devicefarm_android_inventory.py
+      - name: Archive catalog and actual IAM result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-devicefarm-inventory-8-10-12-15
+          path: devicefarm-android-inventory/
+          retention-days: 30
+          if-no-files-found: warn

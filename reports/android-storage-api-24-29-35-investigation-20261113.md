@@ -50,6 +50,28 @@ of the customer's Android 10 issue.
   `HVF error: HV_UNSUPPORTED` and `failed to initialize HVF: Invalid argument`.
   It cannot provide hardware virtualization from within this hosted VM.
 
+## Additional matrix-harness control: Android 15 PASS
+
+[Run 43474107912](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43474107912)
+completed **SUCCESS** using the same 7.3.0 APK and the new
+`android_storage_api_matrix.py` on a Linux/KVM Android 15 (API35)
+x86_64 Google APIs emulator with ARM64 translation.
+
+[Evidence artifact 14062755329](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43474107912/artifacts/14062755329):
+
+- `status=COMPLETE`, original APK SHA-256
+  `8c6190fc5425a8f33db48900e7c9e7f8b1a2b9ff13a3d4667fe9cfc1325e685a`
+- VM ABI `arm64-v8a`; emulator ABIs `x86_64,arm64-v8a`;
+  installed explicitly for `arm64-v8a`.
+- Internal SQLite memory/create/reopen/plaintext-header: **PASS both phases**.
+- `MANAGE_EXTERNAL_STORAGE: ignore`: `/sdcard/asd` **EACCES 13**,
+  external SQLite create/reopen and existing fixture **FAIL**.
+- `MANAGE_EXTERNAL_STORAGE: allow`: directory create/delete,
+  external SQLite create/reopen/header and pre-existing SQLite fixture
+  **PASS** without permission UI.
+- This independently validates the new collector, not API24/29 or
+  the original customer's failure.
+
 ## Existing source-level hypothesis (not yet reproduced on API 29)
 
 `AndroidPermissionManager.mediaPermissionCandidates()` uses

@@ -125,3 +125,18 @@ consider changing `AndroidPermissionManager` and/or APK manifest or
 the native SQLite permission recovery. A separate CI-only Android15
 ARM64-translation control is provided to validate the matrix harness
 on the existing Linux/KVM runners.
+
+
+## Linux/KVM Android 15 control — completed successfully
+
+[Run 43474107912](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43474107912) completed with `success`. [Artifact 14062755329](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43474107912/artifacts/14062755329) contains `android-api-matrix-summary.json` and phase-by-phase logcat.
+
+- Android API **35**, ARM64 translation on x86_64 guest, actual installed native ABI `arm64-v8a`.
+- Same original TotalCross 7.3.0 APK SHA-256 `8c6190fc5425a8f33db48900e7c9e7f8b1a2b9ff13a3d4667fe9cfc1325e685a`.
+- Without `MANAGE_EXTERNAL_STORAGE`: internal in-memory and app-private SQLite stages **PASS**. `/sdcard/asd` fails `Error Code: 13 - Permission denied`. External SQLite creation, reopen and pre-existing file operations **FAIL**; SQLite surfaces a generic `[-1] unknown error (out of memory)` rather than the underlying permission error. Android Settings permissions UI appeared.
+- After `adb appops set <package> MANAGE_EXTERNAL_STORAGE allow`: both internal controls and **all six external stages PASS**, including create/delete directory, SQLite create/reopen, plaintext header, existing SQLite and external result.
+- The matrix runner completed all expected phases with `status=COMPLETE`.
+
+**Caveat:** The summary's `readExternal=false` comes from `aapt dump permissions`; Android's `dumpsys package` shows `READ_EXTERNAL_STORAGE` in the requested-permissions list. This discrepancy must be investigated before using aapt-derived absence of READ as definitive proof of a manifest omission.
+
+**Unchanged limitation:** API **24** and **29** remain *untested at runtime* on this exact APK due to the preceding ABI and GitHub-hosted HVF limitations. A local physical Apple Silicon host with working virtualization, or another suitable ARM64 host, is still needed.

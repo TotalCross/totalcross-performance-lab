@@ -20,14 +20,14 @@
 | Open/update pre-existing external SQLite fixture | PASS | PASS |
 | Plaintext header / SQLite integrity verification | PASS | PASS |
 | Python unittest | 1 test, 0 failures (7.964 s) | 1 test, 0 failures (98.168 s, including denied-phase wait) |
-| Negative phase | External stages also PASS despite revoking READ + WRITE | External stages NOT_REACHED after access denied / runtime permissions UI |
+| Negative phase | **INCONCLUSIVE:** prior PID's PASS events were reused; current process stopped at runtime permission dialog | External stages NOT_REACHED after access denied / runtime permissions UI |
 
 ### Android 10: what the permission controls actually showed
 
 - Pre-grant `dumpsys package`: both `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE` were `granted=true` after explicit `adb pm grant` commands (both exited 0).
 - The pre-granted phase successfully completed **all** File + SQLite stages. This rules out a general failure to open plaintext SQLite on the tested Android 10/7.3.0 binary with usable file access.
-- After `pm revoke` of **both** READ and WRITE (exit 0), `dumpsys package` reported both `granted=false`, **but `appops get` still reported `LEGACY_STORAGE: allow`**. The File + SQLite stages nonetheless succeeded. The negative phase is **not a valid proof of denial**: runtime permission flags alone were not enough to establish no filesystem access.
-- During the negative run `GrantPermissionsActivity` was in foreground but the TotalCross probe emitted all successful stages in approximately 2.5 s. This demonstrates the dialog alone does not always block test application progress.
+- After `pm revoke` of **both** READ and WRITE (exit 0), `dumpsys package` reported both `granted=false`; `appops get` still showed `LEGACY_STORAGE: allow`. This is relevant state information but does **not** prove the application retained usable access.
+- **Correction based on raw logcat:** `denied-runtime.logcat` retained PASS events from the previous grant phase (PID `28693`, 20:40:34). The new denied-phase process (PID `28804`, 20:40:37) logged startup and `external-paths`, then Android opened `GrantPermissionsActivity`; it did **not** emit new external SQLite PASS events. The harness had deduplicated events by stage/status/detail without checking process PID, so it incorrectly classified stale events as a PASS. The negative-phase result is **INCONCLUSIVE**.
 - This round did **not** reproduce the customer's persistent failure with the isolated smoke app. The customer's different app behavior, exact database path, request timing, permissions state and manifest remain relevant.
 
 ### Android 12: permission behavior
@@ -51,8 +51,19 @@
 1. **No SQLite engine regression reproduced** on the physical Android 10 or Android 12 devices with access pre-granted, using the isolated official 7.3.0 smoke APK.
 2. Original Android 10 stall from first round was confounded by a pending permission UI and incomplete positive-control grant: READ remained denied after the harness granted WRITE only.
 3. Investigate the **customer application** with exact Main.zip and database path, matching manifest permissions, `AndroidPermissionManager` runtime permission request timing, and native `FILE_RETRY_ACCESS` behavior. Record the final path and every requested/granted permission, appops, and callback result.
-4. Do not interpret Android 10 success after revocation as permission bypass: `LEGACY_STORAGE: allow` was still present. For future negative controls explicitly record appops and package permissions before assertions.
+4. Do not interpret the apparent Android 10 success after revocation as permission bypass: the relevant PASS entries came from an earlier process. Future assertions must filter logcat by the current application PID and independently record appops, package grants, and UI state.
 5. If customer path fails in 7.3.0 but not 7.2.2, compare both builds using the same manifest, app package, path and access state before attributing a release regression.
 6. Investigate the Device Farm classification separately. Read-only `devicefarm:ListSuites` would help identify the AWS-level failed test component without rerunning billed devices.
 
 The report is based on the two completed physical runs and the collected job, test-spec, device package, JUnit, appops and per-stage evidence.
+## Source-level investigation and test-harness erratum (same date)
+
+- Exact tested runtime source: `TotalCross/totalcross@5464c21e3107e3f1ce9c287b724829e2bb870c1d`.
+- `TotalCrossVM/android/app/src/main/java/totalcross/android/AndroidPermissionManager.java`, `mediaPermissionCandidates()`: API 29/Q excludes `WRITE_EXTERNAL_STORAGE` from permission recovery even if the installed manifest declares it. Earlier APIs include WRITE. The Android 11+ path uses the separate all-files access Settings flow when requested.
+- `TotalCrossVM/android/app/src/main/AndroidManifest.xml` provides baseline `WRITE_EXTERNAL_STORAGE` but not baseline `READ_EXTERNAL_STORAGE`. Hence an API 29 app with unchanged baseline declarations can enter a FILE_ACCESS recovery plan with **zero** runtime permission candidates and no all-files Settings stage. This is a defensible candidate bug; impact on the client's actual APK remains unverified because the original `Main.zip` / effective package manifest was not available during this follow-up.
+- The physical smoke APK **did declare READ as well as WRITE**; both were granted manually with ADB for the positive phase. This test therefore did not cover the default-manifest scenario above.
+- `TotalCrossVM/src/nm/io/posix/File_c.h` routes EACCES/EPERM from TotalCross File operations through `FILE_RETRY_ACCESS` -> `Launcher4A.requestStoragePermission()` -> `AndroidPermissionManager.requestFileAccessBlocking()`. When it cannot acquire new authorization, the original error is preserved.
+- `TotalCrossVM/src/nm/db/NativeDB.c` calls `sqlite3_open_v2` without this File recovery wrapper. An external SQLite open performed before permission resolution may therefore fail directly, while a preceding TotalCross File call can initiate permission recovery.
+- An isolated test harness fix was committed to the **non-billable** `test/android-devicefarm-730-physical-matrix` branch: event parsing now uses the launched app PID instead of accepting all old `logcat` records, and local tests cover old-PID false positives. No production APK, TotalCross VM or manifest was modified. No paid Device Farm run was scheduled.
+
+The proposed production change to investigate is to include declared `WRITE_EXTERNAL_STORAGE` among Android 10/API 29 file-access recovery candidates (not merely Android 9 and below) while preserving the per-permission declaration checks and verifying actual grants. This requires controlled validation and cannot be treated as a confirmed customer fix on the evidence currently available.

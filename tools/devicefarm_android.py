@@ -33,7 +33,7 @@ DEVICE_MATRIX = {
         "api": 29, "android": "10", "model": "Google Pixel 4 (Unlocked)"},
     "pixel5-12": {
         "arn": "arn:aws:devicefarm:us-west-2::device:11E27BF80323455C855874FC3CC710DA",
-        "api": 31, "android": "12", "model": "Google Pixel 5 (Unlocked)"},
+        "api": 32, "android": "12", "model": "Google Pixel 5 (Unlocked)"},
     "pixel8-15": {
         "arn": "arn:aws:devicefarm:us-west-2::device:DE5BD47FF3BD42C3A14BF7A6EFB1BFE7",
         "api": 35, "android": "15", "model": "Google Pixel 8"},
@@ -58,7 +58,9 @@ def verify_input(apk, generic_zip, spec, selection):
         if "tests/test_sqlite_storage.py" not in z.namelist():
             raise ValueError("Expected test script missing")
     content = spec.read_text()
-    if "android_test_host:" not in content or "unittest discover" not in content:
+    if ("android_test_host:" not in content or not any(
+            command in content for command in (
+                "unittest discover", "python tests/test_sqlite_storage.py"))):
         raise ValueError("Device Farm custom test spec incomplete")
     if selection not in DEVICE_MATRIX:
         raise ValueError("Device outside approved four-device matrix")

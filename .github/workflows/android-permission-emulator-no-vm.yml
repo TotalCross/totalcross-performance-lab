@@ -1,5 +1,5 @@
 name: Android 10 storage permission emulator (no TotalCross VM)
-run-name: Android API29 / targetSDK ${{ matrix.target_sdk }} / 7.3.0 coordinator source only
+run-name: Android API29 7.3.0 coordinator permission emulators without VM
 
 on:
   push:

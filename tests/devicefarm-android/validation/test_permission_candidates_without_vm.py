@@ -21,6 +21,11 @@ PERMISSION_JAVA = SOURCE / ("TotalCrossVM/android/app/src/main/java/totalcross"
 MANIFEST = SOURCE / "TotalCrossVM/android/app/src/main/AndroidManifest.xml"
 FILE_NATIVE = SOURCE / "TotalCrossVM/src/nm/io/posix/File_c.h"
 SQLITE_NATIVE = SOURCE / "TotalCrossVM/src/nm/db/NativeDB.c"
+PREVIOUS_SOURCE = Path(os.environ.get("TC722_SOURCE_ROOT", "totalcross-722"))
+PREVIOUS_LAUNCHER = PREVIOUS_SOURCE / (
+    "TotalCrossVM/android/app/src/main/java/totalcross/Launcher4A.java")
+PREVIOUS_SETTINGS = PREVIOUS_SOURCE / (
+    "TotalCrossSDK/src/main/java/totalcross/sys/Settings.java")
 
 
 def extract_method(java_source, declaration):
@@ -156,6 +161,25 @@ class TotalCross730PermissionContract(unittest.TestCase):
                       manifest)
         self.assertNotIn('android:name="android.permission.READ_EXTERNAL_STORAGE"',
                          manifest)
+
+    def test_722_to_730_storage_selection_change(self):
+        settings = PREVIOUS_SETTINGS.read_text()
+        self.assertIn('public static String versionStr = "7.2.2";', settings)
+        old_launcher = PREVIOUS_LAUNCHER.read_text()
+        start = old_launcher.index(
+            "public static final PermissionHandler STORAGE = new PermissionHandler(")
+        end = old_launcher.index(");", start)
+        old_storage = old_launcher[start:end]
+        self.assertIn("Manifest.permission.READ_EXTERNAL_STORAGE", old_storage)
+        self.assertIn("Manifest.permission.WRITE_EXTERNAL_STORAGE", old_storage)
+        self.assertIn("return STORAGE.requestPermissions();", old_launcher)
+        manager = PERMISSION_JAVA.read_text()
+        api29 = extract_method(
+            manager,
+            "private static List<String> mediaPermissionCandidates(Activity activity)")
+        self.assertIn("SDK_INT < Build.VERSION_CODES.Q", api29)
+        print("PASS 7.2.2 storage requests READ+WRITE; "
+              "7.3.0 excludes WRITE on Android 10.")
 
     def test_sqlite_direct_open_bypasses_file_permission_retry(self):
         native_file = FILE_NATIVE.read_text()

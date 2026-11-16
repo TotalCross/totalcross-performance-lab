@@ -1,0 +1,110 @@
+name: Prepare Android 7.3.0 physical device farm tests (free)
+run-name: Prepare pinned 7.3.0 APK and Android 8/10/12/15 test package
+
+on:
+  push:
+    branches:
+      - test/android-devicefarm-730-physical-matrix
+    paths:
+      - .github/workflows/android-devicefarm-730-prepare.yml
+      - tools/devicefarm_android.py
+      - tests/devicefarm-android/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install validation-only package
+        run: python -m pip install --disable-pip-version-check PyYAML boto3
+      - name: Validate Python and Device Farm test spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/devicefarm_android.py tests/devicefarm-android/tests/test_sqlite_storage.py
+          python - <<'PY'
+          import pathlib,yaml
+          s=yaml.safe_load(pathlib.Path("tests/devicefarm-android/devicefarm-test-spec.yml").read_text())
+          assert s["version"]==0.1 and s["android_test_host"]=="amazon_linux_2023"
+          assert all(phase in s["phases"] for phase in ("install","pre_test","test","post_test"))
+          print("Android Device Farm test spec valid")
+          PY
+      - name: Retrieve exactly the original TotalCross 7.3.0 APK
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p physical-android-ready
+          gh api repos/TotalCross/totalcross-performance-lab/actions/artifacts/14007058527             --jq '{id,name,digest,expired,size_in_bytes}' > physical-android-ready/source-artifact.json
+          gh api repos/TotalCross/totalcross-performance-lab/actions/artifacts/14007058527/zip             > physical-android-ready/source-artifact.zip
+          python - <<'PY'
+          import hashlib,json,pathlib,zipfile
+          root=pathlib.Path("physical-android-ready")
+          meta=json.loads((root/"source-artifact.json").read_text())
+          data=(root/"source-artifact.zip").read_bytes()
+          actual="sha256:"+hashlib.sha256(data).hexdigest()
+          assert meta["id"]==14007058527 and not meta["expired"],meta
+          assert actual==meta["digest"],(actual,meta)
+          with zipfile.ZipFile(root/"source-artifact.zip") as z:
+              name="deployed/install/android/sqlite-plaintext-smoke.apk"
+              assert name in z.namelist()
+              apk=z.read(name)
+          (root/"sqlite-plaintext-smoke.apk").write_bytes(apk)
+          digest=hashlib.sha256(apk).hexdigest()
+          assert digest=="8c6190fc5425a8f33db48900e7c9e7f8b1a2b9ff13a3d4667fe9cfc1325e685a", digest
+          with zipfile.ZipFile(root/"sqlite-plaintext-smoke.apk") as app:
+              assert app.testzip() is None
+              assert "lib/arm64-v8a/libtcvm.so" in app.namelist()
+          print("Verified exact original APK:",len(apk),"bytes, sha256=",digest)
+          PY
+      - name: Package immutable Appium-Python ADB test for physical Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,zipfile
+          out=Path("physical-android-ready")
+          src=Path("tests/devicefarm-android")
+          with zipfile.ZipFile(out/"android-test-package.zip","w",zipfile.ZIP_DEFLATED) as z:
+              z.write(src/"tests/test_sqlite_storage.py","tests/test_sqlite_storage.py")
+              z.writestr("requirements.txt","# Python standard library only\n")
+          (out/"android-test-spec.yml").write_bytes((src/"devicefarm-test-spec.yml").read_bytes())
+          with zipfile.ZipFile(out/"android-test-package.zip") as z:
+              assert z.testzip() is None
+              assert "tests/test_sqlite_storage.py" in z.namelist()
+          paths=["sqlite-plaintext-smoke.apk","android-test-package.zip","android-test-spec.yml"]
+          hashes={name:hashlib.sha256((out/name).read_bytes()).hexdigest() for name in paths}
+          (out/"provenance.json").write_text(json.dumps({
+              "sdkSourceSha":"5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+              "sourceRun":43359416885,
+              "sourceArtifact":14007058527,
+              "sdkBuild":40878222908,
+              "artifactsSha256":hashes,
+              "deviceModels":["Pixel 2 XL Android 8.1","Pixel 4 Android 10",
+                              "Pixel 5 Android 12","Pixel 8 Android 15"],
+              "scheduled":False
+          },indent=2)+"\n")
+          print("Validated physical test package",json.dumps(hashes,indent=2))
+          PY
+      - name: Upload build-only physical Android bundle (no device booking)
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-730-physical-test-bundle
+          path: |
+            physical-android-ready/sqlite-plaintext-smoke.apk
+            physical-android-ready/android-test-package.zip
+            physical-android-ready/android-test-spec.yml
+            physical-android-ready/provenance.json
+            physical-android-ready/source-artifact.json
+          retention-days: 30
+          if-no-files-found: error

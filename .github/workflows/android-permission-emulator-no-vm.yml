@@ -51,7 +51,7 @@ jobs:
         with:
           gradle-version: '8.13'
       - name: Configure Android SDK command-line tools
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
       - name: Install Android SDK platform 36 and copy exact manager
         shell: bash
         run: |

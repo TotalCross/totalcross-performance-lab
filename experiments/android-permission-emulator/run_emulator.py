@@ -222,7 +222,7 @@ def main():
 
     # Isolate the API29 selection defect: READ is already granted; WRITE denied.
     grant_state(out, "read-only", grant=[RUNTIME[0]], revoke=[RUNTIME[1]])
-    runs.append(execute(out, "read-only-recovery", "request", timeout=32))
+    runs.append(execute(out, "read-only-recovery", "request", timeout=38, answer_ui=True))
 
     grant_state(out, "denied-again", grant=[], revoke=list(RUNTIME))
     runs.append(execute(out, "interactive-recovery", "request", timeout=38,

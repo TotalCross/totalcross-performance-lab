@@ -1,5 +1,5 @@
-name: Approved physical Android 8 10 12 15 SQLite regression (four devices)
-run-name: Authorized four-device TotalCross 7.3.0 Android storage matrix
+name: Approved physical Android 10 and 12 SQLite follow-up (two devices)
+run-name: Authorized two-device TotalCross 7.3.0 Android storage follow-up
 
 # A unique, explicitly authorized, one-shot push starts this execution.
 # Routine updates to test scripts and other workflows cannot schedule runs.
@@ -13,7 +13,7 @@ on:
     inputs:
       execute:
         type: boolean
-        description: "Book up to four billable physical Device Farm sessions"
+        description: "Book at most two billable physical Device Farm sessions (Android 10 and 12)"
         required: true
         default: false
 
@@ -27,7 +27,7 @@ jobs:
     name: Device Farm / ${{ matrix.label }} / Android API ${{ matrix.api }}
     if: >-
       (github.event_name == 'push' &&
-       github.event.head_commit.message == 'authorize: execute four Android 7.3.0 physical Device Farm tests') ||
+       github.event.head_commit.message == 'authorize: execute two corrected Android 7.3.0 Device Farm tests') ||
       (github.event_name == 'workflow_dispatch' && inputs.execute == true)
     runs-on: ubuntu-24.04
     timeout-minutes: 75
@@ -35,18 +35,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - key: pixel2xl-8
-            label: Pixel 2 XL / Android 8.1
-            api: 27
           - key: pixel4-10
             label: Pixel 4 / Android 10
             api: 29
           - key: pixel5-12
             label: Pixel 5 / Android 12
-            api: 31
-          - key: pixel8-15
-            label: Pixel 8 / Android 15
-            api: 35
+            api: 32
     concurrency:
       group: paid-devicefarm-730-${{ github.sha }}-${{ matrix.key }}
       cancel-in-progress: false
@@ -63,7 +57,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: android-730-physical-test-bundle
-          run-id: 43942018624
+          run-id: 43944824284
           github-token: ${{ github.token }}
           path: physical-android-ready
       - name: Verify locked artifact and Python test syntax
@@ -78,6 +72,8 @@ jobs:
           info=json.loads((root/'provenance.json').read_text())
           assert info['sourceArtifact']==14007058527
           assert info['sdkSourceSha']=='5464c21e3107e3f1ce9c287b724829e2bb870c1d'
+          assert info['artifactsSha256']['android-test-package.zip']=='e3bda7f9d4477ab699cc733cb860eab7fb0a5c0fb1ecd09839a9abb1e8d3e786'
+          assert info['artifactsSha256']['android-test-spec.yml']=='24ffdfa5f2a8f3db0f166aae123eda79fff173e084970f2529dbc4998eae0b0e'
           for name,expected in info['artifactsSha256'].items():
               actual=hashlib.sha256((root/name).read_bytes()).hexdigest()
               assert actual==expected,(name,actual,expected)

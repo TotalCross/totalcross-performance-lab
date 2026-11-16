@@ -29,7 +29,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile tools/devicefarm_android.py tests/devicefarm-android/tests/test_sqlite_storage.py
+          python -m py_compile tools/devicefarm_android.py tests/devicefarm-android/tests/test_sqlite_storage.py tests/devicefarm-android/validation/test_event_isolation.py
+          python -m unittest discover -s tests/devicefarm-android/validation -p 'test_*.py' -v
           python - <<'PY'
           import pathlib,yaml
           s=yaml.safe_load(pathlib.Path("tests/devicefarm-android/devicefarm-test-spec.yml").read_text())

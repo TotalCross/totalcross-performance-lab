@@ -1,0 +1,119 @@
+name: Approved physical Android 8 10 12 15 SQLite regression (four devices)
+run-name: Authorized four-device TotalCross 7.3.0 Android storage matrix
+
+# A unique, explicitly authorized, one-shot push starts this execution.
+# Routine updates to test scripts and other workflows cannot schedule runs.
+on:
+  push:
+    branches:
+      - test/android-devicefarm-730-physical-matrix
+    paths:
+      - .github/workflows/android-devicefarm-730-approved-execution.yml
+  workflow_dispatch:
+    inputs:
+      execute:
+        type: boolean
+        description: "Book up to four billable physical Device Farm sessions"
+        required: true
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+jobs:
+  run-physical:
+    name: Device Farm / ${{ matrix.label }} / Android API ${{ matrix.api }}
+    if: >-
+      (github.event_name == 'push' &&
+       github.event.head_commit.message == 'authorize: execute four Android 7.3.0 physical Device Farm tests') ||
+      (github.event_name == 'workflow_dispatch' && inputs.execute == true)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - key: pixel2xl-8
+            label: Pixel 2 XL / Android 8.1
+            api: 27
+          - key: pixel4-10
+            label: Pixel 4 / Android 10
+            api: 29
+          - key: pixel5-12
+            label: Pixel 5 / Android 12
+            api: 31
+          - key: pixel8-15
+            label: Pixel 8 / Android 15
+            api: 35
+    concurrency:
+      group: paid-devicefarm-730-${{ github.sha }}-${{ matrix.key }}
+      cancel-in-progress: false
+    env:
+      AWS_REGION: us-west-2
+      AWS_DEVICE_FARM_PROJECT_ARN: ${{ vars.AWS_DEVICE_FARM_PROJECT_ARN }}
+      DEVICEFARM_APPROVED_EXECUTE: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Retrieve previously validated, identical 7.3.0 APK and test bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: android-730-physical-test-bundle
+          run-id: 43942018624
+          github-token: ${{ github.token }}
+          path: physical-android-ready
+      - name: Verify locked artifact and Python test syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/devicefarm_android.py
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json,zipfile
+          root=Path('physical-android-ready')
+          info=json.loads((root/'provenance.json').read_text())
+          assert info['sourceArtifact']==14007058527
+          assert info['sdkSourceSha']=='5464c21e3107e3f1ce9c287b724829e2bb870c1d'
+          for name,expected in info['artifactsSha256'].items():
+              actual=hashlib.sha256((root/name).read_bytes()).hexdigest()
+              assert actual==expected,(name,actual,expected)
+          with zipfile.ZipFile(root/'android-test-package.zip') as z:
+              assert z.testzip() is None
+          print('Locked official APK and test bundle verified')
+          PY
+      - name: Authenticate existing Device Farm OIDC role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEVICE_FARM_ROLE_ARN }}
+          aws-region: us-west-2
+          role-session-name: TotalCrossAndroid730
+      - name: Install AWS Python client
+        run: python -m pip install --disable-pip-version-check boto3
+      - name: Free catalog and selected-device preflight
+        shell: bash
+        run: |
+          python tools/devicefarm_android.py validate \
+            --device "${{ matrix.key }}" \
+            --out "physical-test-results/api-${{ matrix.api }}"
+      - name: Execute explicitly authorized one-device physical test (billable)
+        shell: bash
+        run: |
+          python tools/devicefarm_android.py run \
+            --device "${{ matrix.key }}" \
+            --apk physical-android-ready/sqlite-plaintext-smoke.apk \
+            --test-package physical-android-ready/android-test-package.zip \
+            --test-spec physical-android-ready/android-test-spec.yml \
+            --out "physical-test-results/api-${{ matrix.api }}" \
+            --execute
+      - name: Publish evidence even when a device fails or is unavailable
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android730-physical-${{ matrix.key }}-api-${{ matrix.api }}
+          path: physical-test-results/
+          retention-days: 30
+          if-no-files-found: warn

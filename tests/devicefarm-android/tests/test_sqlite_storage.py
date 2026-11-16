@@ -52,11 +52,20 @@ def record(name, argv, timeout=45):
     return r
 
 
-def parse_events(raw):
+def parse_events(raw, app_pid):
+    """Only accept events from the application process launched for this phase.
+
+    The Device Farm host can retain old logcat entries even after adb logcat -c.
+    A previous phase's PASS must never be credited to a new process.
+    """
     records = []
     seen = set()
     for line in raw.splitlines():
         if PREFIX not in line:
+            continue
+        # This probe requests 'adb logcat -v threadtime': date time PID TID ...
+        fields = line.split(None, 5)
+        if len(fields) < 6 or not fields[2].isdigit() or int(fields[2]) != app_pid:
             continue
         try:
             v = json.loads(line.split(PREFIX, 1)[1].strip())
@@ -99,7 +108,18 @@ def prepare_phase(label, source):
     if push["rc"] != 0:
         raise RuntimeError("Could not push external SQLite fixture: "
                            + push["text"][:900])
-    sh(["adb", "logcat", "-c"])
+    record(label + "-clear-logcat.txt", ["adb", "logcat", "-c"])
+
+
+def launched_app_pid(wait_seconds=15):
+    deadline = time.monotonic() + wait_seconds
+    while time.monotonic() < deadline:
+        value = sh(["adb", "shell", "pidof", "-s", PACKAGE], timeout=8)
+        tokens = value["text"].strip().split()
+        if value["rc"] == 0 and tokens and tokens[0].isdigit():
+            return int(tokens[0])
+        time.sleep(0.5)
+    raise RuntimeError("Cannot identify the new TotalCross process PID; phase inconclusive")
 
 
 def observe(label, seconds=90):
@@ -109,7 +129,8 @@ def observe(label, seconds=90):
                      "-c", "android.intent.category.LAUNCHER", "1"], 45)
     if launch["rc"] != 0 or "Events injected: 1" not in launch["text"]:
         raise RuntimeError("APK launch failed: " + launch["text"][:1500])
-    evidence = {"phase": label, "events": [], "failures": [],
+    app_pid = launched_app_pid()
+    evidence = {"phase": label, "appPid": app_pid, "events": [], "failures": [],
                 "device": os.environ.get("DEVICEFARM_DEVICE_NAME"),
                 "osVersion": os.environ.get("DEVICEFARM_DEVICE_OS_VERSION"),
                 "focusedWindows": [], "permissionDialogObserved": False,
@@ -120,7 +141,7 @@ def observe(label, seconds=90):
         logs = sh(["adb", "logcat", "-d", "-v", "threadtime"], timeout=25)
         if logs["rc"] == 0:
             save(label + "-runtime.logcat", logs["text"])
-            evidence["events"] = parse_events(logs["text"])
+            evidence["events"] = parse_events(logs["text"], app_pid)
         focus = sh(["adb", "shell", "dumpsys", "window"], timeout=15)["text"]
         current = " ".join(line.strip() for line in focus.splitlines()
                            if "mCurrentFocus" in line or "mFocusedApp" in line)

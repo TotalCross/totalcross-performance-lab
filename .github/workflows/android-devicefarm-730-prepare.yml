@@ -79,6 +79,16 @@ jobs:
             TotalCrossVM/android/app/src/main/AndroidManifest.xml
             TotalCrossVM/src/nm/io/posix/File_c.h
             TotalCrossVM/src/nm/db/NativeDB.c
+      - name: Checkout exact TotalCross 7.2.2 historical permission source (no VM build)
+        uses: actions/checkout@v4
+        with:
+          repository: TotalCross/totalcross
+          ref: dbfd574f7dc30937652e96e38ae9ce2fc1560b69
+          path: totalcross-722
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            TotalCrossVM/android/app/src/main/java/totalcross/Launcher4A.java
+            TotalCrossSDK/src/main/java/totalcross/sys/Settings.java
       - name: Set up standalone Java compiler (no Android SDK/VM required)
         uses: actions/setup-java@v4
         with:
@@ -88,6 +98,7 @@ jobs:
         shell: bash
         env:
           TC730_SOURCE_ROOT: totalcross-730
+          TC722_SOURCE_ROOT: totalcross-722
           TC730_ARTIFACT_ZIP: physical-android-ready/source-artifact.zip
         run: |
           set -euo pipefail

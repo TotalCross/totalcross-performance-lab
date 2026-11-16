@@ -181,7 +181,9 @@ class PhysicalTotalCrossStorage(unittest.TestCase):
             outcome.update({"api": api, "release": version["text"].strip(),
                             "model": model["text"].strip(),
                             "abis": abis["text"].strip()})
-            expected = int(os.environ["EXPECTED_ANDROID_API"])
+            expected_file = Path(os.environ.get("DEVICEFARM_TEST_PACKAGE_PATH", ".")) / "expected-api.txt"
+            expected = int(os.environ.get("EXPECTED_ANDROID_API") or
+                           expected_file.read_text(encoding="utf-8").strip())
             self.assertEqual(api, expected, "AWS selected the wrong Android API")
             self.assertIn("arm64-v8a", outcome["abis"],
                           "Selected physical device cannot load native libtcvm.so")

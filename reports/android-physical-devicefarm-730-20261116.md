@@ -114,3 +114,41 @@ harness **without modifying the production APK**:
 **Billing guard:** The user's authorization covered four selected
 physical devices. All four have now been run once. Do not schedule
 a fifth session or retries without a new explicit authorization.
+
+
+## Additional per-permission evidence and prepared follow-up harness
+
+The physical Android 10 `dumpsys package` output makes the grant distinction
+explicit:
+
+- Initial phase: `READ_EXTERNAL_STORAGE: granted=false`,
+  `WRITE_EXTERNAL_STORAGE: granted=false`, with both permissions listed
+  as `restricted=true`.
+- After the automation's manual `pm grant WRITE_EXTERNAL_STORAGE`:
+  `WRITE_EXTERNAL_STORAGE: granted=true`, but
+  **`READ_EXTERNAL_STORAGE: granted=false` remained unchanged**.
+- The existing `GrantPermissionsActivity` stayed in the foreground;
+  no post-grant Java stage was emitted. Therefore granting *only* WRITE
+  was not an adequate positive-control setup for Android 10.
+
+The Android 8.1 control also confirmed
+`WRITE_EXTERNAL_STORAGE: granted=true` after `pm grant`, but its
+permissions dialog remained in front of the app.
+
+A corrected **build-only** test harness is available on
+[`test/android-devicefarm-730-physical-matrix`](https://github.com/TotalCross/totalcross-performance-lab/tree/test/android-devicefarm-730-physical-matrix).
+It now:
+
+1. Pins the Pixel 5's actual Android 12 API to **32**.
+2. Tests the pre-granted case **first** on API 27/29, explicitly attempts
+   both `WRITE_EXTERNAL_STORAGE` and `READ_EXTERNAL_STORAGE`, and
+   records their actual grant results.
+3. Runs the denial scenario second to avoid contaminating the authorized
+   phase with an unresolved permission dialog.
+4. Emits a real JUnit XML report for the AWS custom host.
+
+The updated package was successfully compiled and verified in the
+**non-billable** [prepare workflow 43944824284](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/43944824284),
+artifact `14265191482`. It has **NOT** been executed on physical devices.
+Four paid runs were used for the initial investigation; an additional
+physical execution requires separate authorization.

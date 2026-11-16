@@ -99,7 +99,8 @@ def permission_ui():
         label = (node.get("text", "") + " " + node.get("content-desc", "")).lower()
         identifier = node.get("resource-id", "").lower()
         if ("permission_allow_button" in identifier or
-                re.search(r"\ballow\b|\bpermit\b", label)):
+                (node.get("clickable") == "true" and
+                 label.strip() in ("allow", "permit", "allow access"))):
             bounds = re.findall(r"\[(\d+),(\d+)\]", node.get("bounds", ""))
             if len(bounds) == 2:
                 x = (int(bounds[0][0]) + int(bounds[1][0])) // 2
@@ -107,7 +108,7 @@ def permission_ui():
                 candidates.append({"text": label, "id": identifier,
                                    "x": x, "y": y})
     if not candidates:
-        return {"action": "no Allow element", "xml": xml[:6000]}
+        return {"action": "no actionable Allow button", "xml": xml[:6000]}
     target = candidates[0]
     tapped = adb("shell", "input", "tap", str(target["x"]), str(target["y"]),
                  timeout=12)

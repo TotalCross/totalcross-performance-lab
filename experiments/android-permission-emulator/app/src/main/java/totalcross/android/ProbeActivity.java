@@ -111,7 +111,7 @@ public final class ProbeActivity extends Activity {
     }
 
     private void runProbe(String currentMode) {
-        emit("start", "RUNNING", "independent Android app, TotalCross coordinator Java unmodified");
+        emit("start", "RUNNING", "standalone app: TotalCross 7.3.0 permission coordinator <= Q candidate");
         permissions("permissions-before");
         // A private database must work with no external storage permissions.
         sqliteOpen("private-sqlite", new File(getFilesDir(), unique + "-internal.db"));

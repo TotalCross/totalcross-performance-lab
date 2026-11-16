@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import time
 import xml.etree.ElementTree as ET
@@ -28,6 +29,8 @@ def cmd(*args, timeout=45):
         return {"exit": completed.returncode, "text": completed.stdout}
     except subprocess.TimeoutExpired as e:
         return {"exit": 124, "text": "TIMEOUT " + repr(args) + " " + str(e)}
+    except OSError as e:
+        return {"exit": 127, "text": str(e)}
 
 
 def adb(*args, timeout=45):
@@ -136,7 +139,7 @@ def execute(where, label, mode, timeout=32, answer_ui=False):
     pid = None
     events = []
     gestures = []
-    last_ui_scan = 0
+    last_ui_scan = -10
     log = ""
     while time.monotonic() - began < timeout:
         if pid is None:
@@ -148,10 +151,14 @@ def execute(where, label, mode, timeout=32, answer_ui=False):
             events = parse_events(log, pid)
         if any(e.get("stage") == "complete" for e in events):
             break
-        if answer_ui and time.monotonic() - began >= 3 and not gestures:
+        elapsed = time.monotonic() - began
+        if (answer_ui and elapsed >= 3 and len(gestures) < 4
+                and elapsed - last_ui_scan >= 6
+                and not any(e.get("stage") == "permission-return" for e in events)):
+            last_ui_scan = elapsed
             result = permission_ui()
             gestures.append(result)
-            save(where, label + "-permission-ui.json", result)
+            save(where, label + "-permission-ui.json", gestures)
         time.sleep(1)
     # Collect final logcat, including stale entries for audit. Filter only own PID.
     final = adb("logcat", "-d", "-v", "threadtime", timeout=25)
@@ -200,8 +207,12 @@ def main():
     install = adb("install", "-r", str(args.apk.resolve()), timeout=180)
     save(out, "install.txt", install["text"])
     assert install["exit"] == 0, install
-    save(out, "apk-manifest.txt",
-         cmd("aapt", "dump", "badging", str(args.apk.resolve()))["text"])
+    aapt = shutil.which("aapt")
+    if aapt:
+        save(out, "apk-manifest.txt",
+             cmd(aapt, "dump", "badging", str(args.apk.resolve()))["text"])
+    else:
+        save(out, "apk-manifest.txt", "aapt not found on PATH; see dumpsys package")
     # Use target-specific independent subprocesses and exact runtime state.
     grant_state(out, "denied", grant=[], revoke=list(RUNTIME))
     state_before = current_state(out, "denied-before")

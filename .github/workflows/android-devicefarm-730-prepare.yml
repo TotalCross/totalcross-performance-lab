@@ -30,7 +30,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m py_compile tools/devicefarm_android.py tests/devicefarm-android/tests/test_sqlite_storage.py tests/devicefarm-android/validation/test_event_isolation.py
-          python -m unittest discover -s tests/devicefarm-android/validation -p 'test_*.py' -v
+          python -m unittest discover -s tests/devicefarm-android/validation -p 'test_event_isolation.py' -v
           python - <<'PY'
           import pathlib,yaml
           s=yaml.safe_load(pathlib.Path("tests/devicefarm-android/devicefarm-test-spec.yml").read_text())
@@ -67,6 +67,31 @@ jobs:
               assert "lib/arm64-v8a/libtcvm.so" in app.namelist()
           print("Verified exact original APK:",len(apk),"bytes, sha256=",digest)
           PY
+      - name: Checkout exact TotalCross 7.3.0 permission/native sources (no VM build)
+        uses: actions/checkout@v4
+        with:
+          repository: TotalCross/totalcross
+          ref: 5464c21e3107e3f1ce9c287b724829e2bb870c1d
+          path: totalcross-730
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            TotalCrossVM/android/app/src/main/java/totalcross/android/AndroidPermissionManager.java
+            TotalCrossVM/android/app/src/main/AndroidManifest.xml
+            TotalCrossVM/src/nm/io/posix/File_c.h
+            TotalCrossVM/src/nm/db/NativeDB.c
+      - name: Set up standalone Java compiler (no Android SDK/VM required)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Test real pinned Java permission method and original APK metadata (free)
+        shell: bash
+        env:
+          TC730_SOURCE_ROOT: totalcross-730
+          TC730_ARTIFACT_ZIP: physical-android-ready/source-artifact.zip
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests/devicefarm-android/validation -p 'test_permission_candidates_without_vm.py' -v
       - name: Package immutable Appium-Python ADB test for physical Android
         shell: bash
         run: |

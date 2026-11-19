@@ -1,0 +1,44 @@
+name: Benchmark runner contract tests
+
+on:
+  push:
+    branches:
+      - main
+      - fix/benchmark-disk-preflight
+      - test/scroll-workload-contract
+    paths:
+      - 'runners/**'
+      - 'tests/test_runner_contract.py'
+      - 'tests/test_image_rendering_source_contract.py'
+      - 'benchmarks/image-rendering/**'
+      - 'datasets/image-scroll/**'
+      - 'tools/packaging/**'
+      - '.github/workflows/benchmark-runner-contract.yml'
+  pull_request:
+    paths:
+      - 'runners/**'
+      - 'tests/test_runner_contract.py'
+      - 'tests/test_image_rendering_source_contract.py'
+      - 'benchmarks/image-rendering/**'
+      - 'datasets/image-scroll/**'
+      - 'tools/packaging/**'
+      - '.github/workflows/benchmark-runner-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-contracts:
+    name: Python benchmark contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run runner and workload contracts
+        run: |
+          python -m unittest discover -s tests -p test_runner_contract.py -v
+          python -m unittest discover -s tests -p test_image_rendering_source_contract.py -v

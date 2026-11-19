@@ -101,7 +101,7 @@ jobs:
 
   build-graphics:
     name: Build graphics IPA with selected SDK and test ref (no AWS)
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.collect_run_arn == ''
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/test/sqlite-plaintext-7.3.0') && inputs.collect_run_arn == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 110
     env:
@@ -218,7 +218,7 @@ jobs:
 
   physical-graphics-test:
     name: Render graphics on AWS Device Farm (billable; manual opt-in)
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.execute == true && inputs.collect_run_arn == ''
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/test/sqlite-plaintext-7.3.0') && inputs.execute == true && inputs.collect_run_arn == ''
     needs: build-graphics
     runs-on: ubuntu-24.04
     timeout-minutes: 55
@@ -269,7 +269,7 @@ jobs:
 
   collect-graphics-run:
     name: Recover existing AWS Device Farm run (no scheduling)
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.execute == false && inputs.collect_run_arn != ''
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/test/sqlite-plaintext-7.3.0') && inputs.execute == false && inputs.collect_run_arn != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 50
     permissions:

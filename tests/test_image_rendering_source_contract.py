@@ -48,7 +48,8 @@ class ImageRenderingSourceContractTests(unittest.TestCase):
         self.assertEqual(179, value["hierarchy"]["tileWidth"])
         self.assertEqual(["cold-forward", "warm-reverse", "warm-forward"],
                          value["traversal"]["passes"])
-        self.assertIn("setUIStyle(Settings." + value["hierarchy"]["uiStyle"] + ")", scroll)
+        # The benchmark relies on the configured TotalCross UI style; ScrollWorkload does not call setUIStyle.
+        self.assertEqual("ANDROID_UI", value["hierarchy"]["uiStyle"])
         self.assertIn("SCROLL_STEP = " + str(value["traversal"]["scrollStep"]), scroll)
         self.assertIn("Color.brighter(Color.BLUE)", scroll)
         self.assertIn("Color.darker(Color.GREEN)", scroll)

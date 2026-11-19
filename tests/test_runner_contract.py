@@ -308,6 +308,7 @@ class RunnerContractTests(unittest.TestCase):
                                None, "0123456789abcdef", "89abcdef01234567", [], "abc", ENVIRONMENT, root)
 
     def test_scroll_preflight_config_contains_requested_dimensions(self):
+        dataset = run.scroll_workload_contract()["dataset"]
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             args = SimpleNamespace(
@@ -323,17 +324,17 @@ class RunnerContractTests(unittest.TestCase):
                          "'runtimeIdentity':c['runtimeIdentity'],'renderer':'RASTER',"
                          "'diagnosticsRequested':False,'diagnosticsEnabled':False,"
                          "'runtimeConfigurationReport':'Runtime configuration test',"
-                         "'fixture':{'dataset':None,'logicalDimensions':{'width':540,'height':960},"
+                         "'fixture':{'dataset':" + repr(dataset) + ",'logicalDimensions':{'width':540,'height':960},"
                          "'runtimeLogicalDimensions':{'width':540,'height':960},'imageControls':663,"
                          "'rows':221,'columns':3,'tileWidth':179,'explicitPreparationRequested':False}}; "
                          "print('TCBENCH_PREFLIGHT_JSON '+json.dumps(r))"],
                 timeout_seconds=3, launch_cwd=None,
             )
-            run.launch_preflight(args, {"profile": "default", "workload": "scroll"}, 1, None,
+            run.launch_preflight(args, {"profile": "default", "workload": "scroll"}, 1, dataset,
                                  "0123456789abcdef", "89abcdef01234567", [], "abc", ENVIRONMENT, root)
 
     def test_default_scroll_preflight_requires_the_production_runtime_policy(self):
-        dataset = {"id": "image-scroll", "version": "v1", "manifestSha256": "a" * 64}
+        dataset = run.scroll_workload_contract()["dataset"]
         record = {
             "profile": "default", "renderer": "RASTER", "scrollDriver": "fixed-step",
             "diagnosticsRequested": False,

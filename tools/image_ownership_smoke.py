@@ -143,9 +143,9 @@ def prepare(arguments) -> None:
     jar_path = output / (APP_NAME + ".jar")
     run_logged([jar, "cf", str(jar_path), "-C", str(classes), "."], output,
                output / "jar.log", env)
-    deploy_classpath = os.pathsep.join([str(sdk_jars[0]), str(libraries / "*")])
+    deploy_classpath = os.pathsep.join([str(sdk_jars[0]), str(libraries / "*"), str(classes)])
     deploy_log = output / "deploy.log"
-    run_logged([java, "-cp", deploy_classpath, "tc.Deploy", str(jar_path),
+    run_logged([java, "-cp", deploy_classpath, "tc.Deploy", ENTRY_CLASS,
                 "-" + target_flag, "/p", "/n", APP_NAME], output, deploy_log, env)
 
     install_root = output / "install" / platform_folder

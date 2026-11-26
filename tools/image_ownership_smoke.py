@@ -429,13 +429,17 @@ def run_host(arguments) -> None:
                 if getattr(arguments, "procdump", None) is None or getattr(
                         arguments, "pdb_directory", None) is None:
                     raise SmokeError("Windows crash diagnostics require ProcDump and PDB paths")
-                run_logged([
+                command = [
                     "pwsh", "-NoProfile", "-File", str(crash_runner.resolve()),
                     "-Executable", str(binary), "-OutputDirectory", str(output),
                     "-SourceCommit", preparation_provenance["totalcrossSourceCommit"],
                     "-ProcdumpPath", str(arguments.procdump.resolve()),
                     "-PdbDirectory", str(arguments.pdb_directory.resolve()),
-                ], output, output / "crash-runner.log", env)
+                ]
+                debugger = getattr(arguments, "debugger", None)
+                if debugger is not None:
+                    command.extend(["-DebuggerPath", str(debugger.resolve())])
+                run_logged(command, output, output / "crash-runner.log", env)
                 runtime_report = read_json(output / "runtime.json")
                 returncode = runtime_report.get("exitCode")
                 if returncode is None:
@@ -667,6 +671,7 @@ def main(argv: list[str] | None = None) -> int:
     host_parser.add_argument("--diagnostic-mode", choices=("baseline", "fixed"))
     host_parser.add_argument("--windows-crash-runner", type=Path)
     host_parser.add_argument("--procdump", type=Path)
+    host_parser.add_argument("--debugger", type=Path)
     host_parser.add_argument("--pdb-directory", type=Path)
     android_parser = subparsers.add_parser("run-android")
     android_parser.add_argument("--output", type=Path, required=True)

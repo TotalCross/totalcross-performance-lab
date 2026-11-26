@@ -5,7 +5,13 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tools.image_ownership_smoke import SmokeError, parse_result, validate_result, verify_provenance
+from tools.image_ownership_smoke import (
+    SmokeError,
+    host_output,
+    parse_result,
+    validate_result,
+    verify_provenance,
+)
 
 
 class ImageOwnershipSmokeContractTest(unittest.TestCase):
@@ -34,6 +40,23 @@ class ImageOwnershipSmokeContractTest(unittest.TestCase):
         }
         with self.assertRaisesRegex(SmokeError, "ownersAfterDetach"):
             validate_result(record)
+
+    def test_reads_windows_debug_console_when_stdout_has_no_result(self):
+        record = {
+            "status": "PASS",
+            "screenCycles": 64,
+            "maxSharedOwners": 2,
+            "ownersAfterDetach": 0,
+            "cacheReusedWhileOwned": True,
+            "cacheEvictedAfterDetach": True,
+            "drawPixelRgb": 16711680,
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            (directory / "DebugConsole.txt").write_text(
+                "TC_IMAGE_OWNERSHIP_JSON " + json.dumps(record), encoding="utf-8")
+            output = host_output(directory / "ImageOwnershipSmoke.exe", "", "windows")
+            validate_result(parse_result(output))
 
     def test_rejects_artifacts_from_another_source_tree(self):
         manifest = {

@@ -208,6 +208,14 @@ def validate_result(result: dict) -> None:
             raise SmokeError("ownership smoke assertion failed for " + key)
 
 
+def host_output(binary: Path, stdout: str, target: str) -> str:
+    if target == "windows" and RESULT_PREFIX not in stdout:
+        debug_console = binary.parent / "DebugConsole.txt"
+        if debug_console.is_file():
+            return stdout + "\n" + debug_console.read_text(encoding="utf-8", errors="replace")
+    return stdout
+
+
 def result_provenance(output: Path) -> dict:
     provenance = read_json(output / "image-ownership-provenance.json")
     return {
@@ -234,13 +242,14 @@ def run_host(arguments) -> None:
     result = subprocess.run([str(binary)], cwd=binary.parent, env=env,
                             text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             timeout=180, check=False)
+    runtime_output = host_output(binary, result.stdout, arguments.target)
     log_path = output / "runtime.log"
-    log_path.write_text(result.stdout, encoding="utf-8", errors="replace")
+    log_path.write_text(runtime_output, encoding="utf-8", errors="replace")
     outcome = {"status": "PASS", "target": arguments.target,
                "exitCode": result.returncode, "log": log_path.name,
                "provenance": result_provenance(output)}
     try:
-        assertions = parse_result(result.stdout)
+        assertions = parse_result(runtime_output)
         validate_result(assertions)
         outcome["assertions"] = assertions
         if result.returncode != 0:

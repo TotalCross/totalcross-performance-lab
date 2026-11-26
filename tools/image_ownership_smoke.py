@@ -386,15 +386,17 @@ def run_host(arguments) -> None:
     preparation_provenance = read_json(output / "image-ownership-provenance.json")
     diagnostic_mode = getattr(arguments, "diagnostic_mode", None) \
         or preparation_provenance.get("diagnosticMode")
+    windows_architecture = getattr(arguments, "windows_architecture", None) \
+        or preparation_provenance.get("windowsRuntimeArtifact", {}).get("machine", "AMD64")
     if not binary.is_file():
         raise SmokeError("deployed native executable is missing: " + str(binary))
     windows_runtime = None
     if arguments.target == "windows":
-        require_windows_x64(binary)
+        require_windows_machine(binary, windows_architecture)
         deployed_vm = binary.parent / "tcvm.dll"
         if not deployed_vm.is_file():
             raise SmokeError("deployed native Windows VM is missing: " + str(deployed_vm))
-        require_windows_x64(deployed_vm)
+        require_windows_machine(deployed_vm, windows_architecture)
         provenance = read_json(output / "image-ownership-provenance.json")
         runtime_artifacts = provenance.get("platformRuntimeArtifacts", [])
         source_vm = next((Path(item["path"]) for item in runtime_artifacts
@@ -406,7 +408,8 @@ def run_host(arguments) -> None:
         if sha256(source_vm) != sha256(deployed_vm):
             raise SmokeError("deployed tcvm.dll does not match the same-run Windows artifact")
         windows_runtime = {
-            "machine": "AMD64",
+            "machine": windows_architecture,
+            "peMachine": "0x%04x" % pe_machine(binary),
             "deployedLauncherSha256": sha256(binary),
             "sourceLauncherSha256": sha256(source_launcher),
             "deployedVmSha256": sha256(deployed_vm),
@@ -456,6 +459,7 @@ def run_host(arguments) -> None:
                     "pwsh", "-NoProfile", "-File", str(crash_runner.resolve()),
                     "-Executable", str(binary), "-OutputDirectory", str(output),
                     "-SourceCommit", preparation_provenance["totalcrossSourceCommit"],
+                    "-Architecture", windows_architecture,
                     "-PdbDirectory", str(arguments.pdb_directory.resolve()),
                 ]
                 procdump = getattr(arguments, "procdump", None)
@@ -505,6 +509,9 @@ def run_host(arguments) -> None:
         outcome["windowsRuntime"] = windows_runtime
     try:
         assertions = parse_result(runtime_output)
+        if arguments.target == "windows" and re.search(
+                r"persistent.{0,30}owner.{0,20}underflow", runtime_output, re.IGNORECASE):
+            raise SmokeError("Windows output contains an image ownership underflow diagnostic")
         validate_result(assertions, diagnostic_mode)
         outcome["assertions"] = assertions
         if returncode != 0:
@@ -696,6 +703,7 @@ def main(argv: list[str] | None = None) -> int:
     host_parser.add_argument("--target", choices=("macos", "linux-amd64", "windows"), required=True)
     host_parser.add_argument("--output", type=Path, required=True)
     host_parser.add_argument("--diagnostic-mode", choices=("baseline", "fixed"))
+    host_parser.add_argument("--windows-architecture", choices=("I386", "AMD64"))
     host_parser.add_argument("--windows-crash-runner", type=Path)
     host_parser.add_argument("--procdump", type=Path)
     host_parser.add_argument("--debugger", type=Path)

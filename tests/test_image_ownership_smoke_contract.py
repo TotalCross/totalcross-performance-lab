@@ -13,6 +13,7 @@ from tools.image_ownership_smoke import (
     host_output,
     parse_result,
     pe_machine,
+    require_windows_machine,
     require_windows_x64,
     validate_result,
     verify_provenance,
@@ -128,6 +129,19 @@ class ImageOwnershipSmokeContractTest(unittest.TestCase):
             executable.write_bytes(image)
             with self.assertRaisesRegex(SmokeError, "not AMD64"):
                 require_windows_x64(executable)
+
+    def test_accepts_only_the_requested_windows_runtime_architecture(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            executable = Path(temporary) / "Launcher.exe"
+            image = bytearray(0x88)
+            image[:2] = b"MZ"
+            struct.pack_into("<I", image, 0x3C, 0x80)
+            image[0x80:0x84] = b"PE\0\0"
+            struct.pack_into("<H", image, 0x84, 0x014C)
+            executable.write_bytes(image)
+            require_windows_machine(executable, "I386")
+            with self.assertRaisesRegex(SmokeError, "not AMD64"):
+                require_windows_machine(executable, "AMD64")
 
     def test_reads_the_arm64_runtime_from_the_android_bundle(self):
         with tempfile.TemporaryDirectory() as temporary:

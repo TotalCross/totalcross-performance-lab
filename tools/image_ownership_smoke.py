@@ -48,11 +48,19 @@ def pe_machine(path: Path) -> int:
         raise SmokeError("cannot inspect Windows executable: " + str(path)) from error
 
 
-def require_windows_x64(path: Path) -> None:
+def require_windows_machine(path: Path, expected: str) -> None:
     machine = pe_machine(path)
-    if machine != 0x8664:
-        raise SmokeError("Windows runtime artifact is not AMD64: " + str(path)
+    machine_values = {"I386": 0x014C, "AMD64": 0x8664}
+    if expected not in machine_values:
+        raise SmokeError("unsupported Windows runtime architecture: " + expected)
+    if machine != machine_values[expected]:
+        raise SmokeError("Windows runtime artifact is not " + expected + ": " + str(path)
                          + " (PE machine 0x%04x)" % machine)
+
+
+def require_windows_x64(path: Path) -> None:
+    """Retain the existing x64 contract for callers that do not pass an architecture."""
+    require_windows_machine(path, "AMD64")
 
 
 def zip_member(path: Path, suffix: str) -> tuple[str, bytes]:
@@ -176,10 +184,11 @@ def prepare(arguments) -> None:
         shutil.copy2(launcher, launcher_destination)
         shutil.copy2(vm, vm_destination)
         if arguments.target == "windows":
-            require_windows_x64(launcher)
-            require_windows_x64(vm)
+            require_windows_machine(launcher, arguments.windows_architecture)
+            require_windows_machine(vm, arguments.windows_architecture)
             windows_runtime_artifact = {
-                "machine": "AMD64",
+                "machine": arguments.windows_architecture,
+                "peMachine": "0x%04x" % pe_machine(launcher),
                 "launcherSha256": sha256(launcher),
                 "vmSha256": sha256(vm),
             }
@@ -226,6 +235,19 @@ def prepare(arguments) -> None:
         package = install_root / executable
     if not package.is_file():
         raise SmokeError("deployer output is missing: " + str(package))
+    windows_deployed_runtime = None
+    if arguments.target == "windows":
+        require_windows_machine(package, arguments.windows_architecture)
+        deployed_vm = package.parent / vm_name
+        if not deployed_vm.is_file() or sha256(deployed_vm) != sha256(vm):
+            raise SmokeError("deployed tcvm.dll does not match the selected Windows runtime")
+        require_windows_machine(deployed_vm, arguments.windows_architecture)
+        windows_deployed_runtime = {
+            "machine": arguments.windows_architecture,
+            "peMachine": "0x%04x" % pe_machine(package),
+            "deployedLauncherSha256": sha256(package),
+            "deployedTcvmSha256": sha256(deployed_vm),
+        }
 
     provenance = {
         "schemaVersion": 1,
@@ -253,6 +275,8 @@ def prepare(arguments) -> None:
         provenance["diagnosticMode"] = diagnostic_mode
     if windows_runtime_artifact is not None:
         provenance["windowsRuntimeArtifact"] = windows_runtime_artifact
+    if windows_deployed_runtime is not None:
+        provenance["windowsDeployedRuntime"] = windows_deployed_runtime
     if android_runtime_library is not None:
         provenance["androidRuntimeLibrary"] = android_runtime_library
     (output / "image-ownership-provenance.json").write_text(
@@ -666,6 +690,8 @@ def main(argv: list[str] | None = None) -> int:
     prepare_parser.add_argument("--output", type=Path, required=True)
     prepare_parser.add_argument("--allow-dirty-source", action="store_true")
     prepare_parser.add_argument("--diagnostic-mode", choices=("baseline", "fixed"))
+    prepare_parser.add_argument("--windows-architecture", choices=("I386", "AMD64"),
+                                default="AMD64")
     host_parser = subparsers.add_parser("run-host")
     host_parser.add_argument("--target", choices=("macos", "linux-amd64", "windows"), required=True)
     host_parser.add_argument("--output", type=Path, required=True)

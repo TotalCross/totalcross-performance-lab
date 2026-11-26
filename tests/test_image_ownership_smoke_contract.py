@@ -2,15 +2,20 @@
 
 import json
 from pathlib import Path
+import struct
 import tempfile
 import unittest
+import zipfile
 
 from tools.image_ownership_smoke import (
     SmokeError,
     host_output,
     parse_result,
+    pe_machine,
+    require_windows_x64,
     validate_result,
     verify_provenance,
+    zip_member,
 )
 
 
@@ -62,6 +67,31 @@ class ImageOwnershipSmokeContractTest(unittest.TestCase):
                 "TC_IMAGE_OWNERSHIP_JSON " + json.dumps(record), encoding="utf-8")
             output = host_output(directory / "ImageOwnershipSmoke.exe", "", "windows")
             validate_result(parse_result(output))
+
+    def test_accepts_only_amd64_windows_runtime_artifacts(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            executable = Path(temporary) / "Launcher.exe"
+            image = bytearray(0x88)
+            image[:2] = b"MZ"
+            struct.pack_into("<I", image, 0x3C, 0x80)
+            image[0x80:0x84] = b"PE\0\0"
+            struct.pack_into("<H", image, 0x84, 0x8664)
+            executable.write_bytes(image)
+            self.assertEqual(pe_machine(executable), 0x8664)
+            require_windows_x64(executable)
+            struct.pack_into("<H", image, 0x84, 0x014C)
+            executable.write_bytes(image)
+            with self.assertRaisesRegex(SmokeError, "not AMD64"):
+                require_windows_x64(executable)
+
+    def test_reads_the_arm64_runtime_from_the_android_bundle(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            bundle = Path(temporary) / "TotalCross.aab"
+            with zipfile.ZipFile(bundle, "w") as archive:
+                archive.writestr("base/lib/arm64-v8a/libtcvm.so", b"arm64 runtime")
+            member, data = zip_member(bundle, "lib/arm64-v8a/libtcvm.so")
+            self.assertEqual(member, "base/lib/arm64-v8a/libtcvm.so")
+            self.assertEqual(data, b"arm64 runtime")
 
     def test_rejects_artifacts_from_another_source_tree(self):
         manifest = {

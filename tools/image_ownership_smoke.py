@@ -10,9 +10,11 @@ import os
 from pathlib import Path
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import time
+import zipfile
 
 
 APP_NAME = "ImageOwnershipSmoke"
@@ -29,6 +31,40 @@ TARGETS = {
 
 class SmokeError(Exception):
     pass
+
+
+def pe_machine(path: Path) -> int:
+    try:
+        with path.open("rb") as executable:
+            if executable.read(2) != b"MZ":
+                raise SmokeError("Windows executable has no DOS header: " + str(path))
+            executable.seek(0x3C)
+            pe_offset = struct.unpack("<I", executable.read(4))[0]
+            executable.seek(pe_offset)
+            if executable.read(4) != b"PE\0\0":
+                raise SmokeError("Windows executable has no PE signature: " + str(path))
+            return struct.unpack("<H", executable.read(2))[0]
+    except (OSError, struct.error) as error:
+        raise SmokeError("cannot inspect Windows executable: " + str(path)) from error
+
+
+def require_windows_x64(path: Path) -> None:
+    machine = pe_machine(path)
+    if machine != 0x8664:
+        raise SmokeError("Windows runtime artifact is not AMD64: " + str(path)
+                         + " (PE machine 0x%04x)" % machine)
+
+
+def zip_member(path: Path, suffix: str) -> tuple[str, bytes]:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            matches = [name for name in archive.namelist() if name.endswith(suffix)]
+            if len(matches) != 1:
+                raise SmokeError("expected one " + suffix + " entry in " + str(path)
+                                 + "; found " + str(len(matches)))
+            return matches[0], archive.read(matches[0])
+    except (OSError, zipfile.BadZipFile) as error:
+        raise SmokeError("cannot inspect runtime archive: " + str(path)) from error
 
 
 def read_json(path: Path) -> dict:
@@ -102,8 +138,17 @@ def prepare(arguments) -> None:
 
     platform_folder, target_flag, launcher_name, vm_name = TARGETS[arguments.target]
     runtime_files = []
+    windows_runtime_artifact = None
+    android_runtime_library = None
     if arguments.target == "android":
         android_template = locate_one(platform_artifact, "TotalCross.aab")
+        library_member, library_bytes = zip_member(
+            android_template, "lib/arm64-v8a/libtcvm.so")
+        android_runtime_library = {
+            "abi": "arm64-v8a",
+            "archiveMember": library_member,
+            "sha256": hashlib.sha256(library_bytes).hexdigest(),
+        }
         destination = runtime_home / "dist/vm/android/TotalCross.aab"
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(android_template, destination)
@@ -117,6 +162,14 @@ def prepare(arguments) -> None:
         vm_destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(launcher, launcher_destination)
         shutil.copy2(vm, vm_destination)
+        if arguments.target == "windows":
+            require_windows_x64(launcher)
+            require_windows_x64(vm)
+            windows_runtime_artifact = {
+                "machine": "AMD64",
+                "launcherSha256": sha256(launcher),
+                "vmSha256": sha256(vm),
+            }
         runtime_files.extend((launcher, vm))
 
     java = shutil.which("java")
@@ -179,6 +232,10 @@ def prepare(arguments) -> None:
         "smokeAppJar": {"path": str(jar_path), "sha256": sha256(jar_path)},
         "deployedPackage": {"path": str(package), "sha256": sha256(package)},
     }
+    if windows_runtime_artifact is not None:
+        provenance["windowsRuntimeArtifact"] = windows_runtime_artifact
+    if android_runtime_library is not None:
+        provenance["androidRuntimeLibrary"] = android_runtime_library
     (output / "image-ownership-provenance.json").write_text(
         json.dumps(provenance, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"status": "prepared", "target": arguments.target,
@@ -250,6 +307,31 @@ def run_host(arguments) -> None:
     binary = output / "install" / platform_folder / executable
     if not binary.is_file():
         raise SmokeError("deployed native executable is missing: " + str(binary))
+    windows_runtime = None
+    if arguments.target == "windows":
+        require_windows_x64(binary)
+        deployed_vm = binary.parent / "tcvm.dll"
+        if not deployed_vm.is_file():
+            raise SmokeError("deployed native Windows VM is missing: " + str(deployed_vm))
+        require_windows_x64(deployed_vm)
+        provenance = read_json(output / "image-ownership-provenance.json")
+        runtime_artifacts = provenance.get("platformRuntimeArtifacts", [])
+        source_vm = next((Path(item["path"]) for item in runtime_artifacts
+                          if Path(item["path"]).name.lower() == "tcvm.dll"), None)
+        source_launcher = next((Path(item["path"]) for item in runtime_artifacts
+                                if Path(item["path"]).name.lower() == "launcher.exe"), None)
+        if source_vm is None or source_launcher is None:
+            raise SmokeError("Windows runtime artifact provenance is incomplete")
+        if sha256(source_vm) != sha256(deployed_vm):
+            raise SmokeError("deployed tcvm.dll does not match the same-run Windows artifact")
+        windows_runtime = {
+            "machine": "AMD64",
+            "deployedLauncherSha256": sha256(binary),
+            "sourceLauncherSha256": sha256(source_launcher),
+            "deployedVmSha256": sha256(deployed_vm),
+            "sourceVmSha256": sha256(source_vm),
+            "vmArtifactMatches": True,
+        }
     env = os.environ.copy()
     if arguments.target == "linux-amd64":
         env["LD_LIBRARY_PATH"] = str(binary.parent) + os.pathsep + env.get("LD_LIBRARY_PATH", "")
@@ -284,16 +366,28 @@ def run_host(arguments) -> None:
         (output / "runtime-stderr.log").write_text(stderr, encoding="utf-8", errors="replace")
         runtime_output = host_output(binary, stdout + "\n" + stderr, arguments.target)
     else:
-        result = subprocess.run([str(binary)], cwd=binary.parent, env=env,
-                                text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                timeout=180, check=False)
-        returncode = result.returncode
-        runtime_output = host_output(binary, result.stdout, arguments.target)
+        try:
+            result = subprocess.run([str(binary)], cwd=binary.parent, env=env,
+                                    text=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, timeout=180, check=False)
+            returncode = result.returncode
+            runtime_output = host_output(binary, result.stdout, arguments.target)
+        except subprocess.TimeoutExpired as error:
+            stdout = error.stdout or ""
+            if isinstance(stdout, bytes):
+                stdout = stdout.decode("utf-8", errors="replace")
+            runtime_output = host_output(binary, stdout, arguments.target)
+            (output / "runtime.log").write_text(runtime_output, encoding="utf-8",
+                                                errors="replace")
+            raise SmokeError("native " + arguments.target
+                             + " process exceeded 180 seconds; captured partial output") from error
     log_path = output / "runtime.log"
     log_path.write_text(runtime_output, encoding="utf-8", errors="replace")
     outcome = {"status": "PASS", "target": arguments.target,
                "exitCode": returncode, "log": log_path.name,
                "provenance": result_provenance(output)}
+    if windows_runtime is not None:
+        outcome["windowsRuntime"] = windows_runtime
     try:
         assertions = parse_result(runtime_output)
         validate_result(assertions)
@@ -359,8 +453,37 @@ def run_android(arguments) -> None:
     if not package_match:
         raise SmokeError("cannot identify Android package name from APK")
     package_name = package_match.group(1)
+    package_hash = sha256(apk)
+    provenance = read_json(output / "image-ownership-provenance.json")
+    if provenance.get("deployedPackage", {}).get("sha256") != package_hash:
+        raise SmokeError("Android APK hash differs from its prepared provenance")
+    expected_library = provenance.get("androidRuntimeLibrary", {})
+    apk_library_member, apk_library_bytes = zip_member(apk, "lib/arm64-v8a/libtcvm.so")
+    apk_library_hash = hashlib.sha256(apk_library_bytes).hexdigest()
+    if (expected_library.get("abi") != "arm64-v8a"
+            or expected_library.get("sha256") != apk_library_hash):
+        raise SmokeError("APK arm64-v8a libtcvm.so does not match the same-run Android AAB")
+
+    device_api = subprocess.run([adb, "shell", "getprop", "ro.build.version.sdk"],
+                                text=True, capture_output=True, check=True).stdout.strip()
+    device_abi = subprocess.run([adb, "shell", "getprop", "ro.product.cpu.abi"],
+                                text=True, capture_output=True, check=True).stdout.strip()
+    device_model = subprocess.run([adb, "shell", "getprop", "ro.product.model"],
+                                  text=True, capture_output=True, check=True).stdout.strip()
+    if not device_api.isdigit():
+        raise SmokeError("cannot determine Android emulator API level")
+    if arguments.expected_api is not None and int(device_api) != arguments.expected_api:
+        raise SmokeError("Android emulator API level %s does not match expected %d"
+                         % (device_api, arguments.expected_api))
+    if arguments.expected_abi is not None and device_abi != arguments.expected_abi:
+        raise SmokeError("Android emulator ABI %s does not match expected %s"
+                         % (device_abi, arguments.expected_abi))
+
+    subprocess.run([adb, "uninstall", package_name], check=False, timeout=30,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     subprocess.run([adb, "logcat", "-c"], check=True, stdout=subprocess.DEVNULL)
-    subprocess.run([adb, "install", "-r", str(apk)], check=True, timeout=180)
+    install = subprocess.run([adb, "install", str(apk)], text=True, capture_output=True,
+                             check=True, timeout=180)
     subprocess.run([adb, "shell", "monkey", "-p", package_name, "1"],
                    check=True, timeout=60, stdout=subprocess.DEVNULL)
     deadline = time.monotonic() + arguments.timeout
@@ -373,11 +496,28 @@ def run_android(arguments) -> None:
         time.sleep(2)
     (output / "runtime-android-logcat.txt").write_text(log, encoding="utf-8", errors="replace")
     outcome = {"status": "PASS", "target": "android", "packageName": package_name,
-               "log": "runtime-android-logcat.txt", "provenance": result_provenance(output)}
+               "log": "runtime-android-logcat.txt", "provenance": result_provenance(output),
+               "device": {"apiLevel": int(device_api), "abi": device_abi,
+                          "model": device_model},
+               "installation": {"status": "installed", "apkSha256": package_hash,
+                                "output": install.stdout.strip()},
+               "nativeLibrary": {"abi": "arm64-v8a", "archiveMember": apk_library_member,
+                                 "sha256": apk_library_hash},
+               "applicationCompletion": "PASS result marker observed; app calls MainWindow.exit(0)"}
     try:
+        crash_pattern = re.compile(
+            r"FATAL EXCEPTION|Fatal signal|SIG(?:SEGV|ABRT|BUS)|native crash|"
+            r"persistent.{0,30}owner.{0,20}underflow", re.IGNORECASE)
+        crash_lines = [line for line in log.splitlines() if crash_pattern.search(line)]
+        if crash_lines:
+            raise SmokeError("Android logcat contains crash/underflow diagnostics: "
+                             + " | ".join(crash_lines[-8:]))
         assertions = parse_result(log)
         validate_result(assertions)
         outcome["assertions"] = assertions
+        outcome["processIdAfterCompletion"] = subprocess.run(
+            [adb, "shell", "pidof", package_name], text=True, capture_output=True,
+            check=False, timeout=15).stdout.strip() or None
     except SmokeError as error:
         outcome["status"] = "FAIL"
         outcome["error"] = str(error)
@@ -411,6 +551,8 @@ def main(argv: list[str] | None = None) -> int:
     android_parser = subparsers.add_parser("run-android")
     android_parser.add_argument("--output", type=Path, required=True)
     android_parser.add_argument("--timeout", type=int, default=120)
+    android_parser.add_argument("--expected-api", type=int)
+    android_parser.add_argument("--expected-abi")
     arguments = parser.parse_args(argv)
     try:
         if arguments.command == "prepare":

@@ -9,6 +9,7 @@ import zipfile
 
 from tools.image_ownership_smoke import (
     SmokeError,
+    deploy_sdk_jar,
     host_output,
     parse_result,
     pe_machine,
@@ -92,6 +93,18 @@ class ImageOwnershipSmokeContractTest(unittest.TestCase):
             member, data = zip_member(bundle, "lib/arm64-v8a/libtcvm.so")
             self.assertEqual(member, "base/lib/arm64-v8a/libtcvm.so")
             self.assertEqual(data, b"arm64 runtime")
+
+    def test_uses_the_canonical_sdk_jar_for_deployment(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            dist = Path(temporary) / "dist"
+            dist.mkdir()
+            with zipfile.ZipFile(dist / "totalcross-sdk-7.2.2-javadoc.jar", "w"):
+                pass
+            with zipfile.ZipFile(dist / "totalcross-sdk-7.2.2-sources.jar", "w"):
+                pass
+            with zipfile.ZipFile(dist / "totalcross-sdk.jar", "w") as archive:
+                archive.writestr("tc/Deploy.class", b"deployer")
+            self.assertEqual(deploy_sdk_jar(Path(temporary)), dist / "totalcross-sdk.jar")
 
     def test_rejects_artifacts_from_another_source_tree(self):
         manifest = {

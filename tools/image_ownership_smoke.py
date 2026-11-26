@@ -67,6 +67,19 @@ def zip_member(path: Path, suffix: str) -> tuple[str, bytes]:
         raise SmokeError("cannot inspect runtime archive: " + str(path)) from error
 
 
+def deploy_sdk_jar(runtime_home: Path) -> Path:
+    sdk_jar = runtime_home / "dist/totalcross-sdk.jar"
+    if not sdk_jar.is_file():
+        raise SmokeError("packaged SDK is missing its canonical dist/totalcross-sdk.jar")
+    try:
+        with zipfile.ZipFile(sdk_jar) as archive:
+            if "tc/Deploy.class" not in archive.namelist():
+                raise SmokeError("canonical SDK jar does not contain tc.Deploy: " + str(sdk_jar))
+    except (OSError, zipfile.BadZipFile) as error:
+        raise SmokeError("cannot inspect canonical SDK jar: " + str(sdk_jar)) from error
+    return sdk_jar
+
+
 def read_json(path: Path) -> dict:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -177,16 +190,16 @@ def prepare(arguments) -> None:
     jar = shutil.which("jar")
     if not java or not javac or not jar:
         raise SmokeError("JDK java, javac, and jar commands are required")
-    sdk_jars = sorted((runtime_home / "dist").glob("totalcross-sdk*.jar"))
+    sdk_jar = deploy_sdk_jar(runtime_home)
     libraries = runtime_home / "dist/libs"
-    if not sdk_jars or not libraries.is_dir():
+    if not libraries.is_dir():
         raise SmokeError("packaged SDK jars or dist/libs are missing")
     classes = output / "classes"
     classes.mkdir(parents=True, exist_ok=True)
     source = lab_root / "tests/image-ownership/src/totalcross/ui/image/ImageOwnershipLifecycleProbe.java"
     if not source.is_file():
         raise SmokeError("ownership smoke Java source is missing")
-    classpath = os.pathsep.join([str(sdk_jars[0]), str(libraries / "*")])
+    classpath = os.pathsep.join([str(sdk_jar), str(libraries / "*")])
     env = os.environ.copy()
     env["TOTALCROSS3_HOME"] = str(runtime_home)
     compile_log = output / "compile.log"
@@ -196,7 +209,7 @@ def prepare(arguments) -> None:
     jar_path = output / (ENTRY_CLASS.rsplit(".", 1)[-1] + ".jar")
     run_logged([jar, "cf", str(jar_path), "-C", str(classes), "."], output,
                output / "jar.log", env)
-    deploy_classpath = os.pathsep.join([str(sdk_jars[0]), str(libraries / "*")])
+    deploy_classpath = os.pathsep.join([str(sdk_jar), str(libraries / "*")])
     deploy_log = output / "deploy.log"
     run_logged([java, "-cp", deploy_classpath, "tc.Deploy", str(jar_path),
                 "-" + target_flag, "/p", "/n", APP_NAME], output, deploy_log, env)

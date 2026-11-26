@@ -238,10 +238,11 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
     ImageDrawingBridge.drawPersistentImage(graphics, image, 0, 0, true);
     ImageDrawingBridge.drawPersistentImage(graphics, image, 0, 0, true);
     int pixel = graphics.getPixel(0, 0);
-    require(pixel == Color.RED, "native repeated drawing must preserve the red pixel");
     File output = new File("image-ownership-render.png", File.CREATE_EMPTY);
     destination.createPng(output);
     output.close();
+    require(pixel == Color.RED, "native repeated drawing must preserve the red pixel; got 0x"
+        + Integer.toHexString(pixel));
     remove(screen);
     require(ImageDrawingBridge.persistentOwnerCount(image) == 0,
         "drawing fixture cleanup must release its image owner");

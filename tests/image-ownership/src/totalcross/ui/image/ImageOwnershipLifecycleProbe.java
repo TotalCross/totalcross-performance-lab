@@ -3,6 +3,7 @@
 package totalcross.ui.image;
 
 import totalcross.io.File;
+import totalcross.sys.Settings;
 import totalcross.sys.Vm;
 import totalcross.ui.Container;
 import totalcross.ui.ImageControl;
@@ -14,6 +15,9 @@ import totalcross.ui.gfx.Graphics;
 public final class ImageOwnershipLifecycleProbe extends MainWindow {
   private static final int SCREEN_CYCLES = 2;
   private static final int CONTROLS_PER_CYCLE = 1510;
+  private static boolean baselineObservation;
+  private static int ownershipMismatches;
+  private static String currentStage = "startup";
   private static final byte[] RED_PNG = {
       (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
       0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
@@ -30,32 +34,57 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
 
   @Override
   public void initUI() {
+    baselineObservation = isBaselineObservation();
+    markStage("stage-1-mainwindow-entered");
     Vm.debug("TC_IMAGE_OWNERSHIP_START cycles=" + SCREEN_CYCLES + " controlsPerCycle="
         + CONTROLS_PER_CYCLE);
     try {
-      runLargeScreenCycles();
+      currentStage = "stage-1-mainwindow";
+      markStage("stage-1-mainwindow-complete");
+      currentStage = "stage-2-single-control";
+      markStage("stage-2-single-control-entered");
+      runSingleControlScenario();
+      markStage("stage-2-single-control-complete");
+      currentStage = "stage-3-native-drawing";
+      markStage("stage-3-native-drawing-entered");
+      int pixel = runDrawingScenario();
+      markStage("stage-3-native-drawing-complete");
+      currentStage = "stage-4-container-hierarchy";
+      markStage("stage-4-container-hierarchy-entered");
       runDetachedSubtreeScenario();
+      markStage("stage-4-container-hierarchy-complete");
+      currentStage = "stage-5-ancestor-detach";
+      markStage("stage-5-ancestor-detach-complete");
+      currentStage = "stage-6-shared-and-replacement";
+      markStage("stage-6-shared-and-replacement-entered");
       runActiveReparentScenario();
       runSharedRasterScenario();
       runPipelineReplacementScenario();
-      int pixel = runDrawingScenario();
-      String result = "TC_IMAGE_OWNERSHIP_JSON {\"status\":\"PASS\","
-          + "\"screenCycles\":" + SCREEN_CYCLES + ",\"controlsPerCycle\":"
+      markStage("stage-6-shared-and-replacement-complete");
+      currentStage = "stage-7-large-screen";
+      markStage("stage-7-large-screen-entered");
+      runLargeScreenCycles();
+      markStage("stage-7-large-screen-complete");
+      String status = baselineObservation ? "BASELINE_OBSERVED" : "PASS";
+      String result = "TC_IMAGE_OWNERSHIP_JSON {\"status\":\"" + status + "\","
+          + "\"diagnosticMode\":\"" + (baselineObservation ? "baseline" : "fixed")
+          + "\",\"screenCycles\":" + SCREEN_CYCLES + ",\"controlsPerCycle\":"
           + CONTROLS_PER_CYCLE + ",\"distinctImagesPerCycle\":" + CONTROLS_PER_CYCLE
-          + ",\"ownersAfterDetach\":0,\"directParentsPreserved\":true,"
-          + "\"mutationsWhileDetached\":true,\"ownersRestoredAfterReattach\":true,"
-          + "\"activeReparentOwnerCount\":1,\"activeReparentCachePreserved\":true,"
-          + "\"maxSharedOwners\":3,\"rasterRetainedUntilFinalOwner\":true,"
-          + "\"pipelineReplacementOwners\":3,\"cacheReusedWhileOwned\":true,"
-          + "\"cacheEvictedAfterDetach\":true,\"drawPixelRgb\":" + pixel
-          + ",\"png\":\"image-ownership-render.png\"}";
+          + ",\"ownershipMismatches\":" + ownershipMismatches
+          + ",\"highestCompletedStage\":7,\"drawPixelRgb\":" + pixel
+          + ",\"png\":\"image-ownership-render.png\""
+          + (baselineObservation ? "" : fixedOwnershipMetrics()) + "}";
       System.out.println(result);
       Vm.debug(result);
+      writeDiagnosticFile("tcdiag-result.txt",
+          result.substring("TC_IMAGE_OWNERSHIP_JSON ".length()));
       System.out.flush();
       MainWindow.exit(0);
     } catch (Throwable failure) {
+      markStage("failure-" + currentStage);
       String failureRecord = "TC_IMAGE_OWNERSHIP_FAIL " + failure.getClass().getName() + ": "
-          + failure.getMessage();
+          + currentStage + ": " + failure.getMessage();
+      writeDiagnosticFile("tcdiag-failure.txt", failureRecord);
       System.err.println(failureRecord);
       Vm.debug(failureRecord);
       failure.printStackTrace();
@@ -63,6 +92,88 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
       System.out.flush();
       MainWindow.exit(1);
     }
+  }
+
+  private static boolean isBaselineObservation() {
+    Object mode = Settings.appProps == null ? null : Settings.appProps.get("diagnostic.mode");
+    return "baseline".equals(mode);
+  }
+
+  private static String fixedOwnershipMetrics() {
+    return ",\"ownersAfterDetach\":0,\"directParentsPreserved\":true,"
+        + "\"mutationsWhileDetached\":true,\"ownersRestoredAfterReattach\":true,"
+        + "\"activeReparentOwnerCount\":1,\"activeReparentCachePreserved\":true,"
+        + "\"maxSharedOwners\":3,\"rasterRetainedUntilFinalOwner\":true,"
+        + "\"pipelineReplacementOwners\":3,\"cacheReusedWhileOwned\":true,"
+        + "\"cacheEvictedAfterDetach\":true";
+  }
+
+  private static void markStage(String stage) {
+    String marker = "TC_IMAGE_OWNERSHIP_STAGE " + stage;
+    Vm.debug(marker);
+    System.out.println(marker);
+    try {
+      writeDiagnosticFile("tcdiag-" + stage + ".marker", stage);
+    } catch (Throwable ignored) {
+      // Vm.debug and stdout still identify the stage when the marker path is unavailable.
+    }
+  }
+
+  private static void writeDiagnosticFile(String filename, String contents) {
+    File output = null;
+    try {
+      output = new File(Settings.appPath + filename, File.CREATE_EMPTY);
+      byte[] bytes = contents.getBytes();
+      output.writeBytes(bytes, 0, bytes.length);
+    } catch (Throwable ignored) {
+      // The native diagnostic stream remains available as a second marker path.
+    } finally {
+      if (output != null) {
+        try {
+          output.close();
+        } catch (Throwable ignored) {
+          // The marker file is best-effort; this probe must keep its test path simple.
+        }
+      }
+    }
+  }
+
+  private static void recordOwnershipMismatch(String message) {
+    ownershipMismatches++;
+    String detail = "TC_IMAGE_OWNERSHIP_BASELINE_MISMATCH " + currentStage + ": " + message;
+    Vm.debug(detail);
+    System.out.println(detail);
+    try {
+      File output = new File(Settings.appPath + "tcdiag-mismatch-" + ownershipMismatches
+          + ".txt", File.CREATE_EMPTY);
+      byte[] bytes = detail.getBytes();
+      output.writeBytes(bytes, 0, bytes.length);
+      output.close();
+    } catch (Throwable ignored) {
+      // The mismatch remains visible in the native diagnostic stream.
+    }
+  }
+
+  private static void requireOwnership(boolean condition, String message) {
+    if (condition) {
+      return;
+    }
+    if (baselineObservation) {
+      recordOwnershipMismatch(message);
+    } else {
+      require(false, message);
+    }
+  }
+
+  private void runSingleControlScenario() throws Exception {
+    Image image = new Image(RED_PNG);
+    ImageControl control = new ImageControl(image);
+    add(control);
+    requireOwnership(ImageDrawingBridge.persistentOwnerCount(image) == 1,
+        "one attached control must own its image");
+    remove(control);
+    requireOwnership(ImageDrawingBridge.persistentOwnerCount(image) == 0,
+        "removing the one-control fixture must release its image");
   }
 
   private void runLargeScreenCycles() throws Exception {
@@ -85,9 +196,9 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
       }
       add(screen);
       for (int i = 0; i < CONTROLS_PER_CYCLE; i++) {
-        require(ImageDrawingBridge.persistentOwnerCount(images[i]) == 1,
+        requireOwnership(ImageDrawingBridge.persistentOwnerCount(images[i]) == 1,
             "each attached control must register its distinct image exactly once");
-        require(pipelines[i].persistentDrawingOwnerCountForSmoke() == 1,
+        requireOwnership(pipelines[i].persistentDrawingOwnerCountForSmoke() == 1,
             "each attached image pipeline must have exactly one persistent owner");
       }
 
@@ -95,9 +206,9 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
       require(controls[0].getParent() == screen,
           "detaching the screen must preserve the control's direct parent");
       for (int i = 0; i < CONTROLS_PER_CYCLE; i++) {
-        require(ImageDrawingBridge.persistentOwnerCount(images[i]) == 0,
+        requireOwnership(ImageDrawingBridge.persistentOwnerCount(images[i]) == 0,
             "screen detachment must release every owner immediately without GC");
-        require(pipelines[i].persistentDrawingOwnerCountForSmoke() == 0,
+        requireOwnership(pipelines[i].persistentDrawingOwnerCountForSmoke() == 0,
             "detached image pipelines must have no persistent owners");
       }
       screen.removeAll();
@@ -117,31 +228,35 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
     nested.add(existing);
     root.add(nested);
     add(root);
-    require(originalPipeline.persistentDrawingOwnerCountForSmoke() == 1,
+    markStage("stage-4-container-hierarchy-complete");
+    currentStage = "stage-5-ancestor-detach";
+    markStage("stage-5-ancestor-detach-entered");
+    requireOwnership(originalPipeline.persistentDrawingOwnerCountForSmoke() == 1,
         "attached nested control must own its original image");
 
     remove(root);
     require(existing.getParent() == nested && nested.getParent() == root,
         "removing an ancestor must preserve descendants' direct parent relationships");
-    require(originalPipeline.persistentDrawingOwnerCountForSmoke() == 0,
+    requireOwnership(originalPipeline.persistentDrawingOwnerCountForSmoke() == 0,
         "removing an ancestor must release descendant image ownership immediately");
     existing.setImage(replacement);
     ImageControl addedWhileDetached = new ImageControl(addedImage);
     nested.add(addedWhileDetached);
-    require(originalPipeline.persistentDrawingOwnerCountForSmoke() == 0
+    requireOwnership(originalPipeline.persistentDrawingOwnerCountForSmoke() == 0
         && replacementPipeline.persistentDrawingOwnerCountForSmoke() == 0
         && addedPipeline.persistentDrawingOwnerCountForSmoke() == 0,
         "setImage and child addition while detached must not register owners");
 
     add(root);
-    require(originalPipeline.persistentDrawingOwnerCountForSmoke() == 0
+    requireOwnership(originalPipeline.persistentDrawingOwnerCountForSmoke() == 0
         && replacementPipeline.persistentDrawingOwnerCountForSmoke() == 1
         && addedPipeline.persistentDrawingOwnerCountForSmoke() == 1,
         "reattaching the subtree must restore its current distinct image owners");
     remove(root);
-    require(replacementPipeline.persistentDrawingOwnerCountForSmoke() == 0
+    requireOwnership(replacementPipeline.persistentDrawingOwnerCountForSmoke() == 0
         && addedPipeline.persistentDrawingOwnerCountForSmoke() == 0,
         "detaching the reattached subtree must release all restored owners");
+    markStage("stage-5-ancestor-detach-complete");
     root.removeAll();
     nested.removeAll();
   }
@@ -160,13 +275,13 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
     second.add(control);
     require(control.getParent() == second,
         "active-to-active reparenting must move the control to its new container");
-    require(pipeline.persistentDrawingOwnerCountForSmoke() == 1,
+    requireOwnership(pipeline.persistentDrawingOwnerCountForSmoke() == 1,
         "active-to-active reparenting must preserve one owner");
-    require(image.cachedFinalRasterForDrawing(1) == cached,
+    requireOwnership(image.cachedFinalRasterForDrawing(1) == cached,
         "active-to-active reparenting must keep the admitted raster");
     remove(second);
     remove(first);
-    require(pipeline.persistentDrawingOwnerCountForSmoke() == 0,
+    requireOwnership(pipeline.persistentDrawingOwnerCountForSmoke() == 0,
         "removing both active containers must release the reparented owner");
     first.removeAll();
     second.removeAll();
@@ -183,21 +298,21 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
     screen.add(second);
     screen.add(third);
     add(screen);
-    require(pipeline.persistentDrawingOwnerCountForSmoke() == 3,
+    requireOwnership(pipeline.persistentDrawingOwnerCountForSmoke() == 3,
         "three controls sharing an image must register three owners");
     Image cached = ImageDrawingBridge.resolveForDrawing(image, 1,
         ImageDrawingBridge.AdmissionMode.IMMEDIATE);
 
     screen.remove(first);
-    require(pipeline.persistentDrawingOwnerCountForSmoke() == 2
+    requireOwnership(pipeline.persistentDrawingOwnerCountForSmoke() == 2
         && image.cachedFinalRasterForDrawing(1) == cached,
         "the raster must remain while two shared owners survive");
     screen.remove(second);
-    require(pipeline.persistentDrawingOwnerCountForSmoke() == 1
+    requireOwnership(pipeline.persistentDrawingOwnerCountForSmoke() == 1
         && image.cachedFinalRasterForDrawing(1) == cached,
         "the raster must remain while the final shared owner survives");
     screen.remove(third);
-    require(pipeline.persistentDrawingOwnerCountForSmoke() == 0
+    requireOwnership(pipeline.persistentDrawingOwnerCountForSmoke() == 0
         && pipeline.cachedVariantCountForSmoke() == 0
         && image.cachedFinalRasterForDrawing(1) == null,
         "the final owner release must evict the admitted raster");
@@ -213,16 +328,16 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
     screen.add(new ImageControl(image));
     screen.add(new ImageControl(image));
     add(screen);
-    require(previous.persistentDrawingOwnerCountForSmoke() == 3,
+    requireOwnership(previous.persistentDrawingOwnerCountForSmoke() == 3,
         "the original pipeline must begin with three attached owners");
     image.applyFade(120);
     ImagePipeline replacement = image.pipelineForSmoke();
-    require(replacement != previous
+    requireOwnership(replacement != previous
         && previous.persistentDrawingOwnerCountForSmoke() == 0
         && replacement.persistentDrawingOwnerCountForSmoke() == 3,
         "replacing an image pipeline must transfer all three owners exactly once");
     remove(screen);
-    require(replacement.persistentDrawingOwnerCountForSmoke() == 0,
+    requireOwnership(replacement.persistentDrawingOwnerCountForSmoke() == 0,
         "detaching after pipeline replacement must release all transferred owners");
     screen.removeAll();
   }
@@ -237,7 +352,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
     Image secondRaster = ImageDrawingBridge.resolveForDrawing(image, 1,
         ImageDrawingBridge.AdmissionMode.IMMEDIATE);
     Image cachedRaster = image.cachedFinalRasterForDrawing(1);
-    require(firstRaster == secondRaster && cachedRaster == firstRaster,
+    requireOwnership(firstRaster == secondRaster && cachedRaster == firstRaster,
         "repeated draw resolution must reuse the same admitted raster");
 
     Image destination = new Image(4, 4);
@@ -252,7 +367,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
         "native repeated drawing must preserve the red pixel; got 0x"
         + Integer.toHexString(pixel));
     remove(screen);
-    require(ImageDrawingBridge.persistentOwnerCount(image) == 0,
+    requireOwnership(ImageDrawingBridge.persistentOwnerCount(image) == 0,
         "drawing fixture cleanup must release its image owner");
     screen.removeAll();
     return pixel & 0xFFFFFF;

@@ -205,6 +205,10 @@ def prepare(arguments) -> None:
     compile_log = output / "compile.log"
     run_logged([javac, "--release", "8", "-cp", classpath, "-d", str(classes), str(source)],
                output, compile_log, env)
+    diagnostic_mode = getattr(arguments, "diagnostic_mode", None)
+    if diagnostic_mode is not None:
+        (classes / "tcapp.prop").write_text(
+            "diagnostic.mode=" + diagnostic_mode + "\n", encoding="utf-8")
 
     jar_path = output / (ENTRY_CLASS.rsplit(".", 1)[-1] + ".jar")
     run_logged([jar, "cf", str(jar_path), "-C", str(classes), "."], output,
@@ -245,6 +249,8 @@ def prepare(arguments) -> None:
         "smokeAppJar": {"path": str(jar_path), "sha256": sha256(jar_path)},
         "deployedPackage": {"path": str(package), "sha256": sha256(package)},
     }
+    if diagnostic_mode is not None:
+        provenance["diagnosticMode"] = diagnostic_mode
     if windows_runtime_artifact is not None:
         provenance["windowsRuntimeArtifact"] = windows_runtime_artifact
     if android_runtime_library is not None:
@@ -269,7 +275,26 @@ def parse_result(log: str) -> dict:
     raise SmokeError(detail)
 
 
-def validate_result(result: dict) -> None:
+def validate_result(result: dict, diagnostic_mode: str | None = None) -> None:
+    if diagnostic_mode == "baseline":
+        expected = {
+            "status": "BASELINE_OBSERVED",
+            "diagnosticMode": "baseline",
+            "screenCycles": 2,
+            "controlsPerCycle": 1510,
+            "distinctImagesPerCycle": 1510,
+            "drawPixelRgb": 16711680,
+            "png": "image-ownership-render.png",
+            "highestCompletedStage": 7,
+        }
+        for key, value in expected.items():
+            if result.get(key) != value:
+                raise SmokeError("baseline diagnostic result failed for " + key)
+        mismatches = result.get("ownershipMismatches")
+        if not isinstance(mismatches, int) or mismatches < 0:
+            raise SmokeError("baseline diagnostic result has invalid ownershipMismatches")
+        return
+
     expected = {
         "status": "PASS",
         "screenCycles": 2,
@@ -292,25 +317,41 @@ def validate_result(result: dict) -> None:
     for key, value in expected.items():
         if result.get(key) != value:
             raise SmokeError("ownership smoke assertion failed for " + key)
+    if diagnostic_mode == "fixed":
+        if result.get("diagnosticMode") != "fixed":
+            raise SmokeError("fixed diagnostic result is missing its mode marker")
+        if result.get("ownershipMismatches") != 0 or result.get("highestCompletedStage") != 7:
+            raise SmokeError("fixed diagnostic result did not complete every stage")
 
 
 def host_output(binary: Path, stdout: str, target: str) -> str:
     if target == "windows" and RESULT_PREFIX not in stdout:
         debug_console = binary.parent / "DebugConsole.txt"
         if debug_console.is_file():
-            return stdout + "\n" + debug_console.read_text(encoding="utf-8", errors="replace")
+            stdout += "\n" + debug_console.read_text(encoding="utf-8", errors="replace")
+        result_file = binary.parent / "tcdiag-result.txt"
+        if RESULT_PREFIX not in stdout and result_file.is_file():
+            stdout += "\n" + RESULT_PREFIX + result_file.read_text(
+                encoding="utf-8", errors="replace")
+        failure_file = binary.parent / "tcdiag-failure.txt"
+        if RESULT_PREFIX not in stdout and failure_file.is_file():
+            stdout += "\n" + FAILURE_PREFIX + failure_file.read_text(
+                encoding="utf-8", errors="replace")
     return stdout
 
 
 def result_provenance(output: Path) -> dict:
     provenance = read_json(output / "image-ownership-provenance.json")
-    return {
+    result = {
         "totalcrossSourceCommit": provenance["totalcrossSourceCommit"],
         "totalcrossSourceTree": provenance["totalcrossSourceTree"],
         "performanceLabCommit": provenance["performanceLabCommit"],
         "target": provenance["target"],
         "deployedPackage": provenance["deployedPackage"],
     }
+    if "diagnosticMode" in provenance:
+        result["diagnosticMode"] = provenance["diagnosticMode"]
+    return result
 
 
 def run_host(arguments) -> None:
@@ -318,6 +359,9 @@ def run_host(arguments) -> None:
     platform_folder, _, _, _ = TARGETS[arguments.target]
     executable = APP_NAME + (".exe" if arguments.target == "windows" else "")
     binary = output / "install" / platform_folder / executable
+    preparation_provenance = read_json(output / "image-ownership-provenance.json")
+    diagnostic_mode = getattr(arguments, "diagnostic_mode", None) \
+        or preparation_provenance.get("diagnosticMode")
     if not binary.is_file():
         raise SmokeError("deployed native executable is missing: " + str(binary))
     windows_runtime = None
@@ -380,11 +424,32 @@ def run_host(arguments) -> None:
         runtime_output = host_output(binary, stdout + "\n" + stderr, arguments.target)
     else:
         try:
-            result = subprocess.run([str(binary)], cwd=binary.parent, env=env,
-                                    text=True, stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT, timeout=180, check=False)
-            returncode = result.returncode
-            runtime_output = host_output(binary, result.stdout, arguments.target)
+            crash_runner = getattr(arguments, "windows_crash_runner", None)
+            if arguments.target == "windows" and crash_runner is not None:
+                if getattr(arguments, "procdump", None) is None or getattr(
+                        arguments, "pdb_directory", None) is None:
+                    raise SmokeError("Windows crash diagnostics require ProcDump and PDB paths")
+                run_logged([
+                    "pwsh", "-NoProfile", "-File", str(crash_runner.resolve()),
+                    "-Executable", str(binary), "-OutputDirectory", str(output),
+                    "-SourceCommit", preparation_provenance["totalcrossSourceCommit"],
+                    "-ProcdumpPath", str(arguments.procdump.resolve()),
+                    "-PdbDirectory", str(arguments.pdb_directory.resolve()),
+                ], output, output / "crash-runner.log", env)
+                runtime_report = read_json(output / "runtime.json")
+                returncode = runtime_report.get("exitCode")
+                if returncode is None:
+                    returncode = 1
+                stdout_path = output / "runtime-stdout.log"
+                stdout = stdout_path.read_text(encoding="utf-8", errors="replace") \
+                    if stdout_path.is_file() else ""
+                runtime_output = host_output(binary, stdout, arguments.target)
+            else:
+                result = subprocess.run([str(binary)], cwd=binary.parent, env=env,
+                                        text=True, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, timeout=180, check=False)
+                returncode = result.returncode
+                runtime_output = host_output(binary, result.stdout, arguments.target)
         except subprocess.TimeoutExpired as error:
             stdout = error.stdout or ""
             if isinstance(stdout, bytes):
@@ -411,11 +476,40 @@ def run_host(arguments) -> None:
         outcome["windowsRuntime"] = windows_runtime
     try:
         assertions = parse_result(runtime_output)
-        validate_result(assertions)
+        validate_result(assertions, diagnostic_mode)
         outcome["assertions"] = assertions
         if returncode != 0:
             raise SmokeError("native app exited with status %d" % returncode)
         png = output / "install" / platform_folder / assertions["png"]
+        if diagnostic_mode is not None and arguments.target == "windows":
+            stages = (
+                "stage-1-mainwindow-entered", "stage-1-mainwindow-complete",
+                "stage-2-single-control-complete", "stage-3-native-drawing-complete",
+                "stage-4-container-hierarchy-complete", "stage-5-ancestor-detach-entered",
+                "stage-5-ancestor-detach-complete", "stage-6-shared-and-replacement-complete",
+                "stage-7-large-screen-complete",
+            )
+            missing = [stage for stage in stages
+                       if not (binary.parent / ("tcdiag-" + stage + ".marker")).is_file()]
+            if missing:
+                raise SmokeError("diagnostic fixture omitted completed stage markers: "
+                                 + ", ".join(missing))
+            if not png.is_file() or png.stat().st_size == 0:
+                raise SmokeError("Windows diagnostic rendered PNG is missing or empty")
+            if diagnostic_mode == "baseline":
+                outcome["nativeAcceptance"] = (
+                    "baseline completed all seven stages; ownership assertions were not required"
+                )
+                outcome["ownershipMismatches"] = assertions["ownershipMismatches"]
+                outcome["status"] = (
+                    "EXPECTED_BASELINE_DIFFERENCES"
+                    if assertions["ownershipMismatches"] else "BASELINE_OBSERVATION"
+                )
+            else:
+                outcome["nativeAcceptance"] = (
+                    "all seven native stages and fixed ownership assertions passed"
+                )
+            outcome["renderedPng"] = {"path": png.name, "sha256": sha256(png)}
         if arguments.target == "macos":
             if not png.is_file() or png.stat().st_size == 0:
                 raise SmokeError("native macOS PNG output is missing or empty")
@@ -566,9 +660,14 @@ def main(argv: list[str] | None = None) -> int:
     prepare_parser.add_argument("--lab-commit", required=True)
     prepare_parser.add_argument("--output", type=Path, required=True)
     prepare_parser.add_argument("--allow-dirty-source", action="store_true")
+    prepare_parser.add_argument("--diagnostic-mode", choices=("baseline", "fixed"))
     host_parser = subparsers.add_parser("run-host")
     host_parser.add_argument("--target", choices=("macos", "linux-amd64", "windows"), required=True)
     host_parser.add_argument("--output", type=Path, required=True)
+    host_parser.add_argument("--diagnostic-mode", choices=("baseline", "fixed"))
+    host_parser.add_argument("--windows-crash-runner", type=Path)
+    host_parser.add_argument("--procdump", type=Path)
+    host_parser.add_argument("--pdb-directory", type=Path)
     android_parser = subparsers.add_parser("run-android")
     android_parser.add_argument("--output", type=Path, required=True)
     android_parser.add_argument("--timeout", type=int, default=120)

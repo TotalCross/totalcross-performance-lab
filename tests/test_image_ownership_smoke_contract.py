@@ -60,12 +60,56 @@ class ImageOwnershipSmokeContractTest(unittest.TestCase):
         with self.assertRaisesRegex(SmokeError, "controlsPerCycle"):
             validate_result(record)
 
+    def test_accepts_baseline_differences_after_all_native_stages(self):
+        record = {
+            "status": "BASELINE_OBSERVED",
+            "diagnosticMode": "baseline",
+            "screenCycles": 2,
+            "controlsPerCycle": 1510,
+            "distinctImagesPerCycle": 1510,
+            "ownershipMismatches": 12,
+            "highestCompletedStage": 7,
+            "drawPixelRgb": 16711680,
+            "png": "image-ownership-render.png",
+        }
+        validate_result(record, diagnostic_mode="baseline")
+
+    def test_rejects_baseline_that_does_not_reach_the_full_workload(self):
+        record = {
+            "status": "BASELINE_OBSERVED",
+            "diagnosticMode": "baseline",
+            "screenCycles": 2,
+            "controlsPerCycle": 1510,
+            "distinctImagesPerCycle": 1510,
+            "ownershipMismatches": 4,
+            "highestCompletedStage": 6,
+            "drawPixelRgb": 16711680,
+            "png": "image-ownership-render.png",
+        }
+        with self.assertRaisesRegex(SmokeError, "highestCompletedStage"):
+            validate_result(record, diagnostic_mode="baseline")
+
+    def test_fixed_diagnostics_still_require_all_ownership_assertions(self):
+        record = passing_record()
+        record.update({"diagnosticMode": "fixed", "ownershipMismatches": 0,
+                       "highestCompletedStage": 7})
+        validate_result(record, diagnostic_mode="fixed")
+
     def test_reads_windows_debug_console_when_stdout_has_no_result(self):
         record = passing_record()
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
             (directory / "DebugConsole.txt").write_text(
                 "TC_IMAGE_OWNERSHIP_JSON " + json.dumps(record), encoding="utf-8")
+            output = host_output(directory / "ImageOwnershipSmoke.exe", "", "windows")
+            validate_result(parse_result(output))
+
+    def test_reads_the_durable_windows_result_marker(self):
+        record = passing_record()
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            (directory / "tcdiag-result.txt").write_text(
+                json.dumps(record), encoding="utf-8")
             output = host_output(directory / "ImageOwnershipSmoke.exe", "", "windows")
             validate_result(parse_result(output))
 

@@ -23,6 +23,12 @@ Windows runs require AMD64 PE images for the native Launcher and TCVM, then
 verify the deployed `tcvm.dll` matches the same-run artifact. The app mirrors
 startup, result, and failure records through `Vm.debug` so the runner can read
 them from `DebugConsole.txt` when the GUI launcher has no captured stdout.
+The Windows crash-diagnostics branch also records durable per-stage files for
+MainWindow entry, one image control, native drawing, container hierarchy,
+ancestor detach, shared/pipeline behavior, and the 1,510-control workload. Its
+baseline mode records ownership mismatches and continues through the same
+operations; fixed mode still enforces every ownership assertion. The baseline
+mode is a diagnostic observation, never a functional acceptance pass.
 Android runs
 verify the APK's ARM64 `libtcvm.so` against the same-run AAB and record the
 emulator API level and ABI; `run-android` can enforce both with

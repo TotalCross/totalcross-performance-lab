@@ -350,18 +350,29 @@ def validate_result(result: dict, diagnostic_mode: str | None = None) -> None:
 
 def host_output(binary: Path, stdout: str, target: str) -> str:
     if target == "windows" and RESULT_PREFIX not in stdout:
-        debug_console = binary.parent / "DebugConsole.txt"
+        debug_console = find_windows_diagnostic_file(binary, "DebugConsole.txt")
         if debug_console.is_file():
             stdout += "\n" + debug_console.read_text(encoding="utf-8", errors="replace")
-        result_file = binary.parent / "tcdiag-result.txt"
+        result_file = find_windows_diagnostic_file(binary, "tcdiag-result.txt")
         if RESULT_PREFIX not in stdout and result_file.is_file():
             stdout += "\n" + RESULT_PREFIX + result_file.read_text(
                 encoding="utf-8", errors="replace")
-        failure_file = binary.parent / "tcdiag-failure.txt"
+        failure_file = find_windows_diagnostic_file(binary, "tcdiag-failure.txt")
         if RESULT_PREFIX not in stdout and failure_file.is_file():
             stdout += "\n" + FAILURE_PREFIX + failure_file.read_text(
                 encoding="utf-8", errors="replace")
     return stdout
+
+
+def find_windows_diagnostic_file(binary: Path, filename: str) -> Path:
+    """Find a diagnostic file in appPath, including its no-separator form."""
+    in_application_directory = binary.parent / filename
+    if in_application_directory.is_file():
+        return in_application_directory
+    concatenated_app_path = binary.parent.parent / (binary.parent.name + filename)
+    if concatenated_app_path.is_file():
+        return concatenated_app_path
+    return in_application_directory
 
 
 def result_provenance(output: Path) -> dict:
@@ -526,7 +537,8 @@ def run_host(arguments) -> None:
                 "stage-7-large-screen-complete",
             )
             missing = [stage for stage in stages
-                       if not (binary.parent / ("tcdiag-" + stage + ".marker")).is_file()]
+                       if not find_windows_diagnostic_file(
+                           binary, "tcdiag-" + stage + ".marker").is_file()]
             if missing:
                 raise SmokeError("diagnostic fixture omitted completed stage markers: "
                                  + ", ".join(missing))

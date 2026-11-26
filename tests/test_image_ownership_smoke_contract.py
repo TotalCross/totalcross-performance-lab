@@ -10,6 +10,7 @@ import zipfile
 from tools.image_ownership_smoke import (
     SmokeError,
     deploy_sdk_jar,
+    find_windows_diagnostic_file,
     host_output,
     parse_result,
     pe_machine,
@@ -113,6 +114,29 @@ class ImageOwnershipSmokeContractTest(unittest.TestCase):
                 json.dumps(record), encoding="utf-8")
             output = host_output(directory / "ImageOwnershipSmoke.exe", "", "windows")
             validate_result(parse_result(output))
+
+    def test_reads_the_windows_result_marker_with_concatenated_app_path(self):
+        record = passing_record()
+        with tempfile.TemporaryDirectory() as temporary:
+            install = Path(temporary) / "install"
+            app_directory = install / "win32"
+            app_directory.mkdir(parents=True)
+            binary = app_directory / "ImageOwnershipSmoke.exe"
+            result_file = install / "win32tcdiag-result.txt"
+            result_file.write_text(json.dumps(record), encoding="utf-8")
+            output = host_output(binary, "", "windows")
+            validate_result(parse_result(output))
+
+    def test_finds_stage_markers_with_concatenated_app_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            install = Path(temporary) / "install"
+            app_directory = install / "win32"
+            app_directory.mkdir(parents=True)
+            binary = app_directory / "ImageOwnershipSmoke.exe"
+            marker = install / "win32tcdiag-stage-7-large-screen-complete.marker"
+            marker.write_text("complete", encoding="utf-8")
+            self.assertEqual(find_windows_diagnostic_file(
+                binary, "tcdiag-stage-7-large-screen-complete.marker"), marker)
 
     def test_accepts_only_amd64_windows_runtime_artifacts(self):
         with tempfile.TemporaryDirectory() as temporary:

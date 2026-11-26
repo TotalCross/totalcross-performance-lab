@@ -131,6 +131,7 @@ def prepare(arguments) -> None:
         raise SmokeError("ownership smoke Java source is missing")
     classpath = os.pathsep.join([str(sdk_jars[0]), str(libraries / "*")])
     env = os.environ.copy()
+    env["TOTALCROSS3_HOME"] = str(runtime_home)
     compile_log = output / "compile.log"
     run_logged([javac, "--release", "8", "-cp", classpath, "-d", str(classes), str(source)],
                output, compile_log, env)

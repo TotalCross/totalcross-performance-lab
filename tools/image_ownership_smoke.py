@@ -426,16 +426,17 @@ def run_host(arguments) -> None:
         try:
             crash_runner = getattr(arguments, "windows_crash_runner", None)
             if arguments.target == "windows" and crash_runner is not None:
-                if getattr(arguments, "procdump", None) is None or getattr(
-                        arguments, "pdb_directory", None) is None:
-                    raise SmokeError("Windows crash diagnostics require ProcDump and PDB paths")
+                if getattr(arguments, "pdb_directory", None) is None:
+                    raise SmokeError("Windows crash diagnostics require a PDB directory")
                 command = [
                     "pwsh", "-NoProfile", "-File", str(crash_runner.resolve()),
                     "-Executable", str(binary), "-OutputDirectory", str(output),
                     "-SourceCommit", preparation_provenance["totalcrossSourceCommit"],
-                    "-ProcdumpPath", str(arguments.procdump.resolve()),
                     "-PdbDirectory", str(arguments.pdb_directory.resolve()),
                 ]
+                procdump = getattr(arguments, "procdump", None)
+                if procdump is not None:
+                    command.extend(["-ProcdumpPath", str(procdump.resolve())])
                 debugger = getattr(arguments, "debugger", None)
                 if debugger is not None:
                     command.extend(["-DebuggerPath", str(debugger.resolve())])

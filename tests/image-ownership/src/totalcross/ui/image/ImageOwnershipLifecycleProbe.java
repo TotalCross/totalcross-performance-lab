@@ -3,6 +3,7 @@
 package totalcross.ui.image;
 
 import totalcross.io.File;
+import totalcross.sys.Vm;
 import totalcross.ui.Container;
 import totalcross.ui.ImageControl;
 import totalcross.ui.MainWindow;
@@ -36,7 +37,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
       runSharedRasterScenario();
       runPipelineReplacementScenario();
       int pixel = runDrawingScenario();
-      System.out.println("TC_IMAGE_OWNERSHIP_JSON {\"status\":\"PASS\","
+      String result = "TC_IMAGE_OWNERSHIP_JSON {\"status\":\"PASS\","
           + "\"screenCycles\":" + SCREEN_CYCLES + ",\"controlsPerCycle\":"
           + CONTROLS_PER_CYCLE + ",\"distinctImagesPerCycle\":" + CONTROLS_PER_CYCLE
           + ",\"ownersAfterDetach\":0,\"directParentsPreserved\":true,"
@@ -45,12 +46,16 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
           + "\"maxSharedOwners\":3,\"rasterRetainedUntilFinalOwner\":true,"
           + "\"pipelineReplacementOwners\":3,\"cacheReusedWhileOwned\":true,"
           + "\"cacheEvictedAfterDetach\":true,\"drawPixelRgb\":" + pixel
-          + ",\"png\":\"image-ownership-render.png\"}");
+          + ",\"png\":\"image-ownership-render.png\"}";
+      System.out.println(result);
+      Vm.debug(result);
       System.out.flush();
       MainWindow.exit(0);
     } catch (Throwable failure) {
-      System.err.println("TC_IMAGE_OWNERSHIP_FAIL " + failure.getClass().getName() + ": "
-          + failure.getMessage());
+      String failureRecord = "TC_IMAGE_OWNERSHIP_FAIL " + failure.getClass().getName() + ": "
+          + failure.getMessage();
+      System.err.println(failureRecord);
+      Vm.debug(failureRecord);
       failure.printStackTrace();
       System.err.flush();
       System.out.flush();

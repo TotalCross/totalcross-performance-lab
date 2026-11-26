@@ -20,7 +20,10 @@ artifacts from one GitHub Actions run, rejecting artifacts whose source commit
 or tree differs from the workflow checkout. Native results use the
 `TC_IMAGE_OWNERSHIP_JSON ` line and are archived with full logs.
 Windows runs require AMD64 PE images for the native Launcher and TCVM, then
-verify the deployed `tcvm.dll` matches the same-run artifact. Android runs
+verify the deployed `tcvm.dll` matches the same-run artifact. The app mirrors
+its structured result and failure records through `Vm.debug` so the runner can
+read them from `DebugConsole.txt` when the GUI launcher has no captured stdout.
+Android runs
 verify the APK's ARM64 `libtcvm.so` against the same-run AAB and record the
 emulator API level and ABI; `run-android` can enforce both with
 `--expected-api` and `--expected-abi`.

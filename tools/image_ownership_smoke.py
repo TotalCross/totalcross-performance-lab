@@ -396,6 +396,14 @@ def run_host(arguments) -> None:
                              + " process exceeded 180 seconds; captured partial output") from error
     log_path = output / "runtime.log"
     log_path.write_text(runtime_output, encoding="utf-8", errors="replace")
+    if arguments.target == "windows" and RESULT_PREFIX not in runtime_output:
+        debug_console = binary.parent / "DebugConsole.txt"
+        rendered_png = binary.parent / "image-ownership-render.png"
+        raise SmokeError(
+            "Windows launcher emitted no result record (exit code %d; "
+            "DebugConsole.txt=%s; rendered PNG=%s)"
+            % (returncode, debug_console.is_file(), rendered_png.is_file())
+        )
     outcome = {"status": "PASS", "target": arguments.target,
                "exitCode": returncode, "log": log_path.name,
                "provenance": result_provenance(output)}

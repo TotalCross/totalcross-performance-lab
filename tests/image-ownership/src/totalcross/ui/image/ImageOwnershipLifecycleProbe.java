@@ -30,6 +30,8 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
 
   @Override
   public void initUI() {
+    Vm.debug("TC_IMAGE_OWNERSHIP_START cycles=" + SCREEN_CYCLES + " controlsPerCycle="
+        + CONTROLS_PER_CYCLE);
     try {
       runLargeScreenCycles();
       runDetachedSubtreeScenario();

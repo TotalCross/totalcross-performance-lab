@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "investigationId": "I10",
+  "capturedAt": "2026-11-27",
+  "status": "INCOMPLETE",
+  "workflow": {
+    "repository": "TotalCross/totalcross-performance-lab",
+    "workflowFile": ".github/workflows/sqlite-compatibility-i10.yml",
+    "branch": "investigation/totalcross-7.3.0-functional-validation",
+    "commit": "b0a9639fefd45751cc35ec635252f48e7874d70f",
+    "runId": 46022844152,
+    "runUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/46022844152",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "target": "windows-win32-i386",
+        "jobId": 140586603453,
+        "conclusion": "success"
+      },
+      {
+        "target": "linux-x86_64",
+        "jobId": 140587098534,
+        "conclusion": "success"
+      },
+      {
+        "target": "macos-arm64",
+        "jobId": 140587098537,
+        "conclusion": "success"
+      }
+    ],
+    "artifacts": [
+      {
+        "name": "tc730-i10-windows-win32-i386",
+        "artifactId": 15208563313,
+        "zipSha256": "c260c0ea29ad5fa9e3cf7360f7add4ad6d2ae7ac493d31ad459b5266109efbf"
+      },
+      {
+        "name": "tc730-i10-windows-win32-fixtures",
+        "artifactId": 15208697289,
+        "zipSha256": "7ee21165a2773f635b11e0ec0a97e74914b203f2b3a7cdfda9550ad8a48b2b93"
+      },
+      {
+        "name": "tc730-i10-linux-x86_64",
+        "artifactId": 15210460104,
+        "zipSha256": "93c6a37b51fe23c8142aa426d212beb1a2c3eb4b5c6a8300f6d9bab2a84118af"
+      },
+      {
+        "name": "tc730-i10-macos-arm64",
+        "artifactId": 15208329382,
+        "zipSha256": "db0605dd6d81a495950481e9d49a709a697d487677611d75eb21ba2ead0e42e3"
+      }
+    ]
+  },
+  "localAndroid": {
+    "deviceSerial": "emulator-5556",
+    "apiLevel": 36,
+    "androidVersion": "16",
+    "abi": "arm64-v8a",
+    "hostCpu": "Apple M1 Pro",
+    "gpuRenderer": "Android Emulator OpenGL ES Translator (Apple M1 Pro), OpenGL ES 3.0",
+    "fixtureWorkflowRunId": 46022844152,
+    "fixtureManifestSha256": "ec0cb2c7962c5b5a3f89ec3dfc38b05f2510ba5feb2f20b758ab3cc63b973f31",
+    "resultEvidencePath": "investigations/7.3.0-functional/evidence/I10/android-api36-arm64.json",
+    "resultSha256": "43576420eb70655f4dce6a817837dbd5bd0c9839aeafd9cc6becab2e7c7510c2",
+    "packageId": "totalcross.appi10x",
+    "fileStaging": "app-specific external files directory"
+  },
+  "targets": {
+    "windows-win32-i386": {
+      "status": "PASS",
+      "passCount": 24,
+      "blockedCount": 0,
+      "failureCount": 0,
+      "evidencePath": "investigations/7.3.0-functional/evidence/I10/windows-win32-i386-46022844152.json",
+      "evidenceSha256": "1297f583891c0a2c5ba7a789124daea6c02d18eaa901dc5f5ebd14cbb4f21a2c"
+    },
+    "linux-x86_64": {
+      "status": "INCOMPLETE",
+      "passCount": 15,
+      "blockedCount": 7,
+      "failureCount": 0,
+      "evidencePath": "investigations/7.3.0-functional/evidence/I10/linux-x86_64-46022844152.json",
+      "evidenceSha256": "1d646372c8482a6155e0c917a2aa2d09b21472b9748f3a2a73746b03b7408970"
+    },
+    "macos-arm64": {
+      "status": "INCOMPLETE",
+      "passCount": 15,
+      "blockedCount": 1,
+      "failureCount": 0,
+      "evidencePath": "investigations/7.3.0-functional/evidence/I10/macos-arm64-46022844152.json",
+      "evidenceSha256": "93a06ab76dae01f6530c300d133edb29aa3bf99d03645a706a07ccdcf27483a0"
+    },
+    "android-arm64-api36": {
+      "status": "PASS",
+      "passCount": 21,
+      "blockedCount": 0,
+      "failureCount": 0,
+      "evidencePath": "investigations/7.3.0-functional/evidence/I10/android-api36-arm64.json",
+      "evidenceSha256": "43576420eb70655f4dce6a817837dbd5bd0c9839aeafd9cc6becab2e7c7510c2"
+    }
+  },
+  "fixtureManifest": {
+    "evidencePath": "investigations/7.3.0-functional/evidence/I10/fixture-index-46022844152.json",
+    "sha256": "ec0cb2c7962c5b5a3f89ec3dfc38b05f2510ba5feb2f20b758ab3cc63b973f31",
+    "hostPythonSqliteVersion": "3.45.1",
+    "fixtures": {
+      "external-sqlite": {
+        "file": "external-sqlite.sqlite",
+        "sha256": "11ec908b2f6adcebe2dbe1d13d0674ece9a56215c3c0abdf9ca8c2c6e4fbfb3d",
+        "origin": "external-sqlite",
+        "writer": "host-python-sqlite",
+        "sqliteVersion": "3.45.1",
+        "walFile": null,
+        "walSha256": null,
+        "integrityCheck": "ok",
+        "userVersion": 10
+      },
+      "wal-snapshot": {
+        "file": "wal-snapshot.sqlite",
+        "sha256": "19dc4b22b597bb61abe6710da152246882ff4751fb136129bb5635d305c6cc73",
+        "origin": "external-sqlite",
+        "writer": "host-python-sqlite",
+        "sqliteVersion": "3.45.1",
+        "walFile": "wal-snapshot.sqlite-wal",
+        "walSha256": "8874da8f4f089888fb5ca7a0c01e6c306692e9716f7f702b07b8e4d818f79290",
+        "integrityCheck": "ok",
+        "userVersion": 10
+      },
+      "7.2.2": {
+        "file": "7.2.2.sqlite",
+        "sha256": "bf9909a1bf72392a71f86a1d96285d08d3a46d004f92ffb05c513549ff70dddd",
+        "origin": "7.2.2",
+        "writer": "TotalCross 7.2.2",
+        "sqliteVersion": "3.45.1",
+        "walFile": null,
+        "walSha256": null,
+        "integrityCheck": "ok",
+        "userVersion": 10
+      },
+      "7.3.0": {
+        "file": "7.3.0.sqlite",
+        "sha256": "a86a52c3b9110dc4a92bb2233a12fdb845ab9987b72d06d40fcf27a22bbbb90f",
+        "origin": "7.3.0",
+        "writer": "TotalCross 7.3.0",
+        "sqliteVersion": "3.45.1",
+        "walFile": null,
+        "walSha256": null,
+        "integrityCheck": "ok",
+        "userVersion": 10
+      },
+      "candidate-94af": {
+        "file": "candidate-94af.sqlite",
+        "sha256": "37f39afa0249e0708314c7ed0bd0887f8aee8891fc83c3935b36c46941fa24d4",
+        "origin": "candidate-94af",
+        "writer": "TotalCross candidate-94af",
+        "sqliteVersion": "3.45.1",
+        "walFile": null,
+        "walSha256": null,
+        "integrityCheck": "ok",
+        "userVersion": 10
+      }
+    }
+  },
+  "runtimeSqliteVersion": "3.32.3",
+  "sdkJarSha256": {
+    "official-7.2.2": "5f6d5c7f6f08f8635aa648497320bf547b310c6a3c9073659421f1167ff0efe4",
+    "official-7.3.0": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+    "candidate-94af": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d"
+  },
+  "androidApkSha256": {
+    "official-7.2.2": "0c23b645b306f409fe492d8764b7b1afc3adbe318af8cd6660c9f859084eca34",
+    "official-7.3.0": "6f2cd38dde907eafd9f08d8b7f93f8cbcb06c5bde6980f471a53efc9c73a7464",
+    "candidate-94af": "836eb80dc791ce02e997dd095cbfe972185ea0e1ab18b2ed03f282651d90abf8"
+  },
+  "limitations": [
+    "The supplied database was synthetic; no exact customer database file was available.",
+    "Linux 7.2.2 could not reach SQLite because libtcvm.so failed to load glCompressedTexSubImage2D.",
+    "The official 7.2.2 SDK package contained no macOS launcher or VM; that matrix cell was NOT_RUN.",
+    "The negative control used a directory as the database path because legacy SQLite accepted random bytes as an empty database; malformed regular-file behavior remains untested."
+  ],
+  "source": {
+    "casePath": "investigations/7.3.0-functional/cases/sqlite-compatibility/Main.java",
+    "caseSha256": "a93ead1f1d3d06cb47d2cecc8af4c84f1c211de23a6fd18ac0eb076f57d378ef",
+    "harnessPath": "tools/sqlite_compatibility_i10.py",
+    "harnessSha256": "546277eda9e621e64a8304dbcc804e1b66e3e90e778badec7a912ff6ab2e8625",
+    "workflowPath": ".github/workflows/sqlite-compatibility-i10.yml",
+    "workflowSha256": "a3d903d436de52908e36868a3cad7a3a1643c1ee1df87ac89eb9fcb53245fe5a",
+    "candidateSourceRevision": "94af2b8b653cad509994b5ccf3dbb60ac28ef920"
+  }
+}

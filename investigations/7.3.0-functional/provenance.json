@@ -326,6 +326,17 @@
       ],
       "evidencePath": "investigations/7.3.0-functional/evidence/I05/android-api30-shutdown-results.json",
       "result": "one destroyed-mutex FORTIFY abort in ten clean file-I/O shutdown cycles"
+    },
+    {
+      "name": "I10 SQLite compatibility campaign result",
+      "repository": "TotalCross/totalcross-performance-lab",
+      "workflowRunId": 46022844152,
+      "workflowUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/46022844152",
+      "workflowCommit": "b0a9639fefd45751cc35ec635252f48e7874d70f",
+      "candidateSourceSha": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+      "status": "INCOMPLETE",
+      "reason": "Linux 7.2.2 failed before SQLite at unresolved glCompressedTexSubImage2D; the 7.2.2 package has no macOS runtime.",
+      "evidencePath": "investigations/7.3.0-functional/evidence/I10/index.json"
     }
   ],
   "officialReleases": {
@@ -377,6 +388,76 @@
       "sdkJarSha256": "5f6d5c7f6f08f8635aa648497320bf547b310c6a3c9073659421f1167ff0efe4",
       "linuxLibtcvmSha256": "3d8a081d6510e5c2a1e05e38c26b0467180f871af1c5ed0501739bf158341dde",
       "linuxLauncherSha256": "3f8b78f4864681b91cde95443b10a488846b696e62fee1766d071eb7fec3c723"
+    },
+    {
+      "name": "I10 SQLite compatibility hosted artifacts and local Android result",
+      "repository": "TotalCross/totalcross-performance-lab",
+      "workflowFile": ".github/workflows/sqlite-compatibility-i10.yml",
+      "workflowBranch": "investigation/totalcross-7.3.0-functional-validation",
+      "workflowCommit": "b0a9639fefd45751cc35ec635252f48e7874d70f",
+      "workflowRunId": 46022844152,
+      "workflowConclusion": "success",
+      "workflowUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/46022844152",
+      "candidateSourceSha": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+      "results": [
+        {
+          "target": "windows-win32-i386",
+          "jobId": 140586603453,
+          "artifactId": 15208563313,
+          "artifactName": "tc730-i10-windows-win32-i386",
+          "artifactSha256": "c260c0ea29ad5fa9e3cf7360f7add4ad6d2ae7ac493d31ad459b5266109efbf",
+          "status": "PASS"
+        },
+        {
+          "target": "windows-fixtures",
+          "artifactId": 15208697289,
+          "artifactName": "tc730-i10-windows-win32-fixtures",
+          "artifactSha256": "7ee21165a2773f635b11e0ec0a97e74914b203f2b3a7cdfda9550ad8a48b2b93",
+          "fixtureManifestSha256": "ec0cb2c7962c5b5a3f89ec3dfc38b05f2510ba5feb2f20b758ab3cc63b973f31"
+        },
+        {
+          "target": "linux-x86_64",
+          "jobId": 140587098534,
+          "artifactId": 15210460104,
+          "artifactName": "tc730-i10-linux-x86_64",
+          "artifactSha256": "93c6a37b51fe23c8142aa426d212beb1a2c3eb4b5c6a8300f6d9bab2a84118af",
+          "status": "INCOMPLETE"
+        },
+        {
+          "target": "macos-arm64",
+          "jobId": 140587098537,
+          "artifactId": 15208329382,
+          "artifactName": "tc730-i10-macos-arm64",
+          "artifactSha256": "db0605dd6d81a495950481e9d49a709a697d487677611d75eb21ba2ead0e42e3",
+          "status": "INCOMPLETE"
+        }
+      ],
+      "sdkJarSha256": {
+        "official-7.2.2": "5f6d5c7f6f08f8635aa648497320bf547b310c6a3c9073659421f1167ff0efe4",
+        "official-7.3.0": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+        "candidate-94af": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d"
+      },
+      "sqliteVersions": {
+        "externalFixture": "3.45.1",
+        "totalcrossRuntimes": "3.32.3"
+      },
+      "localAndroid": {
+        "target": "android-arm64",
+        "apiLevel": 36,
+        "deviceSerial": "emulator-5556",
+        "hostCpu": "Apple M1 Pro",
+        "resultSha256": "43576420eb70655f4dce6a817837dbd5bd0c9839aeafd9cc6becab2e7c7510c2",
+        "fixtureManifestSha256": "ec0cb2c7962c5b5a3f89ec3dfc38b05f2510ba5feb2f20b758ab3cc63b973f31",
+        "status": "PASS",
+        "passCount": 21,
+        "failureCount": 0
+      },
+      "evidencePath": "investigations/7.3.0-functional/evidence/I10/index.json",
+      "overallStatus": "INCOMPLETE",
+      "evidenceIndexSha256": "dec1c87f38c3e7795e72848672a03f6248b65cfd0cbdc02107994f4bd5ac4124",
+      "caseSourceSha256": "a93ead1f1d3d06cb47d2cecc8af4c84f1c211de23a6fd18ac0eb076f57d378ef",
+      "harnessSha256": "546277eda9e621e64a8304dbcc804e1b66e3e90e778badec7a912ff6ab2e8625",
+      "workflowSha256": "a3d903d436de52908e36868a3cad7a3a1643c1ee1df87ac89eb9fcb53245fe5a"
     }
   ],
   "toolchains": [],

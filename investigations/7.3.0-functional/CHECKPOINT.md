@@ -3,14 +3,15 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
-- Last completed platform checkpoint: I09 passed on Android API 29/30/35/36
-  ARM64 for official 7.3.0 and candidate 94af. I07 passed on Windows I386,
-  Linux x86_64 conditionally, macOS ARM64, and Android API 36 ARM64. I06 passed
-  on Windows I386 and completed its Linux ownership assertions conditionally.
+- Last completed investigation checkpoint: I10. Win32/I386 passed 24 cases,
+  Android API 36 ARM64 passed 21, Linux x86_64 passed 15 with seven 7.2.2
+  startup blocks, and macOS ARM64 passed 15 with its 7.2.2 runtime unavailable.
+  Earlier I09 passed on Android API 29/30/35/36.
 - Shared Android probe source SHA-256:
   `c65d09b87873db63016ba3a209ac453f49a1cf038c0dbdd88a34bb36581f172b`.
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
-- Active milestone: 4 — Filesystem and SQLite
+- I10 workflow commit: `b0a9639fefd45751cc35ec635252f48e7874d70f`
+- Active milestone: 5 — Release workflow and closure
 - Previous campaign checkpoint: `1a602fa` (native build retry findings)
 - Previous evidence checkpoint: `42008b9`
 - Production source edits: none
@@ -181,22 +182,31 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   native bridge sources in the isolated exact-source archive. The first probe
   run found a fixture mismatch at the 255-character TCZ boundary; the payload
   was corrected before the recorded passing run.
+- I10 completed with the dedicated version-matrix workflow in Actions run
+  `46022844152`. Win32/I386 passed all 24 cases and confirmed source/deployed
+  binaries were I386. Linux passed 15 cases; seven 7.2.2 cases stopped before
+  SQLite at unresolved `glCompressedTexSubImage2D`. macOS passed 15 cases; its
+  7.2.2 SDK package contains no macOS launcher/VM. Local Android ARM64 API 36
+  passed all 21 cases using the exact fixtures from the Win32 job. The
+  synthetic external fixture was created by Python SQLite 3.45.1; all
+  TotalCross runtimes reported SQLite 3.32.3. The customer database was not
+  supplied. Results, fixture manifest, artifact identities, hashes, and limits
+  are in `reports/I10-sqlite-compatibility.md` and `evidence/I10/`.
 
 ## Pending investigations
 
 PR #567 historical JavaSE/macOS/Android ownership evidence verification,
-I10, I11, remaining provenance, proposed issue updates, and final consolidation.
+I11, remaining provenance, proposed issue updates, and final consolidation.
 I03 repeated requests and corrected-candidate validation remain explicitly
 unrun because no candidate is available and the first denied transition
 already reproduces the crash.
 
 ## Next concrete action
 
-Begin I10 with external SQLite, official 7.2.2, official 7.3.0, and corrected
-candidate plaintext fixtures. Cover transfer on permitted platforms, update
-persistence, WAL snapshots, and an invalid-format control. I08/I09 are complete;
-Linux I06 remains explicitly conditional on the test-only startup shim. Do not
-run Windows AMD64.
+Inspect and statically validate the #538/#539 restricted release workflow as
+I11. Confirm version consistency, versioned notes, dry-run guards, and that the
+workflow has no tag, release, or Maven publication side effects. Do not dispatch
+the release workflow or run Windows AMD64.
 
 ## Constraints and blockers
 

@@ -103,6 +103,15 @@ API levels.
   based inferences; extended codes are unavailable. See the
   [I09 report](reports/I09-android-sqlite.md) and
   [machine evidence](evidence/I09/android-sqlite-matrix.json).
+- **I10, SQLite compatibility:** INCOMPLETE with no functional failures among
+  executed cases. Windows Win32/I386 passed 24; local Android API 36 ARM64
+  passed 21. Linux x86_64 passed 15 while seven official 7.2.2 cases stopped
+  before SQLite at the unresolved `glCompressedTexSubImage2D` symbol. macOS
+  ARM64 passed 15; the official 7.2.2 SDK package lacks a macOS runtime. The
+  exact customer DB was not supplied; synthetic external SQLite 3.45.1 data
+  was read by all tested TotalCross runtimes using SQLite 3.32.3. Details and
+  limitations are in the [I10 report](reports/I10-sqlite-compatibility.md)
+  and [evidence index](evidence/I10/index.json).
 - **I01-B, Linux x86_64:** official 7.3.0 and frozen master failed before
   startup on all four tested path forms, including short paths. Official 7.2.2
   is inconclusive as a realpath control: three cases failed in dynamic loading;
@@ -112,5 +121,5 @@ API levels.
   rejected during construction. Other platforms remain untested.
 
 No production source was changed. I03 repeated requests and corrected-candidate
-validation remain explicitly unrun. I10, I11, remaining provenance, and the
-final report remain pending.
+validation remain explicitly unrun. I11, remaining provenance, and the final
+report remain pending.

@@ -1,0 +1,541 @@
+{
+  "schemaVersion": 1,
+  "investigationId": "I10",
+  "target": "android-arm64",
+  "host": "macOS-27.2.1-arm64-arm-64bit-Mach-O",
+  "pythonSqliteVersion": "3.54.1",
+  "status": "PASS",
+  "builds": {
+    "official-7.2.2": {
+      "status": "PASS",
+      "sdkJar": "/private/tmp/tc730-i10-compile-20261127/official-722/unpacked/TotalCross/dist/totalcross-sdk.jar",
+      "sdkJarSha256": "5f6d5c7f6f08f8635aa648497320bf547b310c6a3c9073659421f1167ff0efe4",
+      "appDir": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/official-7.2.2/deployed/install/android",
+      "executable": null,
+      "apk": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/official-7.2.2/deployed/install/android/Main.apk",
+      "apkSha256": "0c23b645b306f409fe492d8764b7b1afc3adbe318af8cd6660c9f859084eca34",
+      "deployLog": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/official-7.2.2/deploy.log",
+      "compileLog": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/official-7.2.2/compile.log",
+      "revision": "official-7.2.2",
+      "target": "android-arm64",
+      "platformDirectory": "android",
+      "sourcePeMachine": {},
+      "deployedPeMachine": {}
+    },
+    "official-7.3.0": {
+      "status": "PASS",
+      "sdkJar": "/private/tmp/tc730-i10-compile-20261127/official-730/unpacked/TotalCross/dist/totalcross-sdk.jar",
+      "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+      "appDir": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/official-7.3.0/deployed/install/android",
+      "executable": null,
+      "apk": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/official-7.3.0/deployed/install/android/Main.apk",
+      "apkSha256": "6f2cd38dde907eafd9f08d8b7f93f8cbcb06c5bde6980f471a53efc9c73a7464",
+      "deployLog": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/official-7.3.0/deploy.log",
+      "compileLog": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/official-7.3.0/compile.log",
+      "revision": "official-7.3.0",
+      "target": "android-arm64",
+      "platformDirectory": "android",
+      "sourcePeMachine": {},
+      "deployedPeMachine": {}
+    },
+    "candidate-94af": {
+      "status": "PASS",
+      "sdkJar": "/private/tmp/tc730-i10-build-android-20261127/candidate/TotalCross/dist/totalcross-sdk.jar",
+      "sdkJarSha256": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d",
+      "appDir": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/candidate-94af/deployed/install/android",
+      "executable": null,
+      "apk": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/candidate-94af/deployed/install/android/Main.apk",
+      "apkSha256": "836eb80dc791ce02e997dd095cbfe972185ea0e1ab18b2ed03f282651d90abf8",
+      "deployLog": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/candidate-94af/deploy.log",
+      "compileLog": "/private/tmp/tc730-i10-android-finalrun-20261127/builds/candidate-94af/compile.log",
+      "revision": "candidate-94af",
+      "target": "android-arm64",
+      "platformDirectory": "android",
+      "sourcePeMachine": {},
+      "deployedPeMachine": {}
+    }
+  },
+  "runs": [
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "external-sqlite",
+      "target": "android-arm64",
+      "revision": "official-7.2.2",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:18.623 12510 12534 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:18.626 12510 12534 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:18.647 12510 12534 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:18.649 12510 12534 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:18.651 12510 12534 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:18.655 12510 12534 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:18.656 12510 12534 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.2.2 details=origin=external-sqlite,databasePath=/sdcard/Android/data/totalcross.appi10x/files/external-sqlite.sqlite",
+        "11-27 12:16:18.658 12510 12534 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.2.2 details=origin=external-sqlite,databasePath=/sdcard/Android/data/totalcross.appi10x/files/external-sqlite.sqlite",
+        "11-27 12:16:18.660 12510 12534 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0",
+        "11-27 12:16:18.661 12510 12534 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/official-7.2.2/external-sqlite/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "wal-snapshot",
+      "target": "android-arm64",
+      "revision": "official-7.2.2",
+      "mode": "wal-read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:20.956 12601 12627 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=wal-read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:20.964 12601 12627 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=wal-read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:21.019 12601 12627 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:21.022 12601 12627 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:21.024 12601 12627 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:21.026 12601 12627 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:21.027 12601 12627 I TotalCross: TC_I10_EVENT stage=wal-snapshot status=PASS revision=official-7.2.2 details=origin=external-sqlite,databasePath=/sdcard/Android/data/totalcross.appi10x/files/wal-snapshot.sqlite",
+        "11-27 12:16:21.029 12601 12627 I TotalCross: TC_I10_EVENT stage=wal-snapshot status=PASS revision=official-7.2.2 details=origin=external-sqlite,databasePath=/sdcard/Android/data/totalcross.appi10x/files/wal-snapshot.sqlite",
+        "11-27 12:16:21.030 12601 12627 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0",
+        "11-27 12:16:21.032 12601 12627 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/official-7.2.2/wal-snapshot/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "7.2.2",
+      "target": "android-arm64",
+      "revision": "official-7.2.2",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:23.138 12681 12708 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:23.141 12681 12708 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:23.162 12681 12708 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:23.163 12681 12708 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:23.166 12681 12708 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:23.167 12681 12708 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:23.171 12681 12708 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.2.2 details=origin=7.2.2,databasePath=/sdcard/Android/data/totalcross.appi10x/files/7.2.2.sqlite",
+        "11-27 12:16:23.173 12681 12708 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.2.2 details=origin=7.2.2,databasePath=/sdcard/Android/data/totalcross.appi10x/files/7.2.2.sqlite",
+        "11-27 12:16:23.174 12681 12708 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0",
+        "11-27 12:16:23.175 12681 12708 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/official-7.2.2/7.2.2/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "7.3.0",
+      "target": "android-arm64",
+      "revision": "official-7.2.2",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:25.258 12769 12794 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:25.261 12769 12794 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:25.282 12769 12794 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:25.286 12769 12794 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:25.289 12769 12794 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:25.290 12769 12794 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:25.292 12769 12794 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.2.2 details=origin=7.3.0,databasePath=/sdcard/Android/data/totalcross.appi10x/files/7.3.0.sqlite",
+        "11-27 12:16:25.294 12769 12794 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.2.2 details=origin=7.3.0,databasePath=/sdcard/Android/data/totalcross.appi10x/files/7.3.0.sqlite",
+        "11-27 12:16:25.295 12769 12794 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0",
+        "11-27 12:16:25.297 12769 12794 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/official-7.2.2/7.3.0/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "candidate-94af",
+      "target": "android-arm64",
+      "revision": "official-7.2.2",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:27.442 12849 12875 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:27.444 12849 12875 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:27.464 12849 12875 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:27.467 12849 12875 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:27.470 12849 12875 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:27.472 12849 12875 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:27.475 12849 12875 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.2.2 details=origin=candidate-94af,databasePath=/sdcard/Android/data/totalcross.appi10x/files/candidate-94af.sqlite",
+        "11-27 12:16:27.477 12849 12875 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.2.2 details=origin=candidate-94af,databasePath=/sdcard/Android/data/totalcross.appi10x/files/candidate-94af.sqlite",
+        "11-27 12:16:27.479 12849 12875 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0",
+        "11-27 12:16:27.480 12849 12875 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/official-7.2.2/candidate-94af/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "invalid-database-negative-control",
+      "target": "android-arm64",
+      "revision": "official-7.2.2",
+      "mode": "invalid",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:29.547 12932 12957 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=invalid,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:29.550 12932 12957 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=invalid,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:29.583 12932 12957 I TotalCross: TC_I10_EVENT stage=invalid-negative status=EXPECTED_ERROR revision=official-7.2.2 details=reportedErrorCode=-1,sqlState=null,message=[-1] unknown error (out of memory)",
+        "11-27 12:16:29.587 12932 12957 I TotalCross: TC_I10_EVENT stage=invalid-negative status=EXPECTED_ERROR revision=official-7.2.2 details=reportedErrorCode=-1,sqlState=null,message=[-1] unknown error (out of memory)",
+        "11-27 12:16:29.592 12932 12957 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0",
+        "11-27 12:16:29.595 12932 12957 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/invalid-runs/official-7.2.2/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "external-sqlite",
+      "target": "android-arm64",
+      "revision": "official-7.3.0",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:31.705 13012 13038 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.3.0 details=revision=official-7.3.0,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:31.755 13012 13038 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.3.0 details=integrity_check=ok",
+        "11-27 12:16:31.758 13012 13038 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.3.0 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:31.762 13012 13038 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.3.0 details=origin=external-sqlite,databasePath=/sdcard/Android/data/totalcross.appi10x/files/external-sqlite.sqlite",
+        "11-27 12:16:31.764 13012 13038 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.3.0 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/official-7.3.0/external-sqlite/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "wal-snapshot",
+      "target": "android-arm64",
+      "revision": "official-7.3.0",
+      "mode": "wal-read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:33.774 13097 13123 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.3.0 details=revision=official-7.3.0,mode=wal-read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:33.803 13097 13123 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.3.0 details=integrity_check=ok",
+        "11-27 12:16:33.806 13097 13123 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.3.0 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:33.808 13097 13123 I TotalCross: TC_I10_EVENT stage=wal-snapshot status=PASS revision=official-7.3.0 details=origin=external-sqlite,databasePath=/sdcard/Android/data/totalcross.appi10x/files/wal-snapshot.sqlite",
+        "11-27 12:16:33.810 13097 13123 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.3.0 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/official-7.3.0/wal-snapshot/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "7.2.2",
+      "target": "android-arm64",
+      "revision": "official-7.3.0",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:35.981 13178 13204 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.3.0 details=revision=official-7.3.0,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:36.009 13178 13204 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.3.0 details=integrity_check=ok",
+        "11-27 12:16:36.011 13178 13204 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.3.0 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:36.013 13178 13204 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.3.0 details=origin=7.2.2,databasePath=/sdcard/Android/data/totalcross.appi10x/files/7.2.2.sqlite",
+        "11-27 12:16:36.015 13178 13204 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.3.0 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/official-7.3.0/7.2.2/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "7.3.0",
+      "target": "android-arm64",
+      "revision": "official-7.3.0",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:38.206 13260 13284 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.3.0 details=revision=official-7.3.0,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:38.248 13260 13284 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.3.0 details=integrity_check=ok",
+        "11-27 12:16:38.250 13260 13284 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.3.0 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:38.254 13260 13284 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.3.0 details=origin=7.3.0,databasePath=/sdcard/Android/data/totalcross.appi10x/files/7.3.0.sqlite",
+        "11-27 12:16:38.258 13260 13284 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.3.0 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/official-7.3.0/7.3.0/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "candidate-94af",
+      "target": "android-arm64",
+      "revision": "official-7.3.0",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:40.312 13344 13369 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.3.0 details=revision=official-7.3.0,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:40.332 13344 13369 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=official-7.3.0 details=integrity_check=ok",
+        "11-27 12:16:40.334 13344 13369 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.3.0 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:40.339 13344 13369 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=official-7.3.0 details=origin=candidate-94af,databasePath=/sdcard/Android/data/totalcross.appi10x/files/candidate-94af.sqlite",
+        "11-27 12:16:40.341 13344 13369 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.3.0 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/official-7.3.0/candidate-94af/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "invalid-database-negative-control",
+      "target": "android-arm64",
+      "revision": "official-7.3.0",
+      "mode": "invalid",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:42.416 13425 13455 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.3.0 details=revision=official-7.3.0,mode=invalid,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:42.422 13425 13455 I TotalCross: TC_I10_EVENT stage=invalid-negative status=EXPECTED_ERROR revision=official-7.3.0 details=reportedErrorCode=-1,sqlState=null,message=[-1] unknown error (out of memory)",
+        "11-27 12:16:42.424 13425 13455 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.3.0 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/invalid-runs/official-7.3.0/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "external-sqlite",
+      "target": "android-arm64",
+      "revision": "candidate-94af",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:44.504 13512 13536 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=candidate-94af details=revision=candidate-94af,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:44.526 13512 13536 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=candidate-94af details=integrity_check=ok",
+        "11-27 12:16:44.528 13512 13536 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=candidate-94af details=sqliteVersion=3.32.3,compileOptionCount=13,compileOptions=COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:44.531 13512 13536 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=candidate-94af details=origin=external-sqlite,databasePath=/sdcard/Android/data/totalcross.appi10x/files/external-sqlite.sqlite",
+        "11-27 12:16:44.533 13512 13536 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=candidate-94af details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/candidate-94af/external-sqlite/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "wal-snapshot",
+      "target": "android-arm64",
+      "revision": "candidate-94af",
+      "mode": "wal-read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:46.624 13592 13617 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=candidate-94af details=revision=candidate-94af,mode=wal-read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:46.646 13592 13617 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=candidate-94af details=integrity_check=ok",
+        "11-27 12:16:46.648 13592 13617 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=candidate-94af details=sqliteVersion=3.32.3,compileOptionCount=13,compileOptions=COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:46.650 13592 13617 I TotalCross: TC_I10_EVENT stage=wal-snapshot status=PASS revision=candidate-94af details=origin=external-sqlite,databasePath=/sdcard/Android/data/totalcross.appi10x/files/wal-snapshot.sqlite",
+        "11-27 12:16:46.656 13592 13617 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=candidate-94af details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/candidate-94af/wal-snapshot/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "7.2.2",
+      "target": "android-arm64",
+      "revision": "candidate-94af",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:48.945 13679 13701 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=candidate-94af details=revision=candidate-94af,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:48.967 13679 13701 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=candidate-94af details=integrity_check=ok",
+        "11-27 12:16:48.971 13679 13701 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=candidate-94af details=sqliteVersion=3.32.3,compileOptionCount=13,compileOptions=COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:48.973 13679 13701 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=candidate-94af details=origin=7.2.2,databasePath=/sdcard/Android/data/totalcross.appi10x/files/7.2.2.sqlite",
+        "11-27 12:16:48.975 13679 13701 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=candidate-94af details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/candidate-94af/7.2.2/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "7.3.0",
+      "target": "android-arm64",
+      "revision": "candidate-94af",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:51.199 13758 13780 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=candidate-94af details=revision=candidate-94af,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:51.222 13758 13780 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=candidate-94af details=integrity_check=ok",
+        "11-27 12:16:51.224 13758 13780 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=candidate-94af details=sqliteVersion=3.32.3,compileOptionCount=13,compileOptions=COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:51.226 13758 13780 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=candidate-94af details=origin=7.3.0,databasePath=/sdcard/Android/data/totalcross.appi10x/files/7.3.0.sqlite",
+        "11-27 12:16:51.228 13758 13780 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=candidate-94af details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/candidate-94af/7.3.0/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "cross-platform-transfer",
+      "fixture": "candidate-94af",
+      "target": "android-arm64",
+      "revision": "candidate-94af",
+      "mode": "read",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:53.365 13838 13866 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=candidate-94af details=revision=candidate-94af,mode=read,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:53.390 13838 13866 I TotalCross: TC_I10_EVENT stage=read-integrity status=PASS revision=candidate-94af details=integrity_check=ok",
+        "11-27 12:16:53.392 13838 13866 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=candidate-94af details=sqliteVersion=3.32.3,compileOptionCount=13,compileOptions=COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:53.393 13838 13866 I TotalCross: TC_I10_EVENT stage=cross-version-read status=PASS revision=candidate-94af details=origin=candidate-94af,databasePath=/sdcard/Android/data/totalcross.appi10x/files/candidate-94af.sqlite",
+        "11-27 12:16:53.395 13838 13866 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=candidate-94af details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/reader-runs/candidate-94af/candidate-94af/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "invalid-database-negative-control",
+      "target": "android-arm64",
+      "revision": "candidate-94af",
+      "mode": "invalid",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:55.536 13920 13945 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=candidate-94af details=revision=candidate-94af,mode=invalid,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:55.543 13920 13945 I TotalCross: TC_I10_EVENT stage=invalid-negative status=EXPECTED_ERROR revision=candidate-94af details=reportedErrorCode=-1,sqlState=null,message=[-1] unknown error (unable to open database file)",
+        "11-27 12:16:55.545 13920 13945 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=candidate-94af details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/invalid-runs/candidate-94af/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "suite": "application-update-persistence",
+      "target": "android-arm64",
+      "revision": "official-7.2.2",
+      "mode": "create",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:57.715 13999 14025 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=create,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:57.719 13999 14025 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.2.2 details=revision=official-7.2.2,mode=create,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:57.797 13999 14025 I TotalCross: TC_I10_EVENT stage=create-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:57.799 13999 14025 I TotalCross: TC_I10_EVENT stage=create-integrity status=PASS revision=official-7.2.2 details=integrity_check=ok",
+        "11-27 12:16:57.803 13999 14025 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:57.806 13999 14025 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.2.2 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:57.808 13999 14025 I TotalCross: TC_I10_EVENT stage=create status=PASS revision=official-7.2.2 details=origin=7.2.2,userVersion=10",
+        "11-27 12:16:57.810 13999 14025 I TotalCross: TC_I10_EVENT stage=create status=PASS revision=official-7.2.2 details=origin=7.2.2,userVersion=10",
+        "11-27 12:16:57.811 13999 14025 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0",
+        "11-27 12:16:57.813 13999 14025 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.2.2 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/update-runs/official-7.2.2/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n",
+      "databasePull": {
+        "path": "/private/tmp/tc730-i10-android-finalrun-20261127/update-runs/official-7.2.2/database-after-run.sqlite",
+        "sha256": "bf9909a1bf72392a71f86a1d96285d08d3a46d004f92ffb05c513549ff70dddd",
+        "sizeBytes": 16384,
+        "walPath": "/private/tmp/tc730-i10-android-finalrun-20261127/update-runs/official-7.2.2/database-after-run.sqlite-wal",
+        "walSha256": "d055228c901a728ef23ae12a625e2932ab08e6a39a86acb732da9e54f63b3a2d"
+      }
+    },
+    {
+      "suite": "application-update-persistence",
+      "target": "android-arm64",
+      "revision": "candidate-94af",
+      "mode": "update",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:16:59.856 14092 14116 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=candidate-94af details=revision=candidate-94af,mode=update,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:16:59.897 14092 14116 I TotalCross: TC_I10_EVENT stage=update-integrity status=PASS revision=candidate-94af details=integrity_check=ok",
+        "11-27 12:16:59.899 14092 14116 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=candidate-94af details=sqliteVersion=3.32.3,compileOptionCount=13,compileOptions=COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:16:59.903 14092 14116 I TotalCross: TC_I10_EVENT stage=update status=PASS revision=candidate-94af details=revision=candidate-94af,origin=7.2.2",
+        "11-27 12:16:59.906 14092 14116 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=candidate-94af details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/update-runs/candidate-94af/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n",
+      "databasePull": {
+        "path": "/private/tmp/tc730-i10-android-finalrun-20261127/update-runs/candidate-94af/database-after-run.sqlite",
+        "sha256": "1302feac50f93c5701f1bb5eaacc24da92dcb8dfb1bbc83baf1d3568cd1572f3",
+        "sizeBytes": 24576,
+        "walPath": "/private/tmp/tc730-i10-android-finalrun-20261127/update-runs/candidate-94af/database-after-run.sqlite-wal",
+        "walSha256": "d055228c901a728ef23ae12a625e2932ab08e6a39a86acb732da9e54f63b3a2d"
+      }
+    },
+    {
+      "suite": "application-update-persistence",
+      "target": "android-arm64",
+      "revision": "official-7.3.0",
+      "mode": "update",
+      "status": "PASS",
+      "completionMarkerObserved": true,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "events": [
+        "11-27 12:17:02.060 14175 14201 I TotalCross: TC_I10_EVENT stage=startup status=PASS revision=official-7.3.0 details=revision=official-7.3.0,mode=update,appPath=/data/user/0/totalcross.appi10x",
+        "11-27 12:17:02.094 14175 14201 I TotalCross: TC_I10_EVENT stage=update-integrity status=PASS revision=official-7.3.0 details=integrity_check=ok",
+        "11-27 12:17:02.096 14175 14201 I TotalCross: TC_I10_EVENT stage=sqlite-build status=INFO revision=official-7.3.0 details=sqliteVersion=3.32.3,compileOptionCount=15,compileOptions=CODEC=see,COMPILER=clang-19.0.1,DEFAULT_WAL_SYNCHRONOUS=1,ENABLE_COLUMN_METADATA,ENABLE_FTS3,ENABLE_FTS3_PARENTHESIS,ENABLE_LOAD_EXTENSION,ENABLE_RTREE,ENABLE_UNLOCK_NOTIFY,ENABLE_UPDATE_DELETE_LIMIT,HAS_CODEC,MAX_EXPR_DEPTH=0,OMIT_DEPRECATED,OMIT_PROGRESS_CALLBACK,THREADSAFE=0",
+        "11-27 12:17:02.098 14175 14201 I TotalCross: TC_I10_EVENT stage=update status=PASS revision=official-7.3.0 details=revision=official-7.3.0,origin=7.2.2",
+        "11-27 12:17:02.100 14175 14201 I TotalCross: TC_I10_EVENT stage=result status=PASS revision=official-7.3.0 details=completed=1,failures=0"
+      ],
+      "runtimeLog": "/private/tmp/tc730-i10-android-finalrun-20261127/update-runs/official-7.3.0/runtime.log",
+      "installOutput": "Performing Streamed Install\nSuccess\n",
+      "databasePull": {
+        "path": "/private/tmp/tc730-i10-android-finalrun-20261127/update-runs/official-7.3.0/database-after-run.sqlite",
+        "sha256": "764e7ad5fb499e0dd0b7aaca6ce26942f9d47331a475edf0804485656f53c6de",
+        "sizeBytes": 24576,
+        "walPath": "/private/tmp/tc730-i10-android-finalrun-20261127/update-runs/official-7.3.0/database-after-run.sqlite-wal",
+        "walSha256": "d055228c901a728ef23ae12a625e2932ab08e6a39a86acb732da9e54f63b3a2d"
+      }
+    }
+  ],
+  "updatePersistence": {
+    "sqliteVersion": "3.54.1",
+    "integrityCheck": "ok",
+    "origin": "7.2.2",
+    "amount": 12,
+    "upgrades": [
+      "candidate-94af",
+      "official-7.3.0"
+    ],
+    "sha256": "764e7ad5fb499e0dd0b7aaca6ce26942f9d47331a475edf0804485656f53c6de",
+    "headerHex": "53514c69746520666f726d6174203300",
+    "status": "PASS",
+    "baseRevision": "official-7.2.2"
+  },
+  "blockedCount": 0,
+  "failureCount": 0,
+  "fixtureManifest": "fixtures/fixture-index.json",
+  "startedAt": 1795792562.832533,
+  "finishedAt": 1795792635.532253
+}

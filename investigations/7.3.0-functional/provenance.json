@@ -80,20 +80,130 @@
       "correctedRuntimePeMachine": "I386",
       "evidenceOrigin": "HISTORICAL",
       "campaignExecution": "NOT_RUN"
+    },
+    {
+      "name": "Historical Linux startup failure from the 7.3.0 package",
+      "repository": "TotalCross/totalcross-performance-lab",
+      "workflowRunId": 41888918200,
+      "jobId": 126780740748,
+      "sourceSha": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+      "artifactId": 13353195526,
+      "artifactName": "sqlite-plaintext-7.3.0-linux-x64",
+      "artifactSha256": "92c614f33549cf740a80b4c3d2ba94a57774ca3a1de7e80bb2ea2418f1843d3f",
+      "host": "Linux 7.0.0-1017-azure x86_64, glibc 2.39",
+      "status": "FAIL_BEFORE_SQLITE_PROBE",
+      "retentionUntil": "2026-12-04"
+    },
+    {
+      "name": "Historical Linux PNG materialization failure",
+      "repository": "TotalCross/totalcross-performance-lab",
+      "workflowRunId": 45740940460,
+      "jobId": 139645497342,
+      "sourceSha": "61034a7562e7fa43df076dcc38bcd48128605395",
+      "sourceTree": "d38a41633088464c707c04bd358b9997e3dc1af0",
+      "buildId": "b50ea3755c051558d0d59ec00875cf3338bae1f2b8c78959876226bb44a4bb92",
+      "artifactId": 15080812232,
+      "artifactSha256": "7318fb350214299b1d503825d1554825c9718b06b086982a9ba88b195967d6c3",
+      "linuxVmSha256": "29af2de6c0cb8394259ff481f7aab271bb618436278b7475defd580018a77a2b",
+      "launcherSha256": "657093694da2a5ad9845dd91865639f2be39e6c7411946294e3c0f37aa194912",
+      "testOnlyRealpathShim": true,
+      "fixtureHashesVerified": true,
+      "status": "PNG_FAIL_JPEG_CONTROL_PASS",
+      "retentionUntil": "2026-12-06"
+    },
+    {
+      "name": "7.3.0 package workflow artifact",
+      "repository": "TotalCross/totalcross-performance-lab",
+      "workflowRunId": 40878222908,
+      "sourceBranch": "chore/bump-version-7.3.0",
+      "sourceSha": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+      "artifactId": 12899147776,
+      "artifactName": "TotalCross-7.3.0",
+      "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+      "sizeBytes": 109261594,
+      "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+      "sdkJarPath": "TotalCross/dist/totalcross-sdk-7.3.0.jar",
+      "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+      "linuxLibtcvmPath": "TotalCross/dist/vm/linux/libtcvm.so",
+      "linuxLibtcvmSha256": "94e823963427a67decdb2aaeb99722e297e375a7d772b438ef85cae1449160fb",
+      "linuxLauncherSha256": "444d78555242d1bfd0401967a59430003f6eaa8e602eda53c733f59554794baa",
+      "linuxArchitecture": "x86_64",
+      "classification": "CI_PACKAGE_ARTIFACT_NO_GITHUB_RELEASE_OR_TAG"
+    },
+    {
+      "name": "TotalCross 4.6.0 legacy source snapshot for I04/I05",
+      "repository": "TotalCross/totalcross",
+      "tag": "v4.6.0",
+      "tagCommit": "a535fd8eec26f21385a2bff309ac6df91cb1490e",
+      "relevantFileStateCommit": "e2c9f0795f213d780efe0ea78e958d7f55c13721",
+      "sourceDate": "2022-02-18",
+      "scopeDecision": "No exact applicable legacy fix for the reported live native FILE handle or destroyed mutex failure shape; I04 and I05 remain in scope."
+    },
+    {
+      "name": "Frozen master native source differs from historical Linux build source",
+      "repository": "TotalCross/totalcross",
+      "fromSha": "61034a7562e7fa43df076dcc38bcd48128605395",
+      "toSha": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+      "nativeSourceTreeChanged": true,
+      "changedNativePaths": ["TotalCrossVM/android/app/src/main/java/totalcross/android/AndroidPermissionManager.java", "TotalCrossVM/src/event/darwin/event.m", "TotalCrossVM/src/nm/db/NativeDB.c", "TotalCrossVM/src/nm/io/File.h", "TotalCrossVM/src/nm/io/posix/File_c.h", "TotalCrossVM/src/nm/ui/GraphicsPrimitives_c.h", "TotalCrossVM/src/nm/ui/backend/graphics/gles/gfx_Graphics_c.h", "TotalCrossVM/src/nm/ui/image_Image.c", "TotalCrossVM/src/tests/sqlite/test_android_permission_recovery.py"],
+      "campaignImplication": "Rebuild the exact frozen master source; the historical 61034 Linux VM cannot be reused as current-master evidence."
     }
   ],
   "officialReleases": {
-    "7.2.2": {"tag": "v7.2.2", "sourceSha": null, "sdkArtifact": null, "vmArtifact": null, "status": "GITHUB_RELEASE_FOUND_SOURCE_AND_ARTIFACT_PROVENANCE_PENDING"},
-    "7.3.0": {"tag": null, "sourceSha": null, "sdkArtifact": null, "vmArtifact": null, "status": "NO_GITHUB_RELEASE_OR_TAG_FOUND_ACTION_ARTIFACT_SEARCH_PENDING"}
+    "7.2.2": {
+      "tag": "v7.2.2",
+      "sourceSha": "153fd11b03ea7004b08d2f61183650faeaf0bc16",
+      "sdkArtifact": null,
+      "vmArtifact": null,
+      "status": "RELEASE_PAIR_CONTENTS_VERIFIED",
+      "tagObjectSha": "b6a01df10a52c537f69dba9f5e03152d0cdfec2f",
+      "releaseAsset": {
+        "fullPackage": {
+          "id": 463654239,
+          "name": "TotalCross-7.2.2.zip",
+          "sizeBytes": 99101067,
+          "sha256": "ba72e64d08874321da9df52b2042e84bee10800723fa97749ce224988b0a0a06"
+        },
+        "sdkJar": {
+          "id": 463654237,
+          "name": "totalcross-sdk-7.2.2.jar",
+          "sizeBytes": 5085320,
+          "sha256": "5f6d5c7f6f08f8635aa648497320bf547b310c6a3c9073659421f1167ff0efe4"
+        }
+      },
+      "linuxRuntimePair": {
+        "architecture": "x86_64",
+        "sdkJarPath": "TotalCross/dist/totalcross-sdk-7.2.2.jar",
+        "sdkJarSha256": "5f6d5c7f6f08f8635aa648497320bf547b310c6a3c9073659421f1167ff0efe4",
+        "libtcvmPath": "TotalCross/dist/vm/linux/libtcvm.so",
+        "libtcvmSha256": "3d8a081d6510e5c2a1e05e38c26b0467180f871af1c5ed0501739bf158341dde",
+        "launcherPath": "TotalCross/etc/launchers/linux/Launcher",
+        "launcherSha256": "3f8b78f4864681b91cde95443b10a488846b696e62fee1766d071eb7fec3c723"
+      }
+    },
+    "7.3.0": {
+      "tag": null,
+      "sourceSha": null,
+      "sdkArtifact": null,
+      "vmArtifact": null,
+      "status": "NO_GITHUB_RELEASE_OR_TAG_FOUND_ACTION_ARTIFACT_SEARCH_PENDING"
+    }
   },
   "dependencies": [],
-  "artifactDigests": [],
+  "artifactDigests": [
+    {
+      "name": "TotalCross 7.2.2 Linux runtime pair from the published release ZIP",
+      "assetId": 463654239,
+      "packageSha256": "ba72e64d08874321da9df52b2042e84bee10800723fa97749ce224988b0a0a06",
+      "sdkJarSha256": "5f6d5c7f6f08f8635aa648497320bf547b310c6a3c9073659421f1167ff0efe4",
+      "linuxLibtcvmSha256": "3d8a081d6510e5c2a1e05e38c26b0467180f871af1c5ed0501739bf158341dde",
+      "linuxLauncherSha256": "3f8b78f4864681b91cde95443b10a488846b696e62fee1766d071eb7fec3c723"
+    }
+  ],
   "toolchains": [],
   "unknowns": [
-    "Official 7.2.2 source/SDK/VM provenance and any official 7.3.0 Actions artifact identities and hashes; no 7.3.0 GitHub release or tag was found.",
     "Exact candidate composition that combines the independently stacked PR #545, #565, and #567 corrections.",
     "Recoverable run, job, and artifact IDs for the imported JavaSE, macOS ARM64, and Android ARM64 ownership evidence.",
-    "Legacy 4.x commits relevant to I04 and I05.",
     "Exact dependency identities and toolchain versions for each future campaign build."
   ]
 }

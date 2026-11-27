@@ -5,7 +5,7 @@
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 - Active milestone: 0 — preparation
-- Last completed commit: initial campaign scope commit (pending)
+- Last completed commit before the active evidence slice: `e5831e1`
 - Production source edits: none
 
 ## Frozen references
@@ -38,6 +38,17 @@ commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   workflow; reuse/extension opportunities still need inspection.
 - Verified PR #567's complete `TotalCrossSDK/` tree matches the validated
   implementation commit; GitHub reports #545/#565 on diverged stack branches.
+- Imported compact historical I01-B and I02 Linux evidence, verified archive
+  digests and PNG/JPEG fixture hashes, and kept historical failures distinct
+  from the still-unrun frozen-master campaign.
+- Verified the 7.2.2 release package and its SDK/Linux VM hashes, the 7.3.0 CI
+  package and its SDK/Linux VM hashes, and the 4.6.0 source boundary for I04
+  and I05. Both Android cases remain in scope.
+- Confirmed local ARM64 AVD acceleration and API 34/36/37 images; API 29/30/35
+  images are not currently installed.
+- Compared the earlier 61034 Linux build with frozen master and found native
+  file, SQLite, image, and Android permission changes. Do not reuse its VM for
+  current-master evidence; the focused runner must build exact commit 6b915.
 
 ## Pending investigations
 
@@ -47,11 +58,11 @@ case reports, proposed issue updates, and final consolidation.
 
 ## Next concrete action
 
-Complete and commit Milestone 0 provenance: verify official 7.2.2/7.3.0 SDK
-and VM artifacts, current-master contents, PR stack identities, legacy 4.x
-status for I04/I05, and recoverable historical evidence. Then preserve the
-existing Linux startup/PNG fixtures and define the focused runner contract
-before any costly run.
+Finish the reusable harness and focused Linux workflow contract, add
+contract/YAML/schema checks, and capture runner/emulator capability evidence.
+Then commit the completed provenance inventory and initial matrix before the
+first campaign run. Historical Linux evidence and exact release package pairs
+are already recorded; current-master I01-B/I02 have not run.
 
 ## Constraints and blockers
 

@@ -1,0 +1,16 @@
+Historical master-only run 45740940460, Linux job 139645497342
+Source SHA: 61034a7562e7fa43df076dcc38bcd48128605395
+Artifact: 15080812232, SHA-256 7318fb350214299b1d503825d1554825c9718b06b086982a9ba88b195967d6c3
+Shim: test-only LD_PRELOAD realpath compatibility interposer; production VM unchanged
+
+fixture=LinuxPngDecodeComparisonApp,assets=loaded,pngLength=136,jpegLength=90385,pngWritten=true,jpegWritten=true
+libpng warning: IDAT: IDAT: ADLER32 checksum mismatch
+case=png-file,constructor=Image(File),construct=true,decode=false,width=36,height=36,pixelCount=-1,exception=java.lang.IllegalStateException:Could_not_materialize_encoded_image
+libpng warning: IDAT: IDAT: ADLER32 checksum mismatch
+case=png-bytes,constructor=Image(byte[]),construct=true,decode=false,width=36,height=36,pixelCount=-1,exception=java.lang.IllegalStateException:Could_not_materialize_encoded_image
+case=jpeg-file,constructor=Image(File),construct=true,decode=true,width=512,height=512,pixelCount=262144,exception=none
+case=jpeg-bytes,constructor=Image(byte[]),construct=true,decode=true,width=512,height=512,pixelCount=262144,exception=none
+comparison=complete,pngFileDecode=false,pngBytesDecode=false,jpegFileDecode=true,jpegBytesDecode=true,overallPass=false
+
+The harness intentionally reported findings with runtimeExit=0; this is not a
+passing PNG result. The artifact expires 2026-12-06.

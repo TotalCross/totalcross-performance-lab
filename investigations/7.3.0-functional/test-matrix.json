@@ -23,7 +23,28 @@
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
       "evidenceOrigin": "CAMPAIGN_PENDING",
-      "results": []
+      "results": [
+        {
+          "platform": "linux-x86_64",
+          "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+          "status": "FAIL",
+          "defectClassification": "PREEXISTING_FOR_TESTED_PACKAGE",
+          "evidenceOrigin": "HISTORICAL",
+          "campaignExecution": "IMPORTED",
+          "workflowRunId": 41888918200,
+          "jobId": 126780740748,
+          "artifactId": 13353195526,
+          "artifactSha256": "92c614f33549cf740a80b4c3d2ba94a57774ca3a1de7e80bb2ea2418f1843d3f",
+          "artifactPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+          "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+          "linuxVmSha256": "94e823963427a67decdb2aaeb99722e297e375a7d772b438ef85cae1449160fb",
+          "runtimeExitCode": 134,
+          "failurePoint": "glibc __realpath_chk called from startVM before application/SQLite markers",
+          "host": "Linux 7.0.0-1017-azure x86_64, glibc 2.39",
+          "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/41888918200",
+          "limitations": ["Archived package run; not frozen master or 7.2.2.", "Normal/short/long/symlink path matrix not run."]
+        }
+      ]
     },
     {
       "investigationId": "I02",
@@ -33,7 +54,32 @@
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
       "evidenceOrigin": "CAMPAIGN_PENDING",
-      "results": []
+      "results": [
+        {
+          "platform": "linux-x86_64",
+          "sourceRevision": "61034a7562e7fa43df076dcc38bcd48128605395",
+          "status": "FAIL",
+          "defectClassification": "HISTORICAL_MASTER_FAILURE_CONDITIONAL_STARTUP_SHIM",
+          "evidenceOrigin": "HISTORICAL",
+          "campaignExecution": "IMPORTED",
+          "workflowRunId": 45740940460,
+          "jobId": 139645497342,
+          "artifactId": 15080812232,
+          "artifactSha256": "7318fb350214299b1d503825d1554825c9718b06b086982a9ba88b195967d6c3",
+          "linuxVmSha256": "29af2de6c0cb8394259ff481f7aab271bb618436278b7475defd580018a77a2b",
+          "launcherSha256": "657093694da2a5ad9845dd91865639f2be39e6c7411946294e3c0f37aa194912",
+          "testOnlyRealpathShim": true,
+          "fixtureHashesVerified": true,
+          "cases": {
+            "png-file": false,
+            "png-bytes": false,
+            "jpeg-file": true,
+            "jpeg-bytes": true
+          },
+          "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45740940460",
+          "limitations": ["Historical master 61034, not frozen master 6b915.", "The realpath compatibility shim was enabled.", "TCZ, alpha, indexed, invalid input, and pixel-value assertions were not covered."]
+        }
+      ]
     },
     {
       "investigationId": "I03",
@@ -51,23 +97,23 @@
       "investigationId": "I04",
       "title": "Android File.writeBytes SIGABRT",
       "requiredPlatforms": ["android-arm64-emulator"],
-      "legacyPortCheck": "PENDING",
+      "legacyPortCheck": "REVIEWED_NO_EXACT_APPLICABLE_LEGACY_FIX",
       "requiredScenarios": ["normal-write", "failed-open", "after-close", "denied-authorization", "permission-recovery", "invalid-path", "controlled-shutdown", "controlled-write-close-race"],
       "status": "NOT_RUN",
-      "scopeStatus": "CONDITIONAL_ON_4X_PORT_CHECK",
-      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "scopeStatus": "IN_SCOPE",
+      "evidenceOrigin": "SOURCE_HISTORY",
       "results": []
     },
     {
       "investigationId": "I05",
       "title": "Android native shutdown SIGABRT",
       "requiredPlatforms": ["android-arm64-emulator"],
-      "legacyPortCheck": "PENDING",
+      "legacyPortCheck": "REVIEWED_NO_EXACT_APPLICABLE_LEGACY_FIX",
       "maxIntermittentRepetitions": 10,
       "requiredScenarios": ["normal-exit", "exit-during-file-io", "exit-during-sqlite", "exit-after-permission-request", "exit-after-background-transition", "exit-with-worker-threads", "repeated-init-termination"],
       "status": "NOT_RUN",
-      "scopeStatus": "CONDITIONAL_ON_4X_PORT_CHECK",
-      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "scopeStatus": "IN_SCOPE",
+      "evidenceOrigin": "SOURCE_HISTORY",
       "results": []
     },
     {

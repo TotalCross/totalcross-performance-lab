@@ -1,0 +1,11 @@
+Historical PR #4 run 41888918200, Linux job 126780740748
+Host: Linux 7.0.0-1017-azure x86_64, glibc 2.39
+Artifact: 13353195526, sqlite-plaintext-7.3.0-linux-x64
+Artifact SHA-256: 92c614f33549cf740a80b4c3d2ba94a57774ca3a1de7e80bb2ea2418f1843d3f
+Source SHA: 5464c21e3107e3f1ce9c287b724829e2bb870c1d
+
+*** buffer overflow detected ***: terminated
+Aborted (core dumped)
+EXIT_CODE=134
+
+The expected SQLite probe events were absent because startup aborted first.

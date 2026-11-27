@@ -1,0 +1,13 @@
+Historical PR #4 run 41888918200, Linux job 126780740748
+
+*** buffer overflow detected ***: terminated
+Program received signal SIGABRT, Aborted.
+#6 __GI___fortify_fail ("buffer overflow detected")
+#7 __GI___chk_fail ()
+#8 __realpath_chk (...)
+#9 startVM () from ./libtcvm.so
+#10 executeProgram () from ./libtcvm.so
+#11 main ()
+
+The recorded EXIT_CODE=0 is the gdb wrapper's status; runtime.log records the
+application process exit as 134. This is a startup failure, before SQLite.

@@ -36,12 +36,23 @@ provenance, proposed issue updates, and a consolidated report.
 - [x] 2026-11-27: Created this campaign worktree from performance-lab `main`
   at `fe23e009fa2fcdbf8c36746cea58b9946a138858` after confirming the requested
   branch did not exist locally or remotely.
+- [x] 2026-11-27: Imported compact historical Linux startup and PNG evidence,
+  preserving source revisions, artifact digests, test-only shim conditions,
+  fixture hashes, and the distinction from frozen-master validation.
+- [x] 2026-11-27: Verified the official 7.2.2 SDK/Linux VM pair and the 7.3.0
+  CI package by published artifact digests and extracted binary hashes;
+  checked TotalCross 4.6.0 source for I04/I05 and kept both in scope.
+- [x] 2026-11-27: Confirmed local ARM64 Android emulator acceleration and API
+  34/36/37 system images; Android Actions runtime execution is excluded.
+- [x] 2026-11-27: Compared the historical Linux build source with frozen
+  master and confirmed the native VM tree changed; current-master evidence
+  requires an exact-source rebuild.
 - [ ] Milestone 0: finish provenance, legacy-port exclusion, historical
   evidence import, reusable test harness, and CI/emulator capability checks.
 - [ ] Milestone 1: investigate Linux realpath startup (I01-B), then PNG decode
   (I02), preserving independent findings.
-- [ ] Milestone 2: investigate Android EGL lifecycle (I03), then determine
-  whether I04/I05 are excluded by verified 4.x fixes or remain in scope.
+- [ ] Milestone 2: investigate Android EGL lifecycle (I03), then I04/I05,
+  which remain in scope after the verified 4.6.0 source check.
 - [ ] Milestone 3: run Linux ownership validation (I06) and remaining
   `Image(String)` checks (I07), importing equivalent historical evidence.
 - [ ] Milestone 4: validate Android filesystem and SQLite permission recovery
@@ -82,7 +93,11 @@ test, revision bisect, or new crash dump is allowed.
    added only on this branch must not depend on `workflow_dispatch`; use a
    dedicated-branch push trigger when an Actions run is required.
 5. Commit the completed provenance inventory and explicit initial matrix before
-   starting the full case campaign.
+   starting the full case campaign. A focused branch-only Linux workflow is
+   justified because the canonical reusable workflow cannot select Linux
+   alone; reuse its runner image, dependency artifacts, and CMake/Ninja build
+   path, then remove or upstream the focused path when the canonical workflow
+   supports case-scoped platform selection.
 
 ### Milestone 1 — Linux startup and PNG blockers
 

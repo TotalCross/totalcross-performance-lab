@@ -4,6 +4,17 @@ on:
   push:
     branches:
       - investigation/totalcross-7.3.0-functional-validation
+    paths:
+      - '.github/workflows/functional-validation-730.yml'
+      - 'tools/functional_validation_730.py'
+      - 'tools/linux_image_ownership_730.py'
+      - 'tests/functional-validation/LinuxStartupProbe.java'
+      - 'tests/functional-validation/LinuxPngDecodeProbe.java'
+      - 'tests/functional-validation/totalcross/ui/image/ImageOwnershipLifecycleProbe.java'
+      - 'investigations/7.3.0-functional/campaign-run.json'
+      - 'investigations/7.3.0-functional/cases/linux-startup/**'
+      - 'investigations/7.3.0-functional/cases/png-decoding/**'
+      - 'investigations/7.3.0-functional/cases/image-ownership/**'
 
 permissions:
   contents: read
@@ -24,6 +35,14 @@ jobs:
           path: product
           fetch-depth: 1
 
+      - name: Check out corrected product source
+        uses: actions/checkout@v4
+        with:
+          repository: TotalCross/totalcross
+          ref: 94af2b8b653cad509994b5ccf3dbb60ac28ef920
+          path: product-candidate
+          fetch-depth: 1
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -32,6 +51,20 @@ jobs:
       - name: Build SDK with the canonical packaging script
         working-directory: product/scripts
         run: ./package-sdk.sh
+
+      - name: Build corrected SDK with the canonical packaging script
+        working-directory: product-candidate/scripts
+        env:
+          LOG_PATH: ${{ runner.temp }}/tc730-candidate-sdk-build.log
+        run: |
+          if ./package-sdk.sh > "$LOG_PATH" 2>&1; then
+            echo "Corrected SDK package build passed; log: $LOG_PATH"
+          else
+            status=$?
+            tail -n 100 "$LOG_PATH"
+            echo "Corrected SDK package build failed with exit $status; log: $LOG_PATH" >&2
+            exit "$status"
+          fi
 
       - name: Fetch pinned native dependencies
         working-directory: product
@@ -75,6 +108,47 @@ jobs:
       - name: Generate native bridge sources
         working-directory: product/TotalCrossSDK
         run: ./gradlew-agent generateNativeBridgeSources
+
+      - name: Verify corrected SDK generates identical native bridges
+        working-directory: product-candidate/TotalCrossSDK
+        env:
+          BASELINE_BRIDGES: ${{ github.workspace }}/product/TotalCrossSDK/build/generated/native-bridges
+          CANDIDATE_BRIDGES: ${{ github.workspace }}/product-candidate/TotalCrossSDK/build/generated/native-bridges
+          LOG_PATH: ${{ runner.temp }}/tc730-candidate-native-bridges.log
+        run: |
+          if ./gradlew-agent generateNativeBridgeSources > "$LOG_PATH" 2>&1; then
+            echo "Corrected SDK native bridge generation passed; log: $LOG_PATH"
+          else
+            status=$?
+            tail -n 100 "$LOG_PATH"
+            echo "Corrected SDK native bridge generation failed with exit $status; log: $LOG_PATH" >&2
+            exit "$status"
+          fi
+          python3 - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+
+          def inventory(root):
+              root = Path(root)
+              if not root.is_dir():
+                  raise SystemExit("generated native bridge directory is missing: " + str(root))
+              files = sorted(path for path in root.rglob("*") if path.is_file())
+              return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+                      for path in files}
+
+          baseline = inventory(os.environ["BASELINE_BRIDGES"])
+          candidate = inventory(os.environ["CANDIDATE_BRIDGES"])
+          if baseline != candidate:
+              raise SystemExit("corrected SDK changes generated native bridge inputs")
+          digest = hashlib.sha256()
+          for name, file_hash in sorted(candidate.items()):
+              digest.update(name.encode("utf-8") + b"\0" + file_hash.encode("ascii") + b"\n")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment:
+              environment.write("GENERATED_NATIVE_BRIDGES_SHA256=" + digest.hexdigest() + "\n")
+          print("Identical generated native bridge files: %d; inventory SHA-256: %s" %
+                (len(candidate), digest.hexdigest()))
+          PY
 
       - name: Build Linux VM and launcher with the canonical container
         working-directory: product
@@ -165,11 +239,13 @@ jobs:
         env:
           BUNDLE_DIR: ${{ runner.temp }}/tc730-linux-bundle
           SOURCE_SHA: 6b915883dd202f6db891990f6c3af26fb645ecc7
+          CANDIDATE_SOURCE_SHA: 94af2b8b653cad509994b5ccf3dbb60ac28ef920
           DEPOT_TOOLS_REF: 0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a
           DEPENDENCY_INDEX: ${{ runner.temp }}/tc730-native-dependencies.jsonl
         run: |
-          mkdir -p "$BUNDLE_DIR/TotalCross" "$BUNDLE_DIR/native"
+          mkdir -p "$BUNDLE_DIR/TotalCross" "$BUNDLE_DIR/Corrected/TotalCross" "$BUNDLE_DIR/native"
           cp -a product/build/TotalCross/. "$BUNDLE_DIR/TotalCross/"
+          cp -a product-candidate/build/TotalCross/. "$BUNDLE_DIR/Corrected/TotalCross/"
           cp product/build/libtcvm.so "$BUNDLE_DIR/native/libtcvm.so"
           cp product/build/Launcher "$BUNDLE_DIR/native/Launcher"
           cp product/build/native-toolchain.txt "$BUNDLE_DIR/native-toolchain.txt"
@@ -194,8 +270,27 @@ jobs:
           if depot_revision != os.environ["DEPOT_TOOLS_REF"]:
               raise SystemExit("depot-tools revision differs from the pinned campaign ref")
 
+          def product_identity(path):
+              commit = subprocess.check_output(["git", "-C", path, "rev-parse", "HEAD"], text=True).strip()
+              tree = subprocess.check_output(["git", "-C", path, "rev-parse", "HEAD^{tree}"], text=True).strip()
+              vm_tree = subprocess.check_output(["git", "-C", path, "rev-parse", "HEAD:TotalCrossVM"], text=True).strip()
+              return commit, tree, vm_tree
+
+          baseline_commit, baseline_tree, baseline_vm_tree = product_identity("product")
+          candidate_commit, candidate_tree, candidate_vm_tree = product_identity("product-candidate")
+          if baseline_commit != os.environ["SOURCE_SHA"]:
+              raise SystemExit("frozen source checkout differs from the pinned revision")
+          if candidate_commit != os.environ["CANDIDATE_SOURCE_SHA"]:
+              raise SystemExit("corrected source checkout differs from the pinned revision")
+          if baseline_vm_tree != candidate_vm_tree:
+              raise SystemExit("corrected source changes TotalCrossVM inputs")
+          bridge_hash = os.environ["GENERATED_NATIVE_BRIDGES_SHA256"]
+
           record = {
               "sourceSha": os.environ["SOURCE_SHA"],
+              "sourceTree": baseline_tree,
+              "totalCrossVmTree": baseline_vm_tree,
+              "generatedNativeBridgesSha256": bridge_hash,
               "buildImage": "totalcross/linux-amd64:v1.0.7",
               "depotToolsRevision": depot_revision,
               "sdkJarSha256": sha(root / "TotalCross/dist/totalcross-sdk.jar"),
@@ -210,7 +305,20 @@ jobs:
               ],
           }
           (root / "build-identity.json").write_text(json.dumps(record, indent=2) + "\n")
+          candidate = {
+              "sourceSha": candidate_commit,
+              "sourceTree": candidate_tree,
+              "totalCrossVmTree": candidate_vm_tree,
+              "nativeSourceTreeMatchesBaseline": candidate_vm_tree == baseline_vm_tree,
+              "generatedNativeBridgesSha256": bridge_hash,
+              "nativeBridgeInputsMatchBaseline": True,
+              "sdkJarSha256": sha(root / "Corrected/TotalCross/dist/totalcross-sdk.jar"),
+              "runtimePairing": "same frozen-master Linux runtime; TotalCrossVM source subtree and generated native bridge inputs were verified byte-identical",
+          }
+          (root / "corrected-sdk-build-identity.json").write_text(
+              json.dumps(candidate, indent=2) + "\n")
           print(json.dumps(record))
+          print(json.dumps(candidate))
           PY
 
       - uses: actions/upload-artifact@v4
@@ -219,6 +327,159 @@ jobs:
           path: ${{ runner.temp }}/tc730-linux-bundle
           retention-days: 1
           if-no-files-found: error
+
+  run-linux-image-ownership:
+    name: Run image ownership on Linux x86_64
+    needs: build-frozen-master
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: tc730-linux-frozen-master-bundle
+          path: ${{ runner.temp }}/tc730-linux-bundle
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install the headless Linux runtime
+        run: sudo apt-get update && sudo apt-get install -y xvfb libsdl2-2.0-0 libgl1 libegl1 libgles2 libglu1-mesa libx11-6 libxext6 libxrender1 libfontconfig1
+
+      - name: Verify paired SDK and native runtime provenance
+        env:
+          BUNDLE_DIR: ${{ runner.temp }}/tc730-linux-bundle
+          RESULT_DIR: ${{ runner.temp }}/tc730-image-ownership-results
+        run: |
+          set -euo pipefail
+          mkdir -p "$RESULT_DIR"
+          jq -e '.sourceSha == "6b915883dd202f6db891990f6c3af26fb645ecc7" and .sourceTree != null and .totalCrossVmTree != null' \
+            "$BUNDLE_DIR/build-identity.json" >/dev/null
+          jq -e '.sourceSha == "94af2b8b653cad509994b5ccf3dbb60ac28ef920" and .nativeSourceTreeMatchesBaseline == true and .nativeBridgeInputsMatchBaseline == true' \
+            "$BUNDLE_DIR/corrected-sdk-build-identity.json" >/dev/null
+          python3 - "$BUNDLE_DIR" <<'PY'
+          import hashlib
+          import json
+          import sys
+          from pathlib import Path
+
+          root = Path(sys.argv[1])
+          baseline = json.loads((root / "build-identity.json").read_text())
+          candidate = json.loads((root / "corrected-sdk-build-identity.json").read_text())
+          def sha(path):
+              digest = hashlib.sha256()
+              with path.open("rb") as stream:
+                  for block in iter(lambda: stream.read(1024 * 1024), b""):
+                      digest.update(block)
+              return digest.hexdigest()
+
+          checks = {
+              "baselineSdkJar": (root / "TotalCross/dist/totalcross-sdk.jar",
+                                 baseline["sdkJarSha256"]),
+              "candidateSdkJar": (root / "Corrected/TotalCross/dist/totalcross-sdk.jar",
+                                  candidate["sdkJarSha256"]),
+              "linuxLibtcvm": (root / "native/libtcvm.so", baseline["linuxLibtcvmSha256"]),
+              "linuxLauncher": (root / "native/Launcher", baseline["linuxLauncherSha256"]),
+          }
+          for name, (path, expected) in checks.items():
+              actual = sha(path)
+              if actual != expected:
+                  raise SystemExit(name + " does not match its recorded build identity")
+          if baseline["totalCrossVmTree"] != candidate["totalCrossVmTree"]:
+              raise SystemExit("baseline and corrected TotalCrossVM source trees differ")
+          if baseline["generatedNativeBridgesSha256"] != candidate["generatedNativeBridgesSha256"]:
+              raise SystemExit("baseline and corrected generated native bridge inputs differ")
+          print("SDK and Linux runtime files match their build identities; native inputs are equivalent")
+          PY
+          python3 - "$RESULT_DIR/identities.json" "$BUNDLE_DIR/build-identity.json" \
+            "$BUNDLE_DIR/corrected-sdk-build-identity.json" <<'PY'
+          import json
+          import platform
+          import sys
+          from pathlib import Path
+
+          baseline = json.loads(Path(sys.argv[2]).read_text())
+          candidate = json.loads(Path(sys.argv[3]).read_text())
+          record = {
+              "platform": "linux-x86_64",
+              "runtimeHostArchitecture": platform.machine(),
+              "baseline": baseline,
+              "candidate": candidate,
+              "runtimeLibrarySha256": baseline["linuxLibtcvmSha256"],
+              "runtimeLauncherSha256": baseline["linuxLauncherSha256"],
+          }
+          Path(sys.argv[1]).write_text(json.dumps(record, indent=2) + "\n")
+          print(json.dumps({key: value for key, value in record.items()
+                            if key not in ("baseline", "candidate")}, sort_keys=True))
+          PY
+          ldd --version | head -n 1 > "$RESULT_DIR/glibc-version.txt"
+          uname -a > "$RESULT_DIR/host.txt"
+
+      - name: Prepare and run baseline ownership observation
+        env:
+          BUNDLE_DIR: ${{ runner.temp }}/tc730-linux-bundle
+          RESULT_DIR: ${{ runner.temp }}/tc730-image-ownership-results
+          PROBE_SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          baseline_source="$(jq -r .sourceSha "$BUNDLE_DIR/build-identity.json")"
+          baseline_tree="$(jq -r .sourceTree "$BUNDLE_DIR/build-identity.json")"
+          vm_tree="$(jq -r .totalCrossVmTree "$BUNDLE_DIR/corrected-sdk-build-identity.json")"
+          bridge_hash="$(jq -r .generatedNativeBridgesSha256 "$BUNDLE_DIR/corrected-sdk-build-identity.json")"
+          python3 tools/linux_image_ownership_730.py prepare \
+            --sdk-root "$BUNDLE_DIR/TotalCross" --native-dir "$BUNDLE_DIR/native" \
+            --mode baseline --source-commit "$baseline_source" --source-tree "$baseline_tree" \
+            --runtime-source-commit "$baseline_source" --runtime-source-tree "$baseline_tree" \
+            --runtime-source-subtree "$vm_tree" --runtime-native-bridges-sha256 "$bridge_hash" \
+            --runtime-subtree-matches-candidate \
+            --probe-source-commit "$PROBE_SOURCE_COMMIT" \
+            --out "$RESULT_DIR/I06/baseline"
+          python3 tools/linux_image_ownership_730.py run \
+            --mode baseline --out "$RESULT_DIR/I06/baseline"
+
+      - name: Prepare and run corrected ownership acceptance
+        env:
+          BUNDLE_DIR: ${{ runner.temp }}/tc730-linux-bundle
+          RESULT_DIR: ${{ runner.temp }}/tc730-image-ownership-results
+          PROBE_SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          source="$(jq -r .sourceSha "$BUNDLE_DIR/corrected-sdk-build-identity.json")"
+          tree="$(jq -r .sourceTree "$BUNDLE_DIR/corrected-sdk-build-identity.json")"
+          baseline_source="$(jq -r .sourceSha "$BUNDLE_DIR/build-identity.json")"
+          baseline_tree="$(jq -r .sourceTree "$BUNDLE_DIR/build-identity.json")"
+          vm_tree="$(jq -r .totalCrossVmTree "$BUNDLE_DIR/corrected-sdk-build-identity.json")"
+          bridge_hash="$(jq -r .generatedNativeBridgesSha256 "$BUNDLE_DIR/corrected-sdk-build-identity.json")"
+          python3 tools/linux_image_ownership_730.py prepare \
+            --sdk-root "$BUNDLE_DIR/Corrected/TotalCross" --native-dir "$BUNDLE_DIR/native" \
+            --mode fixed --source-commit "$source" --source-tree "$tree" \
+            --runtime-source-commit "$baseline_source" --runtime-source-tree "$baseline_tree" \
+            --runtime-source-subtree "$vm_tree" --runtime-native-bridges-sha256 "$bridge_hash" \
+            --runtime-subtree-matches-candidate \
+            --probe-source-commit "$PROBE_SOURCE_COMMIT" \
+            --out "$RESULT_DIR/I06/candidate"
+          python3 tools/linux_image_ownership_730.py run \
+            --mode fixed --out "$RESULT_DIR/I06/candidate"
+
+      - name: Print focused diagnostics on failure
+        if: failure()
+        env:
+          RESULT_DIR: ${{ runner.temp }}/tc730-image-ownership-results
+        run: |
+          find "$RESULT_DIR" -type f \( -name runtime.log -o -name compile.log -o -name deploy.log \) \
+            -print -exec tail -n 100 {} \; 2>/dev/null || true
+
+      - name: Upload Linux ownership evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tc730-linux-image-ownership-results
+          path: ${{ runner.temp }}/tc730-image-ownership-results
+          retention-days: 30
+          if-no-files-found: warn
 
   run-linux-cases:
     name: Run Linux cases on glibc 2.39

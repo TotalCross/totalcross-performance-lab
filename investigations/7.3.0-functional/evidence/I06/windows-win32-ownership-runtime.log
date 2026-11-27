@@ -1,0 +1,18 @@
+TC_IMAGE_OWNERSHIP_STAGE stage-1-mainwindow-entered
+TC_IMAGE_OWNERSHIP_STAGE stage-1-mainwindow-complete
+TC_IMAGE_OWNERSHIP_STAGE stage-2-single-control-entered
+TC_IMAGE_OWNERSHIP_STAGE stage-2-single-control-complete
+TC_IMAGE_OWNERSHIP_STAGE stage-3-native-drawing-entered
+TC_IMAGE_OWNERSHIP_STAGE stage-3-native-drawing-complete
+TC_IMAGE_OWNERSHIP_STAGE stage-4-container-hierarchy-entered
+TC_IMAGE_OWNERSHIP_STAGE stage-4-container-hierarchy-complete
+TC_IMAGE_OWNERSHIP_STAGE stage-5-ancestor-detach-entered
+TC_IMAGE_OWNERSHIP_STAGE stage-5-ancestor-detach-complete
+TC_IMAGE_OWNERSHIP_STAGE stage-4-container-hierarchy-complete
+TC_IMAGE_OWNERSHIP_STAGE stage-5-ancestor-detach-complete
+TC_IMAGE_OWNERSHIP_STAGE stage-6-shared-and-replacement-entered
+TC_IMAGE_OWNERSHIP_STAGE stage-6-shared-and-replacement-complete
+TC_IMAGE_OWNERSHIP_STAGE stage-7-large-screen-entered
+TC_IMAGE_OWNERSHIP_STAGE stage-7-large-screen-complete
+TC_IMAGE_OWNERSHIP_JSON {"status":"PASS","diagnosticMode":"fixed","screenCycles":2,"controlsPerCycle":1510,"distinctImagesPerCycle":1510,"ownershipMismatches":0,"highestCompletedStage":7,"drawPixelRgb":16711680,"png":"image-ownership-render.png","ownersAfterDetach":0,"directParentsPreserved":true,"mutationsWhileDetached":true,"ownersRestoredAfterReattach":true,"activeReparentOwnerCount":1,"activeReparentCachePreserved":true,"maxSharedOwners":3,"rasterRetainedUntilFinalOwner":true,"pipelineReplacementOwners":3,"cacheReusedWhileOwned":true,"cacheEvictedAfterDetach":true}
+tuMW_exit_i

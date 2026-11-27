@@ -98,9 +98,15 @@ parallel benchmark suite or repeat the performance investigation.
 The corrected ownership implementation is TotalCross commit
 `94af2b8b653cad509994b5ccf3dbb60ac28ef920`; its open PR is #567 at
 `926e964841ac64dca172a648bce1ffcc6d60d153`. Windows I386 startup and ownership
-validation already passed in Actions run `45907759163`; import it as historical
-evidence and verify equivalence before relying on it. No Windows AMD64 runtime
-test, revision bisect, or new crash dump is allowed.
+validation passed in Actions run `45907759163`. The run has been reverified
+against the priority correction: it builds this exact source with the
+production Win32/Release rendering configuration, executes the minimal startup
+probe and then the existing ownership smoke against the same I386 runtime, and
+compares both historical I386 artifacts on the same runner. Retain it as
+verified historical evidence; do not repeat the run while its inputs remain
+unchanged. The Windows I386 correction is functionally validated; Linux
+x86_64 remains the required I06 execution. No Windows AMD64 runtime test,
+revision bisect, or new crash dump is allowed.
 
 ## Plan of Work
 
@@ -259,3 +265,6 @@ changes the interpretation.
 
 2026-11-27: Initial campaign plan. Windows I386 ownership validation is an
 imported pass; Linux ownership is the remaining I06 runtime requirement.
+2026-11-27: Reverified the existing Windows Actions artifact against the
+priority architecture correction. Corrected Win32 startup and ownership both
+pass; the campaign continues with Linux I01-B/I02 result consolidation.

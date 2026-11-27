@@ -3,7 +3,8 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
-- Last completed campaign commit: `b7bfd900fcc8c6e09f2caa555a76677978c0aca0`
+- Campaign branch tip before the Windows evidence update:
+  `fccadcb5897b0c8aa0a0d8c033002e51bcdefef2`
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 - Active milestone: 1 — Linux startup and PNG blockers
 - Previous campaign checkpoint: `1a602fa` (native build retry findings)
@@ -15,7 +16,8 @@
 - TotalCross master at campaign snapshot: `6b915883dd202f6db891990f6c3af26fb645ecc7`
 - Ownership implementation: `94af2b8b653cad509994b5ccf3dbb60ac28ef920`
 - Ownership PR head: `926e964841ac64dca172a648bce1ffcc6d60d153` (open)
-- Windows I386 historical validation: Actions run `45907759163` (PASS)
+- Windows I386 priority validation: Actions run `45907759163` (startup and
+  same-runtime ownership smoke PASS)
 - Performance-lab `main` base: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 
 PR verification found that #545 is merged into an intermediate feature branch,
@@ -31,8 +33,17 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
 ## Completed
 
 - Read the campaign request and its priority correction.
-- Confirmed the accepted Win32/I386 run completed successfully and checked its
-  job and artifact metadata.
+- Reverified Actions run `45907759163` against the Win32/I386 priority
+  correction. Exact corrected source `94af2b8b653cad509994b5ccf3dbb60ac28ef920`
+  built with the production Win32/Release Skia/SDL configuration. The minimal
+  probe passed all six markers; the existing ownership smoke then passed all
+  seven stages on the same I386 runtime, with two 1,510-control screens,
+  `ownersAfterDetach=0`, zero ownership mismatches, and pixel `0xff0000`.
+  Historical I386 A/B and corrected I386 were compared on the same
+  `windows-2022` runner. The 26,769,105-byte result artifact SHA-256 was
+  verified; compact identities and assertions are in
+  `evidence/I06/windows-win32-45907759163.json`. No duplicate Windows run or
+  AMD64 analysis was needed.
 - Created a clean campaign worktree from the exact current performance-lab
   `main` head after confirming the requested branch was absent locally and
   remotely.
@@ -97,9 +108,11 @@ issue updates; and final consolidation.
 
 ## Next concrete action
 
-Inspect the result artifact from hosted Actions run `45949849457`, update the
-I01-B/I02 reports and matrix, and commit those Linux findings before moving to
-I04/I05. The Linux workflow and result artifact are at
+Windows Win32/I386 priority validation is complete using verified run
+`45907759163`; do not repeat it while inputs remain unchanged. Inspect the
+result artifact from hosted Linux Actions run `45949849457`, update the I01-B/I02
+reports and matrix, and commit those Linux findings before moving to I04/I05.
+The Linux workflow and result artifact are at
 `https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457`.
 
 ## Constraints and blockers

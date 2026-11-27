@@ -73,13 +73,19 @@
       "sourceSha": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
       "workflowRunId": 45907759163,
       "workflowUrl": "https://github.com/TotalCross/totalcross/actions/runs/45907759163",
+      "workflowJobId": 140208504320,
+      "workflowCommit": "cf3487e76147be4ee272cf435f1789c567e10e13",
+      "workflowBranch": "codex/windows-historical-startup-compatibility",
       "workflowConclusion": "success",
       "correctedSdkArtifactId": 15148184230,
       "correctedRuntimeArtifactId": 15158467793,
       "resultsArtifactId": 15158866549,
       "correctedRuntimePeMachine": "I386",
+      "evidencePath": "investigations/7.3.0-functional/evidence/I06/windows-win32-45907759163.json",
       "evidenceOrigin": "HISTORICAL",
-      "campaignExecution": "NOT_RUN"
+      "campaignExecution": "IMPORTED_AND_REVERIFIED",
+      "windowsWin32Acceptance": "PASS",
+      "correctedStartupAndOwnershipUsedSameRuntime": true
     },
     {
       "name": "Historical Linux startup failure from the 7.3.0 package",

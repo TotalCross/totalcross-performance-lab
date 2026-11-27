@@ -10,10 +10,13 @@ now recorded for Android API 29, 30, 35, and 36.
 - **Windows Win32/I386 ownership:** PASS in TotalCross Actions run
   [45907759163](https://github.com/TotalCross/totalcross/actions/runs/45907759163).
   Historical A, historical B, and corrected source
-  `94af2b8b653cad509994b5ccf3dbb60ac28ef920` started on one Windows runner.
-  The corrected I386 runtime passed the existing ownership smoke. This result
-  was verified during the priority correction and is imported historical
-  evidence, not a new campaign execution.
+  `94af2b8b653cad509994b5ccf3dbb60ac28ef920` started on the same
+  `windows-2022` runner. The corrected runtime passed the minimal startup gate
+  and the existing ownership smoke against the identical I386 runtime. The
+  Actions result artifact digest was verified and compact evidence is retained
+  in [the Windows report](reports/I06-windows-win32-ownership.md). This is
+  reused hosted evidence, not a duplicate campaign execution. The production
+  Windows Win32/I386 correction is functionally validated.
 - **Windows AMD64 startup:** PREEXISTING / OUT_OF_SCOPE. No campaign execution.
 - JavaSE, macOS ARM64, and Android ARM64 PR #567 claims: imported evidence
   verification remains pending.
@@ -30,6 +33,8 @@ now recorded for Android API 29, 30, 35, and 36.
   left `WRITE_EXTERNAL_STORAGE` denied and the directory operation failed;
   the explicitly pregranted control succeeded. The permission result is
   tracked separately under I08.
+- **I06 Windows Win32/I386:** PASS for the Windows target; overall I06 remains
+  pending its required Linux x86_64 validation.
 - **I01-B/I02, Linux x86_64:** hosted run 45949849457 completed both jobs and
   uploaded the campaign result artifact. Findings and reports are pending
   result-artifact consolidation.

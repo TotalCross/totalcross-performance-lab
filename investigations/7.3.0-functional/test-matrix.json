@@ -452,19 +452,54 @@
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
       "evidenceOrigin": "CAMPAIGN_PENDING",
+      "statusRationale": "I06 requires Linux x86_64; its Windows Win32/I386 correction check is independently PASS and retained below.",
       "results": [
         {
           "platform": "windows-win32-i386",
           "runtimeArchitecture": "I386",
           "sourceRevision": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+          "sourceTree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
           "status": "PASS",
           "scopeStatus": "IN_SCOPE",
           "evidenceOrigin": "HISTORICAL",
-          "campaignExecution": "NOT_RUN",
+          "campaignExecution": "IMPORTED_AND_REVERIFIED",
           "workflowRunId": 45907759163,
+          "workflowJobId": 140208504320,
+          "workflowCommit": "cf3487e76147be4ee272cf435f1789c567e10e13",
+          "workflowBranch": "codex/windows-historical-startup-compatibility",
+          "configuration": "Visual Studio 17 2022 Win32 Release; Skia/SDL production rendering configuration",
           "evidenceUrl": "https://github.com/TotalCross/totalcross/actions/runs/45907759163",
-          "assertions": "Two 1,510-control screens, detach release, all seven stages, zero mismatches, red pixel 16711680; see committed Windows evidence report.",
-          "limitations": ["Imported evidence; not executed by this campaign."]
+          "resultArtifactId": 15158866549,
+          "correctedSdkArtifactId": 15148184230,
+          "correctedRuntimeArtifactId": 15158467793,
+          "evidencePath": "investigations/7.3.0-functional/evidence/I06/windows-win32-45907759163.json",
+          "startup": {
+            "status": "PASS",
+            "exitCode": 0,
+            "allSixApplicationMarkers": true,
+            "timedOut": false
+          },
+          "ownershipSmoke": {
+            "status": "PASS",
+            "sameRuntimeAsStartup": true,
+            "exitCode": 0,
+            "screenCycles": 2,
+            "controlsPerCycle": 1510,
+            "allSevenStages": true,
+            "ownersAfterAncestorDetach": 0,
+            "subtreeReattachAndActiveReparent": true,
+            "sharedOwners": 3,
+            "pipelineReplacementOwners": 3,
+            "rasterCacheReuseAndEviction": true,
+            "nativePixelRgb": 16711680,
+            "ownershipMismatches": 0,
+            "crashDumps": 0
+          },
+          "limitations": [
+            "Existing hosted evidence was reused; this campaign did not dispatch a duplicate Windows run.",
+            "Windows host runner is X64; every tested TotalCross PE is verified as I386.",
+            "The required Linux x86_64 I06 execution remains NOT_RUN."
+          ]
         }
       ]
     },

@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "investigationId": "I06",
+  "priorityCorrection": "Windows production target is Win32/I386",
+  "acceptance": "PASS",
+  "campaignExecution": "REUSED_VERIFIED_HOSTED_ACTIONS",
+  "source": {
+    "repository": "TotalCross/totalcross",
+    "commit": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+    "tree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+    "dirty": false
+  },
+  "workflow": {
+    "repository": "TotalCross/totalcross",
+    "runId": 45907759163,
+    "runUrl": "https://github.com/TotalCross/totalcross/actions/runs/45907759163",
+    "jobId": 140208504320,
+    "jobUrl": "https://github.com/TotalCross/totalcross/actions/runs/45907759163/job/140208504320",
+    "name": "Windows historical Win32 startup and ownership validation",
+    "branch": "codex/windows-historical-startup-compatibility",
+    "workflowCommit": "cf3487e76147be4ee272cf435f1789c567e10e13",
+    "workflowFile": ".github/workflows/windows-historical-i386-validation.yml",
+    "conclusion": "success"
+  },
+  "runner": {
+    "label": "windows-2022",
+    "imageOS": "win22",
+    "imageVersion": "20261116.370.1",
+    "osVersion": "Microsoft Windows NT 10.0.20348.0",
+    "hostArchitecture": "X64",
+    "targetArchitecture": "I386"
+  },
+  "resultArtifact": {
+    "id": 15158866549,
+    "name": "windows-historical-i386-validation-results",
+    "sizeBytes": 26769105,
+    "sha256": "4d1f7ac1622ae4055b5816bdaa0ed74f99b46146bd4448ddef90710b43a7814c",
+    "downloadedZipSha256Verified": true,
+    "expiresAt": "2026-12-10T22:57:28Z"
+  },
+  "historicalI386StartupComparisons": [
+    {
+      "label": "historical-a",
+      "sourceCommit": "61034a7562e7fa43df076dcc38bcd48128605395",
+      "sourceTree": "d38a41633088464c707c04bd358b9997e3dc1af0",
+      "originRunId": 44414042826,
+      "sdkArtifact": {
+        "id": 14479211695,
+        "name": "sdk-build",
+        "sha256": "fe5384859366b00f5099f564d9069e959c4150a070cf6932396d25f118428fc8"
+      },
+      "windowsArtifact": {
+        "id": 14478821824,
+        "name": "windows",
+        "sha256": "1989c1db41f21d31c82305418f59cbde51b0d891575cd3ba8e3afa553572704a"
+      },
+      "configuration": "Visual Studio 17 2022 Win32 Release",
+      "sourceLauncherSha256": "de5f4be1e795cf3af3d65f600d4082dadf96bd91a6291b154506ca9b1435e241",
+      "sourceTcvmSha256": "2659ec09695d5851361a6730e7ce0de0d7f208d43353d1bc5c76542ba319527a",
+      "deployedProbePeMachine": "0x014c",
+      "deployedTcvmPeMachine": "0x014c",
+      "status": "PASS",
+      "processStarted": true,
+      "exitCode": 0,
+      "timeout": false,
+      "applicationMarkers": 6
+    },
+    {
+      "label": "historical-b",
+      "sourceCommit": "c7cf79575602f3cc19e107643f0fa39d3e151004",
+      "sourceTree": "b4ea2e626c5dcfea67953a56f52a348630551620",
+      "originRunId": 44565183218,
+      "sdkArtifact": {
+        "id": 14551617269,
+        "name": "sdk-build",
+        "sha256": "fd53c7871d9427e858044906041bde525f4e785f0f0ad05cbff9ec9e85686eba"
+      },
+      "windowsArtifact": {
+        "id": 14551309226,
+        "name": "windows",
+        "sha256": "8609a483bc1be6796bf97c6cfb7f6524b06ef64146220b70cbded688ed513f72"
+      },
+      "configuration": "Visual Studio 17 2022 Win32 Release",
+      "sourceLauncherSha256": "c32ae8f9d80db41674ae033bc600f547022e0f590beee576be5e1c52636befd7",
+      "sourceTcvmSha256": "08d4eb870ae178d8506fca0fe57e7bd142ce77bd480ee807195b73000ecd1400",
+      "deployedProbePeMachine": "0x014c",
+      "deployedTcvmPeMachine": "0x014c",
+      "status": "PASS",
+      "processStarted": true,
+      "exitCode": 0,
+      "timeout": false,
+      "applicationMarkers": 6
+    }
+  ],
+  "correctedI386": {
+    "configuration": {
+      "generator": "Visual Studio 17 2022",
+      "platform": "Win32",
+      "configuration": "Release",
+      "configureCommand": "cmake .. -G \"Visual Studio 17 2022\" -A Win32",
+      "buildCommand": "cmake --build . --config Release",
+      "rendering": {
+        "TC_RENDERER_SKIA": true,
+        "TC_RENDERER_LEGACY": false,
+        "TC_WINDOWING_SDL": true,
+        "TC_WINDOWING_NATIVE": false,
+        "TC_GRAPHICS_SOFTWARE": true,
+        "TC_GRAPHICS_GLES": false
+      }
+    },
+    "sdk": {
+      "buildRunId": 45884551862,
+      "artifactId": 15148184230,
+      "artifactName": "sdk-build-fixed",
+      "artifactSha256": "82bfd5bf558dba1bba6a703477fe1feb146d5dae05df84d1d1551baa5db18df8",
+      "sdkBuildArchiveSha256": "ab7cf408d2347a961169ec6adaafcbd3753afdd9c54e9c52e88ebeb17d719576",
+      "sdkJarSha256": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d",
+      "sdkBuildIdentitySha256": "7f0e5a7493f599761e755d5aed0316aeb40e3190f243f2699265ee9815ed0a61"
+    },
+    "nativeInputs": {
+      "preparedDependencies": {
+        "runId": 45884551862,
+        "artifactId": 15148893237,
+        "artifactSha256": "d2b007713e7bc374e4b190585efb7156893bf2ab15ae08b121ea865f2f216d1c"
+      },
+      "nativeBridges": {
+        "runId": 45884551862,
+        "artifactId": 15147749510,
+        "artifactSha256": "a977aac5cbf59c355e5c9f178453952113eaf8588579c31a31d9a95e7d7643c8"
+      },
+      "runtimeArtifact": {
+        "id": 15158467793,
+        "name": "windows-fixed-win32-runtime",
+        "sha256": "81c313cf8c6ab83c0a9b722a153f2b13e344358a91c99df806dcd613e64a73ec",
+        "expiresAt": "2026-12-03T22:56:57Z"
+      },
+      "buildProvenanceSha256": "2a025dfda02dda4062179778b174890f5de4c84cd6859657f27e17cf1a061be0"
+    },
+    "peFiles": {
+      "Launcher.exe": {
+        "machine": "I386",
+        "peMachine": "0x014c",
+        "sha256": "9ffe796f6cfa5ceaf33beaccde5f158cb9e47304256642913894849485fc8e31"
+      },
+      "tcvm.dll": {
+        "machine": "I386",
+        "peMachine": "0x014c",
+        "sha256": "000d9d2ae734659383db9266b7e5c2db0e056de78ebbee68383142f7d797af52"
+      },
+      "deployedWindowsNativeStartupProbe.exe": {
+        "machine": "I386",
+        "peMachine": "0x014c",
+        "sha256": "747e87afd8d59e388c16f117811a3c2aff9c2511441c8471335a4e5b5cfea493"
+      },
+      "deployedTcvm.dll": {
+        "machine": "I386",
+        "peMachine": "0x014c",
+        "sha256": "000d9d2ae734659383db9266b7e5c2db0e056de78ebbee68383142f7d797af52"
+      }
+    },
+    "startupProbe": {
+      "status": "PASS",
+      "processStarted": true,
+      "exitCode": 0,
+      "exitCodeHex": "0x00000000",
+      "timeout": false,
+      "durationMilliseconds": 224,
+      "passMarker": "PASS",
+      "observedApplicationMarkers": [
+        "tcdiag-tcvm-java-class-initialized.marker",
+        "tcdiag-mainwindow-constructed.marker",
+        "tcdiag-init-ui-entered.marker",
+        "tcdiag-window-surface-requested.marker",
+        "tcdiag-window-render-returned.marker",
+        "tcdiag-application-complete.marker"
+      ],
+      "missingApplicationMarkers": [],
+      "dumpFiles": []
+    },
+    "tczArtifacts": [
+      {"name": "Material Icons.tcz", "sha256": "c83da913d307249162e72028c30aba98a91d79cafaf5137d5a87c4bc3bb16696"},
+      {"name": "tc.base.lang.tcz", "sha256": "c4098ec9753887e8a04db1f3e2152397d1fc78ae60af3838fb8595ba28216192"},
+      {"name": "tc.base.misc.tcz", "sha256": "7cb79afcda66fc8a698f7bf818081cfc572b7d3301884374f4b5fec3f3c58504"},
+      {"name": "tc.base.util.tcz", "sha256": "579c3909ef6a5ac2055427c46b4a32f0d5af0a1f5738e3f10321a966a602e5b8"},
+      {"name": "TCFont.tcz", "sha256": "300b29831ba1ae0acc7dacef2b33c06b4f2f6025dace6d5b53149f3bea7d9f7d"},
+      {"name": "TCUI.tcz", "sha256": "c829c98fe6f5bc1bcd9e691256ee349472162c71ab02c850ebc882c8ba42f5b7"},
+      {"name": "WindowsNativeStartupProbe.tcz", "sha256": "16ec0ff96e427a6272ab3d7b6daeac843646499d3e6d17e2bf801b8db0f2c64a"}
+    ],
+    "ownershipSmoke": {
+      "status": "PASS",
+      "processExitCode": 0,
+      "durationMilliseconds": 489,
+      "sameAsStartupRuntime": true,
+      "sameLauncherSha256": "9ffe796f6cfa5ceaf33beaccde5f158cb9e47304256642913894849485fc8e31",
+      "sameTcvmSha256": "000d9d2ae734659383db9266b7e5c2db0e056de78ebbee68383142f7d797af52",
+      "windowsRuntimeMachine": "I386",
+      "windowsRuntimePeMachine": "0x014c",
+      "checks": {
+        "screenCycles": 2,
+        "controlsPerCycle": 1510,
+        "distinctImagesPerCycle": 1510,
+        "highestCompletedStage": 7,
+        "ancestorDetachOwners": 0,
+        "subtreeReattachRestoredOwners": true,
+        "activeReparentOwnerCount": 1,
+        "activeReparentCachePreserved": true,
+        "maximumSharedOwners": 3,
+        "pipelineReplacementOwners": 3,
+        "rasterRetainedUntilFinalOwner": true,
+        "rasterCacheReusedWhileOwned": true,
+        "rasterCacheEvictedAfterDetach": true,
+        "nativeDrawPixelRgb": 16711680,
+        "ownershipMismatches": 0,
+        "ownershipUnderflowMessagesObserved": false,
+        "crashDumps": []
+      },
+      "renderedPng": {
+        "repositoryPath": "investigations/7.3.0-functional/evidence/I06/windows-win32-ownership-render.png",
+        "sha256": "961193a64a23a06ebe62da397919e4e04d752c4f1a6fa31c4e7170fd70d365b5",
+        "expectedPixel": "#ff0000"
+      }
+    }
+  },
+  "amd64Comparison": {
+    "status": "PREEXISTING / OUT_OF_SCOPE",
+    "correctedI386": "PASS",
+    "correctedAmd64": "Existing startup failure is documented separately on TotalCross PR #567; it was not rebuilt or run in this validation.",
+    "faultRvaComparison": "NOT_PERFORMED",
+    "rootCause": "NOT_ESTABLISHED",
+    "evidenceUrl": "https://github.com/TotalCross/totalcross/pull/567"
+  },
+  "diagnosticCommits": [
+    {
+      "repository": "TotalCross/totalcross",
+      "branch": "codex/windows-historical-startup-compatibility",
+      "commit": "cf3487e76147be4ee272cf435f1789c567e10e13",
+      "role": "Win32 diagnostic workflow and scripts"
+    },
+    {
+      "repository": "TotalCross/totalcross-performance-lab",
+      "branch": "codex/windows-i386-ownership-smoke",
+      "commit": "bf691c14d7c5fe807c62de98c7285f65d38de87e",
+      "role": "existing persistent image ownership smoke fixture"
+    }
+  ],
+  "limitations": [
+    "This campaign reuses the completed hosted run because it already matches the requested source, I386 target, production rendering configuration, same-runner historical comparison, and gated ownership sequence.",
+    "The hosted runner itself is X64; PE headers and hashes verify the tested TotalCross binaries are I386.",
+    "The broader I06 Linux x86_64 execution remains pending."
+  ]
+}

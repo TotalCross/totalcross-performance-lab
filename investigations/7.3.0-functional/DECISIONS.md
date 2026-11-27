@@ -48,3 +48,21 @@ runtime evidence.
 The I386 startup and ownership result in run `45907759163` is retained as
 historical evidence for PR #567. Do not repeat it unless subsequent source
 changes invalidate implementation equivalence.
+
+## D7 — Accept the verified production Win32 priority run
+
+The priority correction required corrected source
+`94af2b8b653cad509994b5ccf3dbb60ac28ef920` to build with the production Win32
+configuration, pass a minimal native startup probe, and then pass the existing
+ownership smoke against the same runtime. Run `45907759163` already completes
+that sequence on one `windows-2022` runner, compares both historical I386
+artifacts in the same job, records the startup markers and process exit codes,
+and verifies PE machine `0x014c` for the corrected runtime and deployed
+executable. Its result artifact digest was verified and compact evidence is
+committed in this campaign. Reuse the result; do not dispatch a duplicate
+Windows run while the source and fixture remain unchanged.
+
+The production Windows Win32/I386 correction is functionally validated. The
+Windows-specific portion of I06 is PASS; I06 overall remains NOT_RUN until the
+required Linux x86_64 execution is completed. AMD64 remains a separate
+preexisting, out-of-scope startup failure.

@@ -47,8 +47,9 @@ jobs:
           gh run download 45907759163 --repo TotalCross/totalcross \
             --name windows-fixed-win32-runtime \
             --dir "$RUNNER_TEMP/tc730-i07-win32-artifact"
-          tar -xzf "$RUNNER_TEMP/tc730-i07-sdk-artifact/sdk-build.tar.gz" \
-            -C "$RUNNER_TEMP/tc730-i07-sdk-root"
+          sdk_archive="$(cygpath -u "$RUNNER_TEMP/tc730-i07-sdk-artifact/sdk-build.tar.gz")"
+          sdk_extract_dir="$(cygpath -u "$RUNNER_TEMP/tc730-i07-sdk-root")"
+          tar -xzf "$sdk_archive" -C "$sdk_extract_dir"
           python3 - <<'PY'
           import json
           import os
@@ -177,6 +178,7 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
+          mkdir -p "$RESULT_DIR/I06" "$RESULT_DIR/I07"
           baseline_home="$BUNDLE_DIR/TotalCross"
           fixed_home="$BUNDLE_DIR/Corrected/TotalCross"
           native_dir="$BUNDLE_DIR/native"
@@ -386,8 +388,8 @@ jobs:
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -G Ninja
           cmake --build build --target tcvm Launcher --parallel
-          lipo -archs build/libtcvm.dylib | rg -q '(^| )arm64($| )'
-          lipo -archs build/Launcher | rg -q '(^| )arm64($| )'
+          lipo -archs build/libtcvm.dylib | grep -Eq '(^| )arm64($| )'
+          lipo -archs build/Launcher | grep -Eq '(^| )arm64($| )'
 
       - name: Prepare and run the I07 probe
         env:

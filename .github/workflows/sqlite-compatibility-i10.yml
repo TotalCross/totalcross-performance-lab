@@ -42,7 +42,8 @@ jobs:
           I10_ROOT="$(cygpath -u "$RUNNER_TEMP")/tc730-i10/windows-win32-i386"
           mkdir -p "$I10_ROOT/inputs/official-722" "$I10_ROOT/inputs/official-730" \
             "$I10_ROOT/inputs/candidate-sdk" "$I10_ROOT/inputs/candidate-win32"
-          gh release download 7.2.2 --repo TotalCross/totalcross \
+          test "$(gh api repos/TotalCross/totalcross/releases/tags/v7.2.2 --jq .tag_name)" = v7.2.2
+          gh release download v7.2.2 --repo TotalCross/totalcross \
             --pattern TotalCross-7.2.2.zip --dir "$I10_ROOT/inputs/official-722"
           echo 'ba72e64d08874321da9df52b2042e84bee10800723fa97749ce224988b0a0a06  '"$I10_ROOT/inputs/official-722/TotalCross-7.2.2.zip" | sha256sum --check
           gh api repos/TotalCross/totalcross/actions/runs/40878222908 \
@@ -199,7 +200,8 @@ jobs:
           I10_ROOT="$RUNNER_TEMP/tc730-i10"
           mkdir -p "$I10_ROOT/inputs/official-722" "$I10_ROOT/inputs/official-730" \
             "$I10_ROOT/inputs/candidate-sdk"
-          gh release download 7.2.2 --repo TotalCross/totalcross \
+          test "$(gh api repos/TotalCross/totalcross/releases/tags/v7.2.2 --jq .tag_name)" = v7.2.2
+          gh release download v7.2.2 --repo TotalCross/totalcross \
             --pattern TotalCross-7.2.2.zip --dir "$I10_ROOT/inputs/official-722"
           echo 'ba72e64d08874321da9df52b2042e84bee10800723fa97749ce224988b0a0a06  '"$I10_ROOT/inputs/official-722/TotalCross-7.2.2.zip" | sha256sum --check
           test "$(gh api repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq .digest)" = \
@@ -314,7 +316,8 @@ jobs:
           I10_ROOT="$RUNNER_TEMP/tc730-i10"
           mkdir -p "$I10_ROOT/inputs/official-722" "$I10_ROOT/inputs/official-730" \
             "$I10_ROOT/inputs/candidate-sdk"
-          gh release download 7.2.2 --repo TotalCross/totalcross \
+          test "$(gh api repos/TotalCross/totalcross/releases/tags/v7.2.2 --jq .tag_name)" = v7.2.2
+          gh release download v7.2.2 --repo TotalCross/totalcross \
             --pattern TotalCross-7.2.2.zip --dir "$I10_ROOT/inputs/official-722"
           echo 'ba72e64d08874321da9df52b2042e84bee10800723fa97749ce224988b0a0a06  '"$I10_ROOT/inputs/official-722/TotalCross-7.2.2.zip" | shasum -a 256 -c
           test "$(gh api repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq .digest)" = \

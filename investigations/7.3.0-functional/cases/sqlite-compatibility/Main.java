@@ -16,7 +16,8 @@ import totalcross.ui.Window;
 
 public final class Main extends MainWindow {
   private static final String REVISION = "@@REVISION@@";
-  private static final String APP_ID = "totalcross.appi10";
+  private static final String APP_ID = "i10x";
+  private static final String ANDROID_FILES_PATH = "@@ANDROID_FILES_PATH@@";
   private static int completed;
   private static int failures;
 
@@ -203,7 +204,9 @@ public final class Main extends MainWindow {
   }
 
   private static Config readConfig() throws Exception {
-    String path = Convert.appendPath(Settings.appPath, "tc-i10-case.txt");
+    String path = Settings.ANDROID.equals(Settings.platform)
+        ? ANDROID_FILES_PATH + "/tc-i10-case.txt"
+        : Convert.appendPath(Settings.appPath, "tc-i10-case.txt");
     File file = new File(path, File.READ_ONLY);
     int size = file.getSize();
     byte[] bytes = new byte[size];

@@ -22,7 +22,10 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "investigations/7.3.0-functional/cases/sqlite-compatibility/Main.java"
 APP_NAME = "Main"
-APP_ID = "totalcross.appi10"
+# Android's DEX package rewrite requires a four-character app id.
+APP_ID = "i10x"
+ANDROID_PACKAGE = "totalcross.app" + APP_ID.lower()
+ANDROID_FILES_PATH = "/sdcard/Android/data/" + ANDROID_PACKAGE + "/files"
 REVISIONS = ("official-7.2.2", "official-7.3.0", "candidate-94af")
 TARGETS = {
     "windows-i386": ("win32", "win32", "Main.exe"),
@@ -272,7 +275,9 @@ def build_app(sdk_root, revision, target, output):
     source_dir = output / "source"
     source_dir.mkdir()
     source = source_dir / "Main.java"
-    source_text = SOURCE.read_text(encoding="utf-8").replace("@@REVISION@@", revision)
+    source_text = (SOURCE.read_text(encoding="utf-8")
+                   .replace("@@REVISION@@", revision)
+                   .replace("@@ANDROID_FILES_PATH@@", ANDROID_FILES_PATH))
     source.write_text(source_text, encoding="utf-8")
     classpath = os.pathsep.join((str(jar), str(libs / "*")))
     env = os.environ.copy()
@@ -512,25 +517,23 @@ def relevant_error(text):
     return lines[-8:]
 
 
-def adb_command(serial, *args, input_data=None, timeout=15):
-    return subprocess.run(["adb", "-s", serial, *map(str, args)], input=input_data,
+def adb_command(serial, *args, timeout=15):
+    return subprocess.run(["adb", "-s", serial, *map(str, args)],
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           timeout=timeout, check=False)
 
 
-def android_write(serial, relative_path, data):
-    command = ["shell", "run-as", APP_ID, "sh", "-c", "cat > " + relative_path]
-    result = adb_command(serial, *command, input_data=data)
+def android_push(serial, source, remote_path):
+    result = adb_command(serial, "push", source, remote_path, timeout=60)
     if result.returncode:
-        raise RuntimeError("run-as write failed for " + relative_path + ": "
+        raise RuntimeError("Android file push failed for " + str(remote_path) + ": "
                            + result.stdout.decode(errors="replace")[-500:])
 
 
 def android_read(serial, relative_path):
-    result = adb_command(serial, "exec-out", "run-as", APP_ID, "cat", relative_path,
-                         timeout=30)
+    result = adb_command(serial, "exec-out", "cat", relative_path, timeout=30)
     if result.returncode:
-        raise RuntimeError("run-as read failed for " + relative_path + ": "
+        raise RuntimeError("Android file read failed for " + relative_path + ": "
                            + result.stdout.decode(errors="replace")[-500:])
     return result.stdout
 
@@ -539,8 +542,7 @@ def android_remote_database(serial, remote_db, output):
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_bytes(android_read(serial, remote_db))
-    wal_data = adb_command(serial, "exec-out", "run-as", APP_ID, "cat", remote_db + "-wal",
-                           timeout=30)
+    wal_data = adb_command(serial, "exec-out", "cat", remote_db + "-wal", timeout=30)
     if wal_data.returncode == 0 and wal_data.stdout:
         Path(str(output) + "-wal").write_bytes(wal_data.stdout)
     return {"path": str(output), "sha256": sha256(output),
@@ -558,33 +560,42 @@ def run_android_case(serial, build, mode, remote_db, out, expected_origin="", or
         return {"target": "android-arm64", "revision": build["revision"], "mode": mode,
                 "status": "FAIL", "installOutput": install_text[-1000:],
                 "completionMarkerObserved": False, "processExitCode": None}
-    config = ["mode=" + mode, "databasePath=/data/user/0/" + APP_ID + "/" + remote_db]
+    remote_db = ANDROID_FILES_PATH + "/" + remote_db
+    remote_config = ANDROID_FILES_PATH + "/tc-i10-case.txt"
+    config = ["mode=" + mode, "databasePath=" + remote_db]
     if origin:
         config.append("origin=" + origin)
     if expected_origin:
         config.append("expectedOrigin=" + expected_origin)
+    mkdir = adb_command(serial, "shell", "mkdir", "-p", ANDROID_FILES_PATH)
+    if mkdir.returncode:
+        raise RuntimeError("could not create Android test directory: "
+                           + mkdir.stdout.decode(errors="replace")[-500:])
     remove_db = mode in ("create", "invalid") or source_file is not None
-    files_to_remove = [remote_db + "-wal", remote_db + "-shm", "tc-i10-case.txt"]
+    files_to_remove = [remote_db + "-wal", remote_db + "-shm", remote_config]
     if remove_db:
         files_to_remove.append(remote_db)
-    cleanup = adb_command(serial, "shell", "run-as", APP_ID, "sh", "-c",
-                          "rm -rf " + " ".join(files_to_remove))
+    cleanup = adb_command(serial, "shell", "rm", "-rf", *files_to_remove)
     if cleanup.returncode:
         raise RuntimeError("could not clear Android test database: "
                            + cleanup.stdout.decode(errors="replace")[-500:])
     if mode == "invalid":
-        make_directory = adb_command(serial, "shell", "run-as", APP_ID, "mkdir", "-p", remote_db)
+        make_directory = adb_command(serial, "shell", "mkdir", "-p", remote_db)
         if make_directory.returncode:
             raise RuntimeError("could not create Android invalid database path: "
                                + make_directory.stdout.decode(errors="replace")[-500:])
     if source_file:
-        android_write(serial, remote_db, Path(source_file).read_bytes())
+        android_push(serial, source_file, remote_db)
     if wal_file:
-        android_write(serial, remote_db + "-wal", Path(wal_file).read_bytes())
-    android_write(serial, "tc-i10-case.txt", ("\n".join(config) + "\n").encode("ascii"))
+        android_push(serial, wal_file, remote_db + "-wal")
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    config_path = out / "tc-i10-case.txt"
+    config_path.write_text("\n".join(config) + "\n", encoding="ascii")
+    android_push(serial, config_path, remote_config)
     adb_command(serial, "logcat", "-c")
-    adb_command(serial, "shell", "am", "force-stop", APP_ID)
-    launch = adb_command(serial, "shell", "monkey", "-p", APP_ID,
+    adb_command(serial, "shell", "am", "force-stop", ANDROID_PACKAGE)
+    launch = adb_command(serial, "shell", "monkey", "-p", ANDROID_PACKAGE,
                          "-c", "android.intent.category.LAUNCHER", "1", timeout=30)
     launch_text = launch.stdout.decode(errors="replace")
     started = time.time()
@@ -593,19 +604,17 @@ def run_android_case(serial, build, mode, remote_db, out, expected_origin="", or
     while time.time() - started < 120:
         logs = adb_command(serial, "logcat", "-d", "-s", "TotalCross:V", timeout=30)
         log_text = logs.stdout.decode(errors="replace")
-        state = adb_command(serial, "shell", "pidof", APP_ID)
+        state = adb_command(serial, "shell", "pidof", ANDROID_PACKAGE)
         pid = state.stdout.decode(errors="replace").strip()
         if "TC_I10_EVENT stage=result " in log_text and not pid:
             break
         if time.time() - started > 5 and not pid and "TC_I10_EVENT stage=result " not in log_text:
             break
         time.sleep(1)
-    state = adb_command(serial, "shell", "pidof", APP_ID)
+    state = adb_command(serial, "shell", "pidof", ANDROID_PACKAGE)
     pid = state.stdout.decode(errors="replace").strip()
     logs = adb_command(serial, "logcat", "-d", "-s", "TotalCross:V", timeout=30)
     log_text = logs.stdout.decode(errors="replace")
-    out = Path(out)
-    out.mkdir(parents=True, exist_ok=True)
     runtime_log = out / "runtime.log"
     runtime_log.write_text(launch_text + "\n" + log_text, encoding="utf-8")
     events, result = parse_result(log_text)

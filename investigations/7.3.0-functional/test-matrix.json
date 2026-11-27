@@ -906,10 +906,10 @@
         "draw-after-mutation",
         "shutdown-with-images"
       ],
-      "status": "INCOMPLETE",
+      "status": "PASS",
       "scopeStatus": "IN_SCOPE",
-      "evidenceOrigin": "CAMPAIGN_EXECUTED_STARTUP_BLOCKER",
-      "statusRationale": "The Linux ownership job compiled and deployed the baseline probe, then aborted in VM startup with exit 134 before any ownership case. The error matches I01-B. The corrected candidate ownership run remains unexecuted pending a conditional shimmed continuation.",
+      "evidenceOrigin": "CAMPAIGN_HOSTED_ACTIONS_CONDITIONAL",
+      "statusRationale": "Windows production Win32/I386 ownership validation passed. Linux baseline and corrected ownership probes completed all seven stages with verified assertions after the test-only realpath shim and a JPEG control for the separately tracked PNG decoder blocker. Normal Linux startup remains blocked under I01-B; the Linux ownership result is explicitly conditional.",
       "results": [
         {
           "platform": "windows-win32-i386",
@@ -953,21 +953,26 @@
             "crashDumps": 0
           },
           "limitations": [
-            "Existing hosted evidence was reused; this campaign did not dispatch a duplicate Windows run.",
-            "Windows host runner is X64; every tested TotalCross PE is verified as I386.",
-            "The required Linux x86_64 ownership assertions remain incomplete because startup aborts before the probe."
+            "Existing hosted Windows I386 evidence was reused; the campaign did not dispatch a duplicate Windows run.",
+            "The Windows host runner is X64, but every tested TotalCross PE was verified as I386."
           ]
         },
         {
           "platform": "linux-x86_64",
           "runtimeArchitecture": "x86_64",
-          "sourceRevision": "6b915883dd202f6db891990f6c3af26fb645ecc7 baseline SDK; corrected SDK 94af2b8b653cad509994b5ccf3dbb60ac28ef920 prepared",
-          "sourceTree": "44047160610b7efcb3d49768736af95bde19f85f baseline; candidate tree 539f5b424b6f4593c7d96074d69ff077a38ed361",
-          "status": "INCOMPLETE",
+          "sourceRevision": "baseline 6b915883dd202f6db891990f6c3af26fb645ecc7; corrected SDK 94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+          "sourceTree": "baseline 44047160610b7efcb3d49768736af95bde19f85f; candidate 539f5b424b6f4593c7d96074d69ff077a38ed361",
+          "status": "PASS",
           "scopeStatus": "IN_SCOPE",
-          "evidenceOrigin": "CAMPAIGN_HOSTED_ACTIONS",
-          "workflowRunId": 45978158503,
-          "workflowJobId": 140436912079,
+          "evidenceOrigin": "CAMPAIGN_HOSTED_ACTIONS_CONDITIONAL",
+          "campaignExecution": "EXECUTED_WITH_TEST_ONLY_SHIM",
+          "workflowRunId": 45989644203,
+          "workflowJobId": 140473923177,
+          "workflowCommit": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+          "workflowBranch": "investigation/totalcross-7.3.0-functional-validation",
+          "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45989644203",
+          "resultArtifactId": 15193167516,
+          "resultArtifactSha256": "sha256:d13ecea7447310f6f8af596e93d963940a4482dc57757213d7447290d4ffb849",
           "runner": "ubuntu-22.04; glibc 2.35",
           "runtimeSourceCommit": "6b915883dd202f6db891990f6c3af26fb645ecc7",
           "runtimeSourceTree": "44047160610b7efcb3d49768736af95bde19f85f",
@@ -975,21 +980,52 @@
           "nativeBridgeInputsMatchCandidate": true,
           "runtimeLibrarySha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4",
           "runtimeLauncherSha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166",
-          "baselineProbe": {
-            "compile": "PASS",
-            "deploy": "PASS",
+          "conditionalRealpathShim": true,
+          "unmodifiedStartup": {
+            "status": "INCOMPLETE",
             "processExitCode": 134,
             "applicationMarker": false,
-            "ownershipCasesExecuted": 0,
             "failureMessage": "*** buffer overflow detected ***; Aborted",
-            "failureClassification": "I01-B Linux VM-startup blocker"
+            "classification": "I01-B Linux VM-startup blocker"
           },
-          "correctedOwnershipSmoke": "NOT_EXECUTED",
-          "evidencePath": "investigations/7.3.0-functional/evidence/I06/linux-x86_64-45978158503.json",
+          "baselineProbe": {
+            "status": "BASELINE_OBSERVED",
+            "compile": "PASS",
+            "deploy": "PASS",
+            "processExitCode": 0,
+            "imageFixtureFormat": "jpeg",
+            "ownershipMismatches": 6046,
+            "highestCompletedStage": 7,
+            "screenCycles": 2,
+            "controlsPerCycle": 1510,
+            "drawPixelRgb": 16646144
+          },
+          "correctedOwnershipSmoke": {
+            "status": "PASS",
+            "processExitCode": 0,
+            "imageFixtureFormat": "jpeg",
+            "imageFixtureSha256": "2f3259c72424d54b5ad1914b51e6671aae694e6c2bdb09e2c48de2214ae39ff6",
+            "ownershipMismatches": 0,
+            "screenCycles": 2,
+            "controlsPerCycle": 1510,
+            "allSevenStages": true,
+            "ownersAfterDetach": 0,
+            "directParentsPreserved": true,
+            "mutationsWhileDetached": true,
+            "ownersRestoredAfterReattach": true,
+            "activeReparentOwnerCount": 1,
+            "activeReparentCachePreserved": true,
+            "sharedOwners": 3,
+            "pipelineReplacementOwners": 3,
+            "rasterCacheReuseAndEviction": true,
+            "drawPixelRgb": 16646144,
+            "renderedPngSha256": "9529c34b55b1fc91b27346b48fd63b1ad893eb7485f5daf9371fcad5ecccb54f"
+          },
+          "evidencePath": "investigations/7.3.0-functional/evidence/I06/linux-x86_64-45989644203.json",
+          "markerLogPath": "investigations/7.3.0-functional/evidence/I06/linux-x86_64-45989644203-markers.log",
           "limitations": [
-            "The unmodified app process aborted before ownership behavior was reached.",
-            "The existing __realpath_chk test-only shim will be used only after preserving this unmodified result.",
-            "A shimmed pass will remain conditional and will not establish an unmodified Linux startup pass."
+            "The Linux ownership assertions ran only with the test-only realpath shim; this does not establish normal Linux application startup.",
+            "The original tiny PNG fixture failed in native drawing on both SDKs; JPEG control was used and I02 tracks the PNG decoder behavior."
           ]
         }
       ]
@@ -1020,9 +1056,9 @@
         "snapshot-after-modification",
         "native-ownership"
       ],
-      "status": "INCOMPLETE",
+      "status": "PASS",
       "scopeStatus": "IN_SCOPE",
-      "evidenceOrigin": "CAMPAIGN",
+      "evidenceOrigin": "CAMPAIGN_HOSTED_ACTIONS_AND_LOCAL",
       "results": [
         {
           "platform": "android-arm64-api36",
@@ -1048,9 +1084,113 @@
           "limitations": [
             "Android activity process exit code is not exposed by the local runner; the complete PASS marker and no-crash state were observed."
           ]
+        },
+        {
+          "platform": "windows-win32-i386",
+          "campaignExecution": "EXECUTED",
+          "sourceRevision": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+          "sourceTree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+          "probeSourceRevision": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+          "status": "PASS",
+          "runtimeArchitecture": "I386",
+          "configuration": "Visual Studio 17 2022; Win32; Release; Skia/SDL production configuration",
+          "workflowRunId": 45989644203,
+          "artifactId": 15192792548,
+          "artifactSha256": "sha256:9ad213216cc7e25a9a78b128b094109972fcece5b2368de29ec83fca47c63887",
+          "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45989644203",
+          "processExitCode": 0,
+          "caseCount": 16,
+          "failures": 0,
+          "skips": 0,
+          "allCaseResultsRecorded": true,
+          "verifiedPEMachines": {
+            "source/Launcher.exe": "0x014c",
+            "source/tcvm.dll": "0x014c",
+            "deployed/ImageStringFallbackProbe.exe": "0x014c",
+            "deployed/tcvm.dll": "0x014c"
+          },
+          "sdkJarSha256": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d",
+          "runtimeFiles": [
+            {
+              "path": "D:\\a\\_temp\\tc730-i07-sdk-root\\build\\TotalCross\\etc\\launchers\\win32\\Launcher.exe",
+              "sha256": "9ffe796f6cfa5ceaf33beaccde5f158cb9e47304256642913894849485fc8e31"
+            },
+            {
+              "path": "D:\\a\\_temp\\tc730-i07-sdk-root\\build\\TotalCross\\dist\\vm\\win32\\tcvm.dll",
+              "sha256": "000d9d2ae734659383db9266b7e5c2db0e056de78ebbee68383142f7d797af52"
+            }
+          ],
+          "evidencePath": "investigations/7.3.0-functional/evidence/I07/windows-win32-i386.json",
+          "markerLogPath": "investigations/7.3.0-functional/evidence/I07/windows-win32-i386-runtime-markers.log"
+        },
+        {
+          "platform": "linux-x86_64",
+          "campaignExecution": "EXECUTED_WITH_TEST_ONLY_SHIM",
+          "sourceRevision": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+          "sourceTree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+          "probeSourceRevision": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+          "status": "PASS",
+          "conditionalRealpathShim": true,
+          "unmodifiedProcessExitCode": 134,
+          "processExitCode": 0,
+          "caseCount": 16,
+          "failures": 0,
+          "skips": 1,
+          "skippedCase": "device-path-where-supported: /sdcard access denied on Linux desktop",
+          "workflowRunId": 45989644203,
+          "artifactId": 15193167516,
+          "artifactSha256": "sha256:d13ecea7447310f6f8af596e93d963940a4482dc57757213d7447290d4ffb849",
+          "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45989644203",
+          "sdkJarSha256": "381a99b8835069e64d2e079c9796446992f2f8eed8fac236270c142e14ee64ee",
+          "runtimeFiles": [
+            {
+              "path": "/home/runner/work/_temp/tc730-linux-bundle/Corrected/TotalCross/etc/launchers/linux/Launcher",
+              "sha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166"
+            },
+            {
+              "path": "/home/runner/work/_temp/tc730-linux-bundle/Corrected/TotalCross/dist/vm/linux/libtcvm.so",
+              "sha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4"
+            }
+          ],
+          "evidencePath": "investigations/7.3.0-functional/evidence/I07/linux-x86_64.json",
+          "markerLogPath": "investigations/7.3.0-functional/evidence/I07/linux-x86_64-runtime-markers.log",
+          "limitations": [
+            "Conditional shimmed result; normal Linux startup remains tracked under I01-B."
+          ]
+        },
+        {
+          "platform": "macos-arm64",
+          "campaignExecution": "EXECUTED",
+          "sourceRevision": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+          "sourceTree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+          "probeSourceRevision": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+          "status": "PASS",
+          "runtimeArchitecture": "ARM64",
+          "processExitCode": 0,
+          "caseCount": 16,
+          "failures": 0,
+          "skips": 1,
+          "skippedCase": "device-path-where-supported: device filesystem is read-only",
+          "workflowRunId": 45989644203,
+          "artifactId": 15192782672,
+          "artifactSha256": "sha256:de05bcf90511fdf2901eee9e73f5137221f01652455407f4f3c1aad742dedd47",
+          "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45989644203",
+          "sdkJarSha256": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d",
+          "runtimeFiles": [
+            {
+              "path": "/Users/runner/work/_temp/tc730-i07-sdk-root/build/TotalCross/etc/launchers/macos/Launcher",
+              "sha256": "4c267df065cf687affc6ae6aa6bc9926db496240ff8306e9d39a4b71e0289c5a"
+            },
+            {
+              "path": "/Users/runner/work/_temp/tc730-i07-sdk-root/build/TotalCross/dist/vm/macos/libtcvm.dylib",
+              "sha256": "f841231778c7a5d2af82192163aa71ecd8634c9203ff4ce6bfb4b5bde703ca2e"
+            }
+          ],
+          "evidencePath": "investigations/7.3.0-functional/evidence/I07/macos-arm64.json",
+          "markerLogPath": "investigations/7.3.0-functional/evidence/I07/macos-arm64-runtime-markers.log"
         }
       ],
-      "resultSummary": "Android API 36 ARM64 host-GPU run passed all 16 reported cases with zero failures, skips, or native crashes; other required I07 platforms remain pending."
+      "resultSummary": "All four required platforms completed 16 cases with zero failures. Windows I386 and Android API 36 had no skips; Linux used the conditional realpath shim and skipped only its unavailable device path; macOS skipped only its read-only device path."
     },
     {
       "investigationId": "I08",

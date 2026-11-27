@@ -1,0 +1,162 @@
+{
+  "investigationId": "I07",
+  "platform": "windows-win32-i386",
+  "status": "PASS",
+  "workflowRunId": 45989644203,
+  "workflowUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45989644203",
+  "workflowCommit": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+  "workflowJobArtifactId": 15192792548,
+  "workflowJobArtifactDigest": "sha256:9ad213216cc7e25a9a78b128b094109972fcece5b2368de29ec83fca47c63887",
+  "downloadedArtifactSha256": "9ad213216cc7e25a9a78b128b094109972fcece5b2368de29ec83fca47c63887",
+  "sourceCommit": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+  "sourceTree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+  "probeSourceCommit": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+  "sdkJarSha256": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d",
+  "applicationJarSha256": "a28f6c8ff8dbba5fe9808ffd87fb6d2314d2191c299b0cb70a4b521678ac7140",
+  "runtimeFiles": [
+    {
+      "path": "D:\\a\\_temp\\tc730-i07-sdk-root\\build\\TotalCross\\etc\\launchers\\win32\\Launcher.exe",
+      "sha256": "9ffe796f6cfa5ceaf33beaccde5f158cb9e47304256642913894849485fc8e31"
+    },
+    {
+      "path": "D:\\a\\_temp\\tc730-i07-sdk-root\\build\\TotalCross\\dist\\vm\\win32\\tcvm.dll",
+      "sha256": "000d9d2ae734659383db9266b7e5c2db0e056de78ebbee68383142f7d797af52"
+    }
+  ],
+  "architectureEvidence": {
+    "source/Launcher.exe": "0x014c",
+    "source/tcvm.dll": "0x014c",
+    "deployed/ImageStringFallbackProbe.exe": "0x014c",
+    "deployed/tcvm.dll": "0x014c"
+  },
+  "deployedWindowsPefiles": [
+    {
+      "path": "ImageStringFallbackProbe.exe",
+      "sha256": "747e87afd8d59e388c16f117811a3c2aff9c2511441c8471335a4e5b5cfea493"
+    },
+    {
+      "path": "tcvm.dll",
+      "sha256": "000d9d2ae734659383db9266b7e5c2db0e056de78ebbee68383142f7d797af52"
+    }
+  ],
+  "applicationTcz": {
+    "path": "D:\\a\\_temp\\tc730-i07\\windows-i386\\deployed\\install\\win32\\ImageStringFallbackProbe.tcz",
+    "sha256": "5459b589a0ea55eef7195a97a6439e7e7a431d189d7869be48ce091994b1e6ec"
+  },
+  "artifactProvenance": {
+    "sourceCommit": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+    "sourceTree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+    "sdkArtifact": {
+      "runId": 45884551862,
+      "id": 15148184230,
+      "digest": "sha256:82bfd5bf558dba1bba6a703477fe1feb146d5dae05df84d1d1551baa5db18df8"
+    },
+    "runtimeArtifact": {
+      "runId": 45907759163,
+      "id": 15158467793,
+      "digest": "sha256:81c313cf8c6ab83c0a9b722a153f2b13e344358a91c99df806dcd613e64a73ec"
+    },
+    "configuration": "Visual Studio 17 2022; Win32; Release",
+    "graphics": {
+      "skia": true,
+      "legacyRenderer": false,
+      "sdlWindowing": true,
+      "nativeWindowing": false,
+      "softwareSurface": true,
+      "gles": false
+    }
+  },
+  "processExitCode": 0,
+  "timedOut": false,
+  "conditionalRealpathShim": false,
+  "applicationResult": {
+    "status": "PASS",
+    "cases": 16,
+    "failures": 0,
+    "skips": 0
+  },
+  "caseResults": [
+    {
+      "name": "prepare-filesystem-fixtures",
+      "status": "PASS",
+      "details": "wrote valid, malformed, and empty filesystem controls"
+    },
+    {
+      "name": "relative-path-filesystem-only",
+      "status": "PASS",
+      "details": "dimensions=36x36,pixels=1296"
+    },
+    {
+      "name": "tcz-only",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "both-tcz-precedence",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "malformed-tcz-does-not-fallback",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Invalid or unsupported encoded image"
+    },
+    {
+      "name": "empty-tcz-does-not-fallback",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Could not open encoded image"
+    },
+    {
+      "name": "missing-filesystem",
+      "status": "PASS",
+      "details": "totalcross.io.FileNotFoundException:File not found: missing.jpg"
+    },
+    {
+      "name": "invalid-filesystem",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Invalid or unsupported encoded image"
+    },
+    {
+      "name": "empty-filesystem",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Invalid encoded image buffer"
+    },
+    {
+      "name": "absolute-path",
+      "status": "PASS",
+      "details": "dimensions=36x36,pixels=1296"
+    },
+    {
+      "name": "device-path-where-supported",
+      "status": "PASS",
+      "details": "dimensions=36x36,pixels=1296"
+    },
+    {
+      "name": "path-boundary-255",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "path-boundary-256-does-not-truncate-to-255-entry",
+      "status": "PASS",
+      "details": "totalcross.io.IllegalArgumentIOException:Invalid value for argument 'path': xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "name": "image-file-parity",
+      "status": "PASS",
+      "details": "pixels=1296"
+    },
+    {
+      "name": "snapshot-after-modification",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "native-ownership",
+      "status": "PASS",
+      "details": "owners attached=1 detached=0"
+    }
+  ],
+  "caseResultsComplete": true,
+  "runtimeMarkersFile": "windows-win32-i386-runtime-markers.log"
+}

@@ -1,0 +1,128 @@
+{
+  "investigationId": "I07",
+  "platform": "linux-x86_64",
+  "status": "PASS",
+  "workflowRunId": 45989644203,
+  "workflowUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45989644203",
+  "workflowCommit": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+  "workflowJobId": 140473923177,
+  "workflowJobArtifactId": 15193167516,
+  "workflowJobArtifactDigest": "sha256:d13ecea7447310f6f8af596e93d963940a4482dc57757213d7447290d4ffb849",
+  "downloadedArtifactSha256": "d13ecea7447310f6f8af596e93d963940a4482dc57757213d7447290d4ffb849",
+  "sourceCommit": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+  "sourceTree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+  "probeSourceCommit": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+  "sdkJarSha256": "381a99b8835069e64d2e079c9796446992f2f8eed8fac236270c142e14ee64ee",
+  "runtimeFiles": [
+    {
+      "path": "/home/runner/work/_temp/tc730-linux-bundle/Corrected/TotalCross/etc/launchers/linux/Launcher",
+      "sha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166"
+    },
+    {
+      "path": "/home/runner/work/_temp/tc730-linux-bundle/Corrected/TotalCross/dist/vm/linux/libtcvm.so",
+      "sha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4"
+    }
+  ],
+  "processExitCode": 0,
+  "timedOut": false,
+  "conditionalRealpathShim": true,
+  "applicationResult": {
+    "status": "PASS",
+    "cases": 16,
+    "failures": 0,
+    "skips": 1
+  },
+  "caseResults": [
+    {
+      "name": "prepare-filesystem-fixtures",
+      "status": "PASS",
+      "details": "wrote valid, malformed, and empty filesystem controls"
+    },
+    {
+      "name": "relative-path-filesystem-only",
+      "status": "PASS",
+      "details": "dimensions=36x36,pixels=1296"
+    },
+    {
+      "name": "tcz-only",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "both-tcz-precedence",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "malformed-tcz-does-not-fallback",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Invalid or unsupported encoded image"
+    },
+    {
+      "name": "empty-tcz-does-not-fallback",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Could not open encoded image"
+    },
+    {
+      "name": "missing-filesystem",
+      "status": "PASS",
+      "details": "totalcross.io.FileNotFoundException:File not found: missing.jpg"
+    },
+    {
+      "name": "invalid-filesystem",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Invalid or unsupported encoded image"
+    },
+    {
+      "name": "empty-filesystem",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Invalid encoded image buffer"
+    },
+    {
+      "name": "absolute-path",
+      "status": "PASS",
+      "details": "dimensions=36x36,pixels=1296"
+    },
+    {
+      "name": "device-path-where-supported",
+      "status": "SKIP",
+      "details": "device filesystem unavailable: totalcross.io.IOException:Error Code: 13 - Permission denied"
+    },
+    {
+      "name": "path-boundary-255",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "path-boundary-256-does-not-truncate-to-255-entry",
+      "status": "PASS",
+      "details": "totalcross.io.IllegalArgumentIOException:Invalid value for argument 'path': xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "name": "image-file-parity",
+      "status": "PASS",
+      "details": "pixels=1296"
+    },
+    {
+      "name": "snapshot-after-modification",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "native-ownership",
+      "status": "PASS",
+      "details": "owners attached=1 detached=0"
+    }
+  ],
+  "caseResultsComplete": true,
+  "unmodifiedRuntime": {
+    "status": "INCOMPLETE",
+    "processExitCode": 134,
+    "observed": "*** buffer overflow detected ***; Aborted"
+  },
+  "limitations": [
+    "Run used the test-only realpath shim; it is conditional evidence, not an unmodified Linux startup pass.",
+    "The device-path case was skipped because /sdcard access is denied in this desktop Linux runtime."
+  ],
+  "runtimeMarkersFile": "linux-x86_64-runtime-markers.log"
+}

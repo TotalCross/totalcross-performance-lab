@@ -78,6 +78,16 @@ provenance, proposed issue updates, and a consolidated report.
 - [x] 2026-11-27: Reused and reverified the Windows Win32/I386 priority run
   `45907759163`; its same-runtime startup and ownership checks passed. No
   AMD64 test or analysis was performed.
+- [x] 2026-11-27: Hosted run `45989644203` completed I07 on Windows I386, Linux
+  x86_64, and macOS ARM64; the existing local API 36 ARM64 run completes the
+  fourth required platform. All reported cases passed. Linux I07 is conditional
+  on the realpath shim; Linux and macOS skipped only their unavailable device
+  path cases.
+- [x] 2026-11-27: The same hosted run completed Linux I06 baseline and
+  corrected ownership probes under the test-only realpath shim. Both completed
+  all seven stages with the JPEG decoder control; baseline recorded 6,046
+  mismatches and corrected source recorded zero. Normal Linux startup remains
+  blocked under I01-B.
 - [x] Milestone 0: provenance, legacy-port review, historical evidence import,
   harness/workflow contract, and CI/emulator capability checks are complete.
 - [x] Milestone 1: Linux realpath startup (I01-B) and PNG decode (I02) runtime
@@ -97,8 +107,9 @@ provenance, proposed issue updates, and a consolidated report.
 - [x] Milestone 2: I03/I04/I05 results and limitations are recorded; repeated
   I03 permission requests remain explicitly NOT_RUN because the first denied
   transition already crashes and no candidate is available.
-- [ ] Milestone 3: run Linux ownership validation (I06) and remaining
-  `Image(String)` checks (I07), importing equivalent historical evidence.
+- [ ] Milestone 3: verify and import the remaining durable PR #567 historical
+  JavaSE, macOS ARM64, and Android ARM64 ownership evidence. I07 is complete;
+  I06 Linux assertions passed conditionally under the test-only startup shim.
 - [ ] Milestone 4: validate Android filesystem and SQLite permission recovery
   (I08/I09), then SQLite compatibility (I10).
 - [ ] Milestone 5: restricted release workflow validation (I11), final matrix,

@@ -23,6 +23,25 @@ in ten clean file-I/O cycles; the native stack and mutex owner remain unknown.
 - JavaSE, macOS ARM64, and Android ARM64 PR #567 claims: imported evidence
   verification remains pending.
 
+## Completed campaign image validation
+
+- **I06 persistent image ownership:** PASS for the production Windows
+  Win32/I386 target. Linux x86_64 baseline and corrected ownership probes also
+  completed all seven stages: the baseline recorded 6,046 mismatches and the
+  corrected candidate recorded zero. Linux used the test-only realpath shim
+  because the unmodified runtime aborts before application startup. A bundled
+  red JPEG control replaced the tiny PNG after both Linux probes failed in the
+  decoder at native drawing. The Linux result is conditional; normal Linux
+  startup and the PNG decoder failure remain separately tracked. See the
+  [Linux report](reports/I06-linux-ownership.md).
+- **I07 `Image(String)` fallback:** PASS on Windows Win32/I386, Linux x86_64,
+  macOS ARM64, and Android API 36 ARM64. All four platforms reported 16 cases
+  and zero failures. Linux used the realpath shim and skipped its inaccessible
+  device path; macOS skipped its read-only device path. Windows and Android
+  had no skips. The Android activity exit code is unavailable from the local
+  runner, but its completion marker and no-crash state were observed. See the
+  [I07 report](reports/I07-image-string-fallback.md).
+
 ## Campaign execution
 
 - **I03, Android API 30, 35, and 36 ARM64 AVDs:** FAIL. The exact customer APK
@@ -56,24 +75,14 @@ in ten clean file-I/O cycles; the native stack and mutex owner remain unknown.
   permission grant completed without the same abort. The exact mutex owner and
   failure stack were not captured. The report proposes an update to existing
   issue #432; no remote issue was edited.
-- **I06 Windows Win32/I386:** PASS for the Windows target; overall I06 remains
-  pending its required Linux x86_64 validation.
-- **I06 Linux x86_64:** INCOMPLETE. Hosted run 45978158503 compiled and
-  deployed the baseline ownership probe, but the runtime aborted with exit 134
-  and `*** buffer overflow detected ***` before the first application marker
-  on Ubuntu 22.04/glibc 2.35. No ownership assertions ran. The runtime hashes
-  match the I01-B build with the captured `__realpath_chk -> startVM` stack;
-  evidence and source identities are recorded in
-  [the Linux I06 record](evidence/I06/linux-x86_64-45978158503.json). A
-  conditional shimmed continuation is planned, and any resulting pass will
-  remain conditional on the Linux startup workaround.
-- **I07 `Image(String)` fallback:** INCOMPLETE. Android API 36 ARM64 passed all
-  16 reported cases on the host-GPU emulator with zero failures, skips, or
-  native crashes. The candidate release AAB and deployed ARM64 APK identities,
-  complete case results, and runtime markers are recorded in
-  [the Android evidence record](evidence/I07/android-api36-arm64.json). Windows
-  I386, Linux x86_64, and macOS ARM64 remain pending the authorized branch
-  workflow.
+- **I06 Linux x86_64:** Conditional ownership validation completed in hosted
+  run 45989644203. The unmodified startup abort remains INCOMPLETE under
+  I01-B; the shimmed baseline and candidate assertions passed as recorded in
+  [the Linux I06 record](evidence/I06/linux-x86_64-45989644203.json).
+- **I07 hosted platforms:** Windows I386, Linux x86_64, and macOS ARM64 all
+  completed in hosted run 45989644203. Their full case results, artifacts, and
+  compact markers are under `evidence/I07/`. The local API 36 Android record is
+  [here](evidence/I07/android-api36-arm64.json).
 - **I01-B, Linux x86_64:** official 7.3.0 and frozen master failed before
   startup on all four tested path forms, including short paths. Official 7.2.2
   is inconclusive as a realpath control: three cases failed in dynamic loading;
@@ -83,5 +92,5 @@ in ten clean file-I/O cycles; the native stack and mutex owner remain unknown.
   rejected during construction. Other platforms remain untested.
 
 No production source was changed. I03 repeated requests and corrected-candidate
-validation remain explicitly unrun. I06/I07, I08/I09/I10, I11, remaining
-provenance, and the final report remain pending.
+validation remain explicitly unrun. I08/I09/I10, I11, remaining provenance,
+and the final report remain pending.

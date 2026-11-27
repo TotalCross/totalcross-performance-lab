@@ -1,0 +1,138 @@
+{
+  "investigationId": "I07",
+  "platform": "macos-arm64",
+  "status": "PASS",
+  "workflowRunId": 45989644203,
+  "workflowUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45989644203",
+  "workflowCommit": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+  "workflowJobArtifactId": 15192782672,
+  "workflowJobArtifactDigest": "sha256:de05bcf90511fdf2901eee9e73f5137221f01652455407f4f3c1aad742dedd47",
+  "downloadedArtifactSha256": "de05bcf90511fdf2901eee9e73f5137221f01652455407f4f3c1aad742dedd47",
+  "sourceCommit": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+  "sourceTree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+  "probeSourceCommit": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+  "sdkJarSha256": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d",
+  "applicationJarSha256": "7d5415590576453c6c42e23a5f4e5fb6d5a9de804bc329532c8308fbfa797559",
+  "runtimeFiles": [
+    {
+      "path": "/Users/runner/work/_temp/tc730-i07-sdk-root/build/TotalCross/etc/launchers/macos/Launcher",
+      "sha256": "4c267df065cf687affc6ae6aa6bc9926db496240ff8306e9d39a4b71e0289c5a"
+    },
+    {
+      "path": "/Users/runner/work/_temp/tc730-i07-sdk-root/build/TotalCross/dist/vm/macos/libtcvm.dylib",
+      "sha256": "f841231778c7a5d2af82192163aa71ecd8634c9203ff4ce6bfb4b5bde703ca2e"
+    }
+  ],
+  "architectureEvidence": {},
+  "deployedWindowsPefiles": [],
+  "applicationTcz": null,
+  "artifactProvenance": {
+    "sdkSourceCommit": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+    "sdkSourceTree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+    "sdkArtifact": {
+      "runId": 45884551862,
+      "id": 15148184230,
+      "digest": "sha256:82bfd5bf558dba1bba6a703477fe1feb146d5dae05df84d1d1551baa5db18df8"
+    },
+    "preparedDependenciesRunId": 45884551862,
+    "preparedDependenciesArtifactId": 15148893237,
+    "preparedDependenciesSha256": "252691d3709d238e9228f20409dfab496e30ae632b45b578a1538b255635754a",
+    "preparedDependenciesArtifactDigest": "sha256:d2b007713e7bc374e4b190585efb7156893bf2ab15ae08b121ea865f2f216d1c",
+    "nativeBridgesRunId": 45884551862,
+    "nativeBridgesArtifactId": 15147749510,
+    "nativeBridgesArtifactDigest": "sha256:a977aac5cbf59c355e5c9f178453952113eaf8588579c31a31d9a95e7d7643c8"
+  },
+  "processExitCode": 0,
+  "timedOut": false,
+  "conditionalRealpathShim": false,
+  "applicationResult": {
+    "status": "PASS",
+    "cases": 16,
+    "failures": 0,
+    "skips": 1
+  },
+  "caseResults": [
+    {
+      "name": "prepare-filesystem-fixtures",
+      "status": "PASS",
+      "details": "wrote valid, malformed, and empty filesystem controls"
+    },
+    {
+      "name": "relative-path-filesystem-only",
+      "status": "PASS",
+      "details": "dimensions=36x36,pixels=1296"
+    },
+    {
+      "name": "tcz-only",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "both-tcz-precedence",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "malformed-tcz-does-not-fallback",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Invalid or unsupported encoded image"
+    },
+    {
+      "name": "empty-tcz-does-not-fallback",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Could not open encoded image"
+    },
+    {
+      "name": "missing-filesystem",
+      "status": "PASS",
+      "details": "totalcross.io.FileNotFoundException:File not found: missing.jpg"
+    },
+    {
+      "name": "invalid-filesystem",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Invalid or unsupported encoded image"
+    },
+    {
+      "name": "empty-filesystem",
+      "status": "PASS",
+      "details": "totalcross.ui.image.ImageException:Invalid encoded image buffer"
+    },
+    {
+      "name": "absolute-path",
+      "status": "PASS",
+      "details": "dimensions=36x36,pixels=1296"
+    },
+    {
+      "name": "device-path-where-supported",
+      "status": "SKIP",
+      "details": "device filesystem unavailable: totalcross.io.IOException:Error Code: 30 - Read-only file system"
+    },
+    {
+      "name": "path-boundary-255",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "path-boundary-256-does-not-truncate-to-255-entry",
+      "status": "PASS",
+      "details": "totalcross.io.IllegalArgumentIOException:Invalid value for argument 'path': xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "name": "image-file-parity",
+      "status": "PASS",
+      "details": "pixels=1296"
+    },
+    {
+      "name": "snapshot-after-modification",
+      "status": "PASS",
+      "details": "dimensions=2x2,pixels=4"
+    },
+    {
+      "name": "native-ownership",
+      "status": "PASS",
+      "details": "owners attached=1 detached=0"
+    }
+  ],
+  "caseResultsComplete": true,
+  "runtimeMarkersFile": "macos-arm64-runtime-markers.log"
+}

@@ -1,0 +1,17 @@
+TC_I07 case=prepare-filesystem-fixtures status=PASS details=wrote valid, malformed, and empty filesystem controls
+TC_I07 case=relative-path-filesystem-only status=PASS details=dimensions=36x36,pixels=1296
+TC_I07 case=tcz-only status=PASS details=dimensions=2x2,pixels=4
+TC_I07 case=both-tcz-precedence status=PASS details=dimensions=2x2,pixels=4
+TC_I07 case=malformed-tcz-does-not-fallback status=PASS details=totalcross.ui.image.ImageException:Invalid or unsupported encoded image
+TC_I07 case=empty-tcz-does-not-fallback status=PASS details=totalcross.ui.image.ImageException:Could not open encoded image
+TC_I07 case=missing-filesystem status=PASS details=totalcross.io.FileNotFoundException:File not found: missing.jpg
+TC_I07 case=invalid-filesystem status=PASS details=totalcross.ui.image.ImageException:Invalid or unsupported encoded image
+TC_I07 case=empty-filesystem status=PASS details=totalcross.ui.image.ImageException:Invalid encoded image buffer
+TC_I07 case=absolute-path status=PASS details=dimensions=36x36,pixels=1296
+TC_I07 case=device-path-where-supported status=SKIP details=device filesystem unavailable: totalcross.io.IOException:Error Code: 30 - Read-only file system
+TC_I07 case=path-boundary-255 status=PASS details=dimensions=2x2,pixels=4
+TC_I07 case=path-boundary-256-does-not-truncate-to-255-entry status=PASS details=totalcross.io.IllegalArgumentIOException:Invalid value for argument 'path': xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TC_I07 case=image-file-parity status=PASS details=pixels=1296
+TC_I07 case=snapshot-after-modification status=PASS details=dimensions=2x2,pixels=4
+TC_I07 case=native-ownership status=PASS details=owners attached=1 detached=0
+TC_I07_RESULT {"status":"PASS","cases":16,"failures":0,"skips":1}

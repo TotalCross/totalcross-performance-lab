@@ -3,8 +3,9 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
-- Last completed platform checkpoint: I07 Android API 36 ARM64 PASS; Windows
-  Win32/I386 I06 result is independently verified from run `45907759163`.
+- Last completed platform checkpoint: I07 passed on Windows I386, Linux x86_64
+  conditionally, macOS ARM64, and Android API 36 ARM64. I06 passed on Windows
+  I386 and completed its Linux ownership assertions conditionally.
 - Shared Android probe sources: `dd3a916`.
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 - Active milestone: 3 — Image functional validation
@@ -134,15 +135,27 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   aborted before its first application marker with exit 134 and
   `*** buffer overflow detected ***` on Ubuntu 22.04/glibc 2.35. Its VM and
   launcher hashes match the I01-B build whose captured stack is
-  `__realpath_chk -> startVM -> executeProgram -> main`. No ownership assertion
-  ran; I06 Linux is INCOMPLETE and classified under I01-B. The bundle and
-  result artifact are indexed in
+  `__realpath_chk -> startVM -> executeProgram -> main`. This remains the
+  unmodified Linux startup blocker under I01-B. The bundle and initial result
+  are indexed in
   `evidence/I06/linux-x86_64-45978158503.json`.
 - Added the I07 `Image(String)` probe, cross-platform prepare/run harness, and
   branch-push workflow. It reuses the verified Windows I386 artifacts, the
   Linux frozen-master bundle, and the exact prepared dependency/bridge artifacts
-  for the canonical macOS ARM64 build. The workflow is committed locally but
-  has not yet been pushed or executed.
+  for the canonical macOS ARM64 build. Hosted run `45989644203` passed the
+  Windows I386 and macOS ARM64 jobs and completed Linux I06/I07 conditionally.
+- The Linux ownership run completed all seven stages for both SDKs after using
+  the test-only realpath shim. The baseline recorded 6,046 ownership
+  mismatches; corrected source `94af2b8` recorded zero and passed all
+  assertions. Both original PNG draw controls failed in the Linux decoder, so
+  the Linux ownership smoke used a bundled red JPEG and validated the native
+  render pixel. Evidence is in `evidence/I06/linux-x86_64-45989644203.json`.
+- I07 passed all 16 cases on Windows I386, Linux x86_64, macOS ARM64, and
+  Android API 36 ARM64. Windows and Android had no skips. Linux used the
+  conditional realpath shim and skipped only its inaccessible device path;
+  macOS skipped only its read-only device path. The Android API 36 host-GPU run
+  identifies the Apple M1 Pro. Full results and compact markers are committed
+  under `evidence/I07/`.
 - Built the candidate Android release AAB and ran I07 on the hardware-accelerated
   API 36 ARM64 emulator. All 16 reported cases passed, with zero failures,
   skips, or native crashes. The host GPU log identifies the Apple M1 Pro. The
@@ -155,20 +168,19 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
 
 ## Pending investigations
 
-I06 Linux conditional ownership execution, I07 Windows I386/Linux/macOS ARM64
-execution, I08/I09/I10, I11; remaining provenance; proposed issue updates; and
-final consolidation. I03 repeated requests and corrected-candidate validation
-remain explicitly unrun because no candidate is available and the first denied
+PR #567 historical JavaSE/macOS/Android ownership evidence verification, I08,
+I09, I10, I11, remaining provenance, proposed issue updates, and final
+consolidation. I03 repeated requests and corrected-candidate validation remain
+explicitly unrun because no candidate is available and the first denied
 transition already reproduces the crash.
 
 ## Next concrete action
 
-Push the committed I07 workflow to the authorized campaign branch. It will run
-Windows Win32/I386 using the existing corrected runtime, Linux I06/I07 after
-preserving the unmodified startup abort, and the canonical macOS ARM64 build.
-Android API 36 ARM64 has passed locally. Do not run Windows AMD64. The
-unmodified Linux startup blocker and artifact hashes are indexed in
-`evidence/I06/linux-x86_64-45978158503.json`.
+Verify whether PR #567's JavaSE, macOS ARM64, and Android ARM64 ownership claims
+have durable artifacts and assertions that can be imported. Then begin I08 on
+the available hardware-accelerated API 29/30/35/36 ARM64 emulators. I07 is
+complete; Linux I06 remains explicitly conditional on the test-only startup
+shim. Do not run Windows AMD64.
 
 ## Constraints and blockers
 

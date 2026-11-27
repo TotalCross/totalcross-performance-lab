@@ -1,0 +1,455 @@
+{
+  "investigationId": "I06",
+  "platform": "linux-x86_64",
+  "workflowRunId": 45989644203,
+  "workflowUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45989644203",
+  "workflowCommit": "65925255376e15820e3bdfa04ca3d090020f6d0e",
+  "workflowJobId": 140473923177,
+  "workflowJobArtifactId": 15193167516,
+  "workflowJobArtifactDigest": "sha256:d13ecea7447310f6f8af596e93d963940a4482dc57757213d7447290d4ffb849",
+  "downloadedArtifactSha256": "d13ecea7447310f6f8af596e93d963940a4482dc57757213d7447290d4ffb849",
+  "runner": "ubuntu-22.04; glibc 2.35",
+  "runtimeProvenance": {
+    "sourceSha": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+    "sourceTree": "44047160610b7efcb3d49768736af95bde19f85f",
+    "totalCrossVmTree": "7b288d4f732a01c9e87ad5290b628cad7e56c513",
+    "generatedNativeBridgesSha256": "27f29ddfd1378665b58936ff859ba8c1725e9a8770cd2cddf0c783343fc9fb24",
+    "buildImage": "totalcross/linux-amd64:v1.0.7",
+    "depotToolsRevision": "0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a",
+    "sdkJarSha256": "ad28e5c5770c95849a3ca41caa3c9175d9c82edf48921e05ba0bd2df4d224ab0",
+    "linuxLibtcvmSha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4",
+    "linuxLauncherSha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166",
+    "nativeToolchainSha256": "f55d1849ea9b78a11b1c0ef0cdea808953198fe61eed370b2b63c9a68474dd4b",
+    "dependencyIndexSha256": "b463a227f1b5284b15e1dcc308da2e83ea39adb78a0c086061521a5b5be38f05",
+    "preparedDependencies": [
+      {
+        "dependency": "zlib-ng",
+        "release_tag": "zlib-ng-2.1.6-r3",
+        "sha256": "a79098d8e04afc554833a9a273cd5b10ba5130e2253752d94d2cbb311a015262"
+      },
+      {
+        "dependency": "minizip-ng",
+        "release_tag": "minizip-ng-4.2.2-r3",
+        "sha256": "6a6fd01823e0ae1a356654360d0814df82281e5011433e2875affac437cb400c"
+      },
+      {
+        "dependency": "libpng",
+        "release_tag": "libpng-1.6.48-r3",
+        "sha256": "e94989e586c76b000acbbfbe05de0d7e5973b064220bb1289473a3b0561a79fa"
+      },
+      {
+        "dependency": "libjpeg-turbo",
+        "release_tag": "libjpeg-turbo-3.1.4.1-r2",
+        "sha256": "d1ee4fb97a1232d9a53a475ce8d4a1ee22f1803b01149d1014da14b19b63c0fc"
+      },
+      {
+        "dependency": "sqlite3",
+        "release_tag": "sqlite3-3.32.3-r2",
+        "sha256": "d28286e9b1ece82308d84162c16dfc6797ecc857c3f5bb5a5862102d392c2264"
+      },
+      {
+        "dependency": "mbedtls",
+        "release_tag": "mbedtls-3.5.2-r3",
+        "sha256": "c536c4a317214f8572d597578ed023b711650b810edf5c4bbcbb6d02024b31c1"
+      },
+      {
+        "dependency": "axtls",
+        "release_tag": "axtls-2.1.5-tc.1-r2",
+        "sha256": "daa12a805798fcc9c04e9f59041e1d5b15eb76c2d5c50dc0aac392074fda90cf"
+      },
+      {
+        "dependency": "qrcodegen",
+        "release_tag": "qrcodegen-20250123-r2",
+        "sha256": "d34048785f24d73999bbfca4890188724224c8a70b564c0d354aa30f57ab32ee"
+      },
+      {
+        "dependency": "skia",
+        "release_tag": "skia-158dc9d7-r8",
+        "sha256": "cf91ad98d7f20365245cb2aa84dce825402b2838c05dee8d6d2b9cdbf076f8c3"
+      },
+      {
+        "dependency": "sdl2",
+        "release_tag": "sdl2-2.32.8-r2",
+        "sha256": "620e6258a4c4a9abc7203df1561bd1b950289431a0d039e70eb1d9968db6b1d0"
+      },
+      {
+        "dependency": "zlib-ng",
+        "release_tag": "zlib-ng-2.1.6-r3",
+        "sha256": "9dd6b47fac34c74ccc2f7c3bcd284331d02193a82a70a98c0ccf121c3466b82c"
+      },
+      {
+        "dependency": "minizip-ng",
+        "release_tag": "minizip-ng-4.2.2-r3",
+        "sha256": "e6b211e3514c3550cc158124637bfc9d88f3086aab72433497cd06e006d72574"
+      },
+      {
+        "dependency": "libpng",
+        "release_tag": "libpng-1.6.48-r3",
+        "sha256": "33ad50c84caa14e2fb91b17908b6b5d9234e826f68d00beadd4bf09a74c6a7bd"
+      },
+      {
+        "dependency": "libjpeg-turbo",
+        "release_tag": "libjpeg-turbo-3.1.4.1-r2",
+        "sha256": "ec9340cd234baa4960c4b63fbcaed3f9c7e90b01e180625668ab19461e58e3e8"
+      },
+      {
+        "dependency": "sqlite3",
+        "release_tag": "sqlite3-3.32.3-r2",
+        "sha256": "5afb32d54edd7e83d271642fce1e0ff515db27de4e196317fe4491457de68867"
+      },
+      {
+        "dependency": "mbedtls",
+        "release_tag": "mbedtls-3.5.2-r3",
+        "sha256": "2be1c961a69316831d4e54e725955289a875389c5c50a92e4b1e4aec0100281f"
+      },
+      {
+        "dependency": "axtls",
+        "release_tag": "axtls-2.1.5-tc.1-r2",
+        "sha256": "f8ed28dfa6ee7c6c872be191a0736d041fe7194be0a18b0aa5a4bd82a4a8d1bf"
+      },
+      {
+        "dependency": "qrcodegen",
+        "release_tag": "qrcodegen-20250123-r2",
+        "sha256": "4ffe432f75329bd56caec7e708aaba5cf0d63a907d37d3d7c23711e5283f64f4"
+      },
+      {
+        "dependency": "skia",
+        "release_tag": "skia-158dc9d7-r8",
+        "sha256": "9c034d320313f3ce83868391fde6d01b1e8834fe97f42743727b72b2d0f66b26"
+      },
+      {
+        "dependency": "sdl2",
+        "release_tag": "sdl2-2.32.8-r2",
+        "sha256": "4fd22efff04adf51ac673cb4e3ed9b7b9d5d1952b4d33a031ecd2fdfadcbd7d5"
+      },
+      {
+        "dependency": "zlib-ng",
+        "release_tag": "zlib-ng-2.1.6-r3",
+        "sha256": "61a762e1d787095295161130b67dd30e5a051ae34009cc5278f9122319da6495"
+      },
+      {
+        "dependency": "minizip-ng",
+        "release_tag": "minizip-ng-4.2.2-r3",
+        "sha256": "99704e1dd30354a523c6cbcad14503fddb2635f86b6b0bcce44882f09ba561a9"
+      },
+      {
+        "dependency": "libpng",
+        "release_tag": "libpng-1.6.48-r3",
+        "sha256": "01856f704792b96c1bd1e2de4bad589e7b101cfb3df7afbd35d84a86feecdfaa"
+      },
+      {
+        "dependency": "libjpeg-turbo",
+        "release_tag": "libjpeg-turbo-3.1.4.1-r2",
+        "sha256": "66a24673d0f1f9e68098a997fccaffef190f1963d1e8def6b200f5edda716312"
+      },
+      {
+        "dependency": "sqlite3",
+        "release_tag": "sqlite3-3.32.3-r2",
+        "sha256": "ce35550827d46284b043e7c2e92ec055dcd3b8f889017807c9da88aadc788d76"
+      },
+      {
+        "dependency": "mbedtls",
+        "release_tag": "mbedtls-3.5.2-r3",
+        "sha256": "0f2331444792fba6f433c511fc5a2911ab8f765caa65b6730790c950eb595fb1"
+      },
+      {
+        "dependency": "axtls",
+        "release_tag": "axtls-2.1.5-tc.1-r2",
+        "sha256": "bde0bd8b0aa5bff517ba4268c1e94b1fa5383d292a22c49dabc6f78ae06423a5"
+      },
+      {
+        "dependency": "qrcodegen",
+        "release_tag": "qrcodegen-20250123-r2",
+        "sha256": "caef12fd3f05e18b7092a7eac3bd72cd6404c8c08132e3070baf3103bb3ed6b0"
+      },
+      {
+        "dependency": "skia",
+        "release_tag": "skia-158dc9d7-r8",
+        "sha256": "630ce8030425e9b91a88a8dc55e13020f36c438a68853433f2e5046e270d0e98"
+      },
+      {
+        "dependency": "sdl2",
+        "release_tag": "sdl2-2.32.8-r2",
+        "sha256": "f99464d2e5d7d6b583cd15ff3e37967d761c0a508f6108c4b417f1c294888809"
+      },
+      {
+        "dependency": "zlib-ng",
+        "release_tag": "zlib-ng-2.1.6-r3",
+        "sha256": "6ec8f8e2727a2fb9bd9417e6bf430613e12c2d882bad3e9e5e698715494ea3e1"
+      },
+      {
+        "dependency": "minizip-ng",
+        "release_tag": "minizip-ng-4.2.2-r3",
+        "sha256": "e00fef41c352d08fd924ec7a4cfa908452480a8f670318f67a2e35ce652d7d7c"
+      },
+      {
+        "dependency": "libpng",
+        "release_tag": "libpng-1.6.48-r3",
+        "sha256": "6f7f8ded01b2240c3153c0ffcf1aafc334a00d4bdb38257842b49b050bc75359"
+      },
+      {
+        "dependency": "libjpeg-turbo",
+        "release_tag": "libjpeg-turbo-3.1.4.1-r2",
+        "sha256": "c3c5830b352819c4a7d1d07ca9d90eefe2048478a3e2dff2c15d826961d5afc0"
+      },
+      {
+        "dependency": "sqlite3",
+        "release_tag": "sqlite3-3.32.3-r2",
+        "sha256": "28b9f1784536cfaff10d62c651b51ae04482488ccbfe5c5554063814cf251816"
+      },
+      {
+        "dependency": "mbedtls",
+        "release_tag": "mbedtls-3.5.2-r3",
+        "sha256": "3b012272fb8b864eab07ebe63f561c99092e69c9f008b66ad312a71d33878bd7"
+      },
+      {
+        "dependency": "axtls",
+        "release_tag": "axtls-2.1.5-tc.1-r2",
+        "sha256": "102cc14ae733fdc68f23f3ec0b8d960ddf0d35467da4d83af8fa52b7395af878"
+      },
+      {
+        "dependency": "qrcodegen",
+        "release_tag": "qrcodegen-20250123-r2",
+        "sha256": "528403b513c136a707cdab0337edd7d8227ab9f611612cd896900600e40c4dc3"
+      },
+      {
+        "dependency": "skia",
+        "release_tag": "skia-158dc9d7-r8",
+        "sha256": "27d9a34f721340d5bf45181fc087568022433683830cd8526ceb38b857f27d3a"
+      },
+      {
+        "dependency": "sdl2",
+        "release_tag": "sdl2-2.32.8-r2",
+        "sha256": "a6dd50a227e0139ccee573045c6de60770a88f2e0b4987afe623117c3d50f97e"
+      },
+      {
+        "dependency": "zlib-ng",
+        "release_tag": "zlib-ng-2.1.6-r3",
+        "sha256": "5136c28c013160b8a80ac202b37e4ffb1f9a2a4c5e41c98df7d8bcc06f168e86"
+      },
+      {
+        "dependency": "minizip-ng",
+        "release_tag": "minizip-ng-4.2.2-r3",
+        "sha256": "b5bf00e37185b67db549210e135937be69abc731b834ad0358523964cd09b7b4"
+      },
+      {
+        "dependency": "libpng",
+        "release_tag": "libpng-1.6.48-r3",
+        "sha256": "00f7460b37ce3b2d4e032e9b94ee2b53f6aa1e6fbc481c4d1f66bfff53ad20c3"
+      },
+      {
+        "dependency": "libjpeg-turbo",
+        "release_tag": "libjpeg-turbo-3.1.4.1-r2",
+        "sha256": "2f1a6259ffe837c277bc8490e715da48473fd37b3a33908c98984f2d76103c55"
+      },
+      {
+        "dependency": "sqlite3",
+        "release_tag": "sqlite3-3.32.3-r2",
+        "sha256": "c33f2d94582040256e1fd23dfd1b171effd94fffae663b70fefcf9985ec26752"
+      },
+      {
+        "dependency": "mbedtls",
+        "release_tag": "mbedtls-3.5.2-r3",
+        "sha256": "e2f7f8bf7a1622b1ba5dbdedf0b0ded31fc35c4f778ecec3653113e5cd9edace"
+      },
+      {
+        "dependency": "axtls",
+        "release_tag": "axtls-2.1.5-tc.1-r2",
+        "sha256": "a32215d46e958a26bf4fd28f187e630c9774439df733904140fc61d4864e0aa2"
+      },
+      {
+        "dependency": "qrcodegen",
+        "release_tag": "qrcodegen-20250123-r2",
+        "sha256": "1049dd43c5f8bdfca838fc42dba0a60b081b0a1038f93d154981b2343d811245"
+      },
+      {
+        "dependency": "skia",
+        "release_tag": "skia-158dc9d7-r8",
+        "sha256": "f2a6158c3df3eb00fc115a14d727f9000b2bd738f031ed06b6c62179a6135238"
+      },
+      {
+        "dependency": "sdl2",
+        "release_tag": "sdl2-2.32.8-r2",
+        "sha256": "8d3de2df500ca93758e6d23d194d71ed6c45efa05511142b18abcbfe9f94372a"
+      },
+      {
+        "dependency": "zlib-ng",
+        "release_tag": "zlib-ng-2.1.6-r3",
+        "sha256": "70e853fcb0f9076daf5f9fd3568a29db592bba23c36a507c2a7bc5563d8099bf"
+      },
+      {
+        "dependency": "minizip-ng",
+        "release_tag": "minizip-ng-4.2.2-r3",
+        "sha256": "422be7d951e7a6cb52735f40c44b7563eeaa424e81e4ceb89838513f464363f9"
+      },
+      {
+        "dependency": "libpng",
+        "release_tag": "libpng-1.6.48-r3",
+        "sha256": "77fef3c328fb41d21a8dec3b3017fc094a1ee3e8ec2d3afe8fa457e2e5cecee6"
+      },
+      {
+        "dependency": "libjpeg-turbo",
+        "release_tag": "libjpeg-turbo-3.1.4.1-r2",
+        "sha256": "bd06daeda96981c3903ce516ab0194453edee4d9b189c2ac98a1a22146eca47e"
+      },
+      {
+        "dependency": "sqlite3",
+        "release_tag": "sqlite3-3.32.3-r2",
+        "sha256": "50c01442426452c6e39eb79c2c598b8f94807295d416d9a1490207d377cba3ac"
+      },
+      {
+        "dependency": "mbedtls",
+        "release_tag": "mbedtls-3.5.2-r3",
+        "sha256": "fe5e7e7dfa6b020db28ee7144ed9adfd93ebe15307c7dbd95d8e0821fdd403c5"
+      },
+      {
+        "dependency": "axtls",
+        "release_tag": "axtls-2.1.5-tc.1-r2",
+        "sha256": "9704e9e5e4b476ec0d206d4c092738d893d39aba3a4732ffd2cfea554b1f519a"
+      },
+      {
+        "dependency": "qrcodegen",
+        "release_tag": "qrcodegen-20250123-r2",
+        "sha256": "053c6f5ed89304a1cb2de7dc2b9cb506438f41174397be4efc748ad3c5c2b09e"
+      },
+      {
+        "dependency": "skia",
+        "release_tag": "skia-158dc9d7-r8",
+        "sha256": "06be713f925efd86a0c34b189ea2c291f245e43fd38c4a047286c95be35a568d"
+      },
+      {
+        "dependency": "zlib-ng",
+        "release_tag": "zlib-ng-2.1.6-r3",
+        "sha256": "7fd87ec244306299e8ba54421a85d575f8ec8f59d309b88fe111a6ca7dbf0a81"
+      },
+      {
+        "dependency": "minizip-ng",
+        "release_tag": "minizip-ng-4.2.2-r3",
+        "sha256": "64b09c09e0719d5d5e12f69940c17834c0e29eecf6e07d26cd2c78d2c7950185"
+      },
+      {
+        "dependency": "libpng",
+        "release_tag": "libpng-1.6.48-r3",
+        "sha256": "0f2ac0ff44fd1ac6dc0a451502d5c60601e0fe11bdac71b640bd79eb73ab98e8"
+      },
+      {
+        "dependency": "libjpeg-turbo",
+        "release_tag": "libjpeg-turbo-3.1.4.1-r2",
+        "sha256": "28d13d6b33d890e6ff55f050507d73fb626110419f28debe6e3b870ca286b2e4"
+      },
+      {
+        "dependency": "sqlite3",
+        "release_tag": "sqlite3-3.32.3-r2",
+        "sha256": "cb6fcd8a191f9df36d68f07aca2a10ce784c02f4be6f52f19bbc82bdfabcf6d8"
+      },
+      {
+        "dependency": "mbedtls",
+        "release_tag": "mbedtls-3.5.2-r3",
+        "sha256": "b2a483b6275b4feef6a0cf2021cf35eae1bc7c9cdbe03c7e59db0f9f284dd3fa"
+      },
+      {
+        "dependency": "axtls",
+        "release_tag": "axtls-2.1.5-tc.1-r2",
+        "sha256": "dfb3c308a10c4be28554c4cc1ed5b2fdcfefc5da9ca668850568d6e9f04f1e34"
+      },
+      {
+        "dependency": "qrcodegen",
+        "release_tag": "qrcodegen-20250123-r2",
+        "sha256": "fc186ab68d5e38e2ff4685d463f3678eb760777d6ed2bcf4f4de19a39d55bc7d"
+      },
+      {
+        "dependency": "skia",
+        "release_tag": "skia-158dc9d7-r8",
+        "sha256": "6be1ca62729ea0d1d8b1b28b678add4a9a204fded126e1f4dc4df1ba38aa0700"
+      },
+      {
+        "dependency": "skia-shared",
+        "release_tag": "skia-158dc9d7-r8",
+        "sha256": "75d3749ce633ad92abbe035722f1f740346c5d70d073c1ac9a26807e4d0a6948"
+      },
+      {
+        "dependency": "minizip-ng",
+        "release_tag": "minizip-ng-4.2.2-r3",
+        "sha256": "0b701a8d738b67e165286be973a4615efa00f9029956368faf58f84765c7df86"
+      },
+      {
+        "dependency": "minizip-ng",
+        "release_tag": "minizip-ng-4.2.2-r3",
+        "sha256": "61393adf071aacdd3dc27d34d4efa80ff9e4407d66ce390c70b40d7553919c9d"
+      },
+      {
+        "dependency": "minizip-ng",
+        "release_tag": "minizip-ng-4.2.2-r3",
+        "sha256": "dd9a0797bbb87c31c70a32f5983b551cd8b36a266916cbe6f61331599c2d1324"
+      },
+      {
+        "dependency": "axtls",
+        "release_tag": "axtls-2.1.5-tc.1-r2",
+        "sha256": "2f2b12b3a56ff1f451023412436432f162f79b52a13b0a98d248f3782d6762f0"
+      },
+      {
+        "dependency": "axtls",
+        "release_tag": "axtls-2.1.5-tc.1-r2",
+        "sha256": "ed8cd6ceded1dae6e08bb81c28ef612a0a675380fbcb6d8a4824c2dd63377cda"
+      },
+      {
+        "dependency": "axtls",
+        "release_tag": "axtls-2.1.5-tc.1-r2",
+        "sha256": "f6585b555cc2f3a0373458298bd694f31bee597919cd1dbf85c48ac908ade670"
+      }
+    ],
+    "workflowArtifact": {
+      "runId": 45978158503,
+      "id": 15187074937,
+      "digest": "sha256:32f287687f0beab78902c9e1b847e1815543b1cdfd7f36df5549cff1bd8cabc9"
+    }
+  },
+  "sourceCommit": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+  "sourceTree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+  "conditionalRealpathShim": true,
+  "pngFixtureBlocker": "The unmodified and shimmed Linux image decoder rejected the tiny PNG at stage 3; I02 tracks this decoder behavior.",
+  "baseline": {
+    "status": "BASELINE_OBSERVED",
+    "exitCode": 0,
+    "imageFixtureFormat": "jpeg",
+    "imageFixtureSha256": "2f3259c72424d54b5ad1914b51e6671aae694e6c2bdb09e2c48de2214ae39ff6",
+    "ownershipMismatches": 6046,
+    "highestCompletedStage": 7,
+    "drawPixelRgb": 16646144,
+    "renderedPngSha256": "9529c34b55b1fc91b27346b48fd63b1ad893eb7485f5daf9371fcad5ecccb54f"
+  },
+  "correctedCandidate": {
+    "status": "PASS",
+    "exitCode": 0,
+    "imageFixtureFormat": "jpeg",
+    "imageFixtureSha256": "2f3259c72424d54b5ad1914b51e6671aae694e6c2bdb09e2c48de2214ae39ff6",
+    "ownershipMismatches": 0,
+    "highestCompletedStage": 7,
+    "drawPixelRgb": 16646144,
+    "renderedPngSha256": "9529c34b55b1fc91b27346b48fd63b1ad893eb7485f5daf9371fcad5ecccb54f",
+    "assertions": {
+      "status": "PASS",
+      "diagnosticMode": "fixed",
+      "imageFixtureFormat": "jpeg",
+      "screenCycles": 2,
+      "controlsPerCycle": 1510,
+      "distinctImagesPerCycle": 1510,
+      "ownershipMismatches": 0,
+      "highestCompletedStage": 7,
+      "drawPixelRgb": 16646144,
+      "png": "image-ownership-render.png",
+      "ownersAfterDetach": 0,
+      "directParentsPreserved": true,
+      "mutationsWhileDetached": true,
+      "ownersRestoredAfterReattach": true,
+      "activeReparentOwnerCount": 1,
+      "activeReparentCachePreserved": true,
+      "maxSharedOwners": 3,
+      "rasterRetainedUntilFinalOwner": true,
+      "pipelineReplacementOwners": 3,
+      "cacheReusedWhileOwned": true,
+      "cacheEvictedAfterDetach": true
+    }
+  },
+  "evidenceOrigin": "CAMPAIGN_HOSTED_ACTIONS_CONDITIONAL"
+}

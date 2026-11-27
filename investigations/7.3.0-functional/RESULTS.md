@@ -6,6 +6,8 @@ and provenance record. I03 priority API runs are recorded for Android API 29,
 30, 35, and 36; API 30 lifecycle follow-ups are also recorded. I04 is
 inconclusive on API 30. I05 recorded one destroyed-mutex abort during shutdown
 in ten clean file-I/O cycles; the native stack and mutex owner remain unknown.
+I08 completed its official/candidate filesystem matrix on Android API 29, 30,
+35, and 36, including a separate foreign-file permission control.
 
 ## Imported historical evidence
 
@@ -83,6 +85,14 @@ in ten clean file-I/O cycles; the native stack and mutex owner remain unknown.
   completed in hosted run 45989644203. Their full case results, artifacts, and
   compact markers are under `evidence/I07/`. The local API 36 Android record is
   [here](evidence/I07/android-api36-arm64.json).
+- **I08, Android API 29/30/35/36 ARM64:** PASS for filesystem CRUD on private,
+  app-specific external, and app-created shared paths for official 7.3.0 and
+  candidate 94af. The separate host-seeded foreign file passed after candidate
+  API 29 permission grant; API 30 requested READ only, while APIs 35/36 denied
+  foreign access without a legacy prompt. App-created shared-path success is
+  not treated as foreign-file authorization. See the
+  [I08 report](reports/I08-android-storage.md) and
+  [machine evidence](evidence/I08/android-storage-matrix.json).
 - **I01-B, Linux x86_64:** official 7.3.0 and frozen master failed before
   startup on all four tested path forms, including short paths. Official 7.2.2
   is inconclusive as a realpath control: three cases failed in dynamic loading;
@@ -92,5 +102,5 @@ in ten clean file-I/O cycles; the native stack and mutex owner remain unknown.
   rejected during construction. Other platforms remain untested.
 
 No production source was changed. I03 repeated requests and corrected-candidate
-validation remain explicitly unrun. I08/I09/I10, I11, remaining provenance,
-and the final report remain pending.
+validation remain explicitly unrun. I09/I10, I11, remaining provenance, and the
+final report remain pending.

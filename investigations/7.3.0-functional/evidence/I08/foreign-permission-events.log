@@ -1,0 +1,38 @@
+[API29 candidate denied]
+11-27 09:36:07.918   378   396 I ActivityTaskManager: START u0 {act=android.content.pm.action.REQUEST_PERMISSIONS pkg=com.google.android.permissioncontroller cmp=com.google.android.permissioncontroller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity (has extras)} from uid 10150
+11-27 09:36:08.546   378   405 I ActivityTaskManager: Displayed com.google.android.permissioncontroller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity: +602ms
+11-27 09:36:28.357  2516  2516 V GrantPermissionsActivity: Logged buttons presented and clicked permissionGroupName=android.permission-group.STORAGE uid=10150 package=totalcross.appzmtw presentedButtons=9 clickedButton=8
+11-27 09:36:28.398  2516  2516 V GrantPermissionsActivity: Permission grant result requestId=1047183339299344723 callingUid=10150 callingPackage=totalcross.appzmtw permission=android.permission.READ_EXTERNAL_STORAGE isImplicit=false result=6
+11-27 09:36:28.398  2516  2516 V GrantPermissionsActivity: Permission grant result requestId=1047183339299344723 callingUid=10150 callingPackage=totalcross.appzmtw permission=android.permission.WRITE_EXTERNAL_STORAGE isImplicit=false result=6
+11-27 09:36:28.695  6237  6263 I TotalCross: TC_I08 case=shared-existing-foreign status=OBSERVED_DENIAL details=totalcross.io.IOException:Error Code: 13 - Permission denied
+11-27 09:36:28.737  6237  6263 I TotalCross: TC_I08_RESULT {"revision":"candidate-94af","completed":0,"denied":0,"failures":0,"foreignPassed":0,"foreignDenied":1,"mode":"foreign-only"}
+
+[API29 candidate granted on retry]
+11-27 09:36:36.605   378   715 I ActivityTaskManager: START u0 {act=android.content.pm.action.REQUEST_PERMISSIONS pkg=com.google.android.permissioncontroller cmp=com.google.android.permissioncontroller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity (has extras)} from uid 10150
+11-27 09:36:37.191   378   405 I ActivityTaskManager: Displayed com.google.android.permissioncontroller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity: +568ms
+11-27 09:36:42.663  2516  2516 V GrantPermissionsActivity: Logged buttons presented and clicked permissionGroupName=android.permission-group.STORAGE uid=10150 package=totalcross.appzmtw presentedButtons=25 clickedButton=1
+11-27 09:36:43.017  2516  2516 V GrantPermissionsActivity: Permission grant result requestId=-479813137310415378 callingUid=10150 callingPackage=totalcross.appzmtw permission=android.permission.READ_EXTERNAL_STORAGE isImplicit=false result=4
+11-27 09:36:43.018  2516  2516 V GrantPermissionsActivity: Permission grant result requestId=-479813137310415378 callingUid=10150 callingPackage=totalcross.appzmtw permission=android.permission.WRITE_EXTERNAL_STORAGE isImplicit=false result=4
+11-27 09:36:43.452  6347  6371 I TotalCross: TC_I08 case=shared-existing-foreign status=PASS details=size=29;read=29;listed=true
+11-27 09:36:43.488  6347  6371 I TotalCross: TC_I08_RESULT {"revision":"candidate-94af","completed":0,"denied":0,"failures":0,"foreignPassed":1,"foreignDenied":0,"mode":"foreign-only"}
+
+[API29 official pregranted]
+11-27 09:38:50.050  6536  6560 I TotalCross: TC_I08 case=shared-existing-foreign status=PASS details=size=29;read=29;listed=true
+11-27 09:38:50.053  6536  6560 I TotalCross: TC_I08_RESULT {"revision":"official-730","completed":0,"denied":0,"failures":0,"foreignPassed":1,"foreignDenied":0,"mode":"foreign-only"}
+
+[API30 candidate denied]
+11-27 09:37:18.201   500 11432 I ActivityTaskManager: START u0 {act=android.content.pm.action.REQUEST_PERMISSIONS pkg=com.google.android.permissioncontroller cmp=com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity (has extras)} from uid 10191
+11-27 09:37:21.274   500   525 D ArtManagerInternalImpl: /data/misc/iorapd/com.google.android.permissioncontroller/300900706/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity/compiled_traces/compiled_trace.pb doesn't exist
+11-27 09:37:21.277   500   525 I ActivityTaskManager: Displayed com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity: +3s9ms
+11-27 09:37:24.150  3352  3352 V GrantPermissionsActivity: Logged buttons presented and clicked permissionGroupName=android.permission-group.STORAGE uid=10191 package=totalcross.appzmtw presentedButtons=9 clickedButton=8 sessionId=-7285808642781746350
+11-27 09:37:24.473  3352  3352 V GrantPermissionsActivity: Permission grant result requestId=-7285808642781746350 callingUid=10191 callingPackage=totalcross.appzmtw permission=android.permission.READ_EXTERNAL_STORAGE isImplicit=false result=6
+11-27 09:37:25.144 12615 12640 I TotalCross: TC_I08 case=shared-existing-foreign status=OBSERVED_DENIAL details=totalcross.io.IOException:Error Code: 13 - Permission denied
+11-27 09:37:25.215 12615 12640 I TotalCross: TC_I08_RESULT {"revision":"candidate-94af","completed":0,"denied":0,"failures":0,"foreignPassed":0,"foreignDenied":1,"mode":"foreign-only"}
+
+[API35 candidate denied]
+11-27 09:38:15.285  4876  4897 I TotalCross: TC_I08 case=shared-existing-foreign status=OBSERVED_DENIAL details=totalcross.io.IOException:Error Code: 13 - Permission denied
+11-27 09:38:15.319  4876  4897 I TotalCross: TC_I08_RESULT {"revision":"candidate-94af","completed":0,"denied":0,"failures":0,"foreignPassed":0,"foreignDenied":1,"mode":"foreign-only"}
+
+[API36 candidate denied]
+11-27 09:38:09.838  6123  6141 I TotalCross: TC_I08 case=shared-existing-foreign status=OBSERVED_DENIAL details=totalcross.io.IOException:Error Code: 13 - Permission denied
+11-27 09:38:09.842  6123  6141 I TotalCross: TC_I08_RESULT {"revision":"candidate-94af","completed":0,"denied":0,"failures":0,"foreignPassed":0,"foreignDenied":1,"mode":"foreign-only"}

@@ -1,0 +1,14 @@
+--------- beginning of main
+11-27 09:30:10.527  4367  4367 I TotalCross: Updating application totalcross.appzmtw...
+11-27 09:30:16.097  4367  4408 I TotalCross: TC_I08 startup revision=candidate-94af appPath=/data/user/0/totalcross.appzmtw
+11-27 09:30:16.270  4367  4408 I TotalCross: TC_I08 case=private state=BEGIN root=/data/user/0/totalcross.appzmtw/i08-candidate-94af-private
+11-27 09:30:16.351  4367  4408 I TotalCross: TC_I08 case=private resolvedFilePath=/data/user/0/totalcross.appzmtw/i08-candidate-94af-private/case/data.bin
+11-27 09:30:16.500  4367  4408 I TotalCross: TC_I08 case=private status=PASS details=bytes=32;size=32;attributes=1;modified=09:30:16 AM
+11-27 09:30:16.515  4367  4408 I TotalCross: TC_I08 case=app-specific-external state=BEGIN root=/sdcard/Android/data/totalcross.appzmtw/files/i08-candidate-94af
+11-27 09:30:16.537  4367  4408 I TotalCross: /sdcard0: /storage/emulated/0 (valid)
+11-27 09:30:16.559  4367  4408 I TotalCross: TC_I08 case=app-specific-external resolvedFilePath=/sdcard/Android/data/totalcross.appzmtw/files/i08-candidate-94af/case/data.bin
+11-27 09:30:16.656  4367  4408 I TotalCross: TC_I08 case=app-specific-external status=PASS details=bytes=46;size=46;attributes=1;modified=09:30:16 AM
+11-27 09:30:16.684  4367  4408 I TotalCross: TC_I08 case=shared-external state=BEGIN root=/sdcard/Download/i08-candidate-94af
+11-27 09:30:17.024  4367  4408 I TotalCross: TC_I08 case=shared-external resolvedFilePath=/sdcard/Download/i08-candidate-94af/case/data.bin
+11-27 09:30:17.313  4367  4408 I TotalCross: TC_I08 case=shared-external status=PASS details=bytes=40;size=40;attributes=1;modified=09:30:17 AM
+11-27 09:30:17.338  4367  4408 I TotalCross: TC_I08_RESULT {"revision":"candidate-94af","completed":3,"denied":0,"failures":0,"foreignPassed":0,"foreignDenied":0,"mode":"files-only"}

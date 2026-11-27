@@ -88,6 +88,11 @@ provenance, proposed issue updates, and a consolidated report.
   all seven stages with the JPEG decoder control; baseline recorded 6,046
   mismatches and corrected source recorded zero. Normal Linux startup remains
   blocked under I01-B.
+- [x] 2026-11-27: I08 completed on API 29/30/35/36 ARM64 host-GPU emulators.
+  Official 7.3.0 and candidate 94af passed all nine filesystem operations on
+  three storage roots at every API. A foreign-file control confirmed API 29
+  denial/grant recovery, API 30's READ-only prompt, and no legacy prompt on
+  APIs 35/36. App-created shared files were kept distinct from foreign access.
 - [x] Milestone 0: provenance, legacy-port review, historical evidence import,
   harness/workflow contract, and CI/emulator capability checks are complete.
 - [x] Milestone 1: Linux realpath startup (I01-B) and PNG decode (I02) runtime

@@ -3,12 +3,14 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
-- Last completed platform checkpoint: I07 passed on Windows I386, Linux x86_64
-  conditionally, macOS ARM64, and Android API 36 ARM64. I06 passed on Windows
-  I386 and completed its Linux ownership assertions conditionally.
-- Shared Android probe sources: `dd3a916`.
+- Last completed platform checkpoint: I08 passed on Android API 29/30/35/36
+  ARM64 for official 7.3.0 and candidate 94af. I07 passed on Windows I386,
+  Linux x86_64 conditionally, macOS ARM64, and Android API 36 ARM64. I06 passed
+  on Windows I386 and completed its Linux ownership assertions conditionally.
+- Shared Android probe source SHA-256:
+  `c65d09b87873db63016ba3a209ac453f49a1cf038c0dbdd88a34bb36581f172b`.
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
-- Active milestone: 3 — Image functional validation
+- Active milestone: 4 — Filesystem and SQLite
 - Previous campaign checkpoint: `1a602fa` (native build retry findings)
 - Previous evidence checkpoint: `42008b9`
 - Production source edits: none
@@ -156,6 +158,13 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   macOS skipped only its read-only device path. The Android API 36 host-GPU run
   identifies the Apple M1 Pro. Full results and compact markers are committed
   under `evidence/I07/`.
+- I08 passed all nine filesystem operations on private, app-specific external,
+  and app-created shared storage for official 7.3.0 and candidate 94af on API
+  29/30/35/36. A host-seeded foreign-file control confirmed candidate API 29
+  denial followed by successful permission-granted retry; API 30 requested
+  READ only, and APIs 35/36 denied foreign access without a legacy prompt. The
+  manifest does not declare MANAGE_EXTERNAL_STORAGE. Results and compact logs
+  are in `reports/I08-android-storage.md` and `evidence/I08/`.
 - Built the candidate Android release AAB and ran I07 on the hardware-accelerated
   API 36 ARM64 emulator. All 16 reported cases passed, with zero failures,
   skips, or native crashes. The host GPU log identifies the Apple M1 Pro. The
@@ -168,7 +177,7 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
 
 ## Pending investigations
 
-PR #567 historical JavaSE/macOS/Android ownership evidence verification, I08,
+PR #567 historical JavaSE/macOS/Android ownership evidence verification,
 I09, I10, I11, remaining provenance, proposed issue updates, and final
 consolidation. I03 repeated requests and corrected-candidate validation remain
 explicitly unrun because no candidate is available and the first denied
@@ -176,9 +185,9 @@ transition already reproduces the crash.
 
 ## Next concrete action
 
-Verify whether PR #567's JavaSE, macOS ARM64, and Android ARM64 ownership claims
-have durable artifacts and assertions that can be imported. Then begin I08 on
-the available hardware-accelerated API 29/30/35/36 ARM64 emulators. I07 is
+Begin I09 with the exact official and candidate Android ARM64 runtimes: cover
+private persistence, shared-path permission denial/grant/re-denial, SQLite
+error codes, read-only and corrupt controls, and `integrity_check`. I08 is
 complete; Linux I06 remains explicitly conditional on the test-only startup
 shim. Do not run Windows AMD64.
 

@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "investigationId": "I08",
+  "executionDate": "2026-11-27",
+  "environment": {
+    "hostArchitecture": "arm64",
+    "hostGpu": "Apple M1 Pro",
+    "devices": [
+      {"serial": "emulator-5580", "apiLevel": 29, "androidRelease": "10", "abi": "arm64-v8a", "renderer": "OpenGL ES 2.0"},
+      {"serial": "emulator-5554", "apiLevel": 30, "androidRelease": "11", "abi": "arm64-v8a", "renderer": "OpenGL ES 3.0"},
+      {"serial": "emulator-5582", "apiLevel": 35, "androidRelease": "15", "abi": "arm64-v8a", "renderer": "OpenGL ES 3.0"},
+      {"serial": "emulator-5556", "apiLevel": 36, "androidRelease": "16", "abi": "arm64-v8a", "renderer": "OpenGL ES 3.0"}
+    ],
+    "application": {
+      "minSdk": 24,
+      "targetSdk": 36,
+      "declaredPermissions": ["WRITE_EXTERNAL_STORAGE"],
+      "platformAddedPermissionsObserved": ["READ_EXTERNAL_STORAGE"],
+      "requestLegacyExternalStorage": true,
+      "declaresManageExternalStorage": false
+    }
+  },
+  "revisions": {
+    "official-730": {
+      "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+      "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+      "arm64LibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+      "filesOnlyApkSha256": "40fb89ea93908efd45b5d6c0db01db020da0d7a3a97aba3fbc83dab622e8404e",
+      "foreignOnlyApkSha256": "99f5e91defc731b2ee758d78c1d8b612cef0caecd25ca46889ad8b0c56eb23f3"
+    },
+    "candidate-94af": {
+      "sourceRevision": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+      "sdkJarSha256": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d",
+      "arm64LibtcvmSha256": "57ec070728ce6362a4ed32c06e05122a4bbdc29d4468dc4630c94d33db029215",
+      "filesOnlyApkSha256": "6ac9c2b1f08a9d51e93401aed0ada1294dac374fcc75f124f0bf1c005bf2664a",
+      "foreignOnlyApkSha256": "fe21ec8ec4ba21ec7f231a35190208690b5f5840c7b7a6af49d6b8c8b78ed675"
+    }
+  },
+  "probe": {
+    "sourcePath": "investigations/7.3.0-functional/cases/android-storage/Main.java",
+    "sourceSha256": "c65d09b87873db63016ba3a209ac453f49a1cf038c0dbdd88a34bb36581f172b",
+    "foreignFixturePath": "investigations/7.3.0-functional/cases/android-storage/fixtures/tc730-i08-foreign-control.txt",
+    "foreignFixtureSha256": "0a1b80a8f26a7d6040de19593030a66097b6a2136a876e03d6f4d54f70ddddcb",
+    "foreignFixtureBytes": 29,
+    "operations": [
+      "create-directory", "create-file", "write", "metadata", "list", "rename", "read", "delete-file", "delete-directory"
+    ]
+  },
+  "fileCrudMatrix": [
+    {"apiLevel": 29, "revision": "official-730", "status": "PASS", "completedScopes": 3, "failures": 0, "readWritePermissions": "granted", "evidencePath": "api29-official-730-files-only.log"},
+    {"apiLevel": 29, "revision": "candidate-94af", "status": "PASS", "completedScopes": 3, "failures": 0, "readWritePermissions": "granted", "evidencePath": "api29-candidate-94af-files-only.log"},
+    {"apiLevel": 30, "revision": "official-730", "status": "PASS", "completedScopes": 3, "failures": 0, "readWritePermissions": "denied", "evidencePath": "api30-official-730-files-only.log"},
+    {"apiLevel": 30, "revision": "candidate-94af", "status": "PASS", "completedScopes": 3, "failures": 0, "readWritePermissions": "denied", "evidencePath": "api30-candidate-94af-files-only.log"},
+    {"apiLevel": 35, "revision": "official-730", "status": "PASS", "completedScopes": 3, "failures": 0, "readWritePermissions": "denied", "evidencePath": "api35-official-730-files-only.log"},
+    {"apiLevel": 35, "revision": "candidate-94af", "status": "PASS", "completedScopes": 3, "failures": 0, "readWritePermissions": "denied", "evidencePath": "api35-candidate-94af-files-only.log"},
+    {"apiLevel": 36, "revision": "official-730", "status": "PASS", "completedScopes": 3, "failures": 0, "readWritePermissions": "denied", "evidencePath": "api36-official-730-files-only.log"},
+    {"apiLevel": 36, "revision": "candidate-94af", "status": "PASS", "completedScopes": 3, "failures": 0, "readWritePermissions": "denied", "evidencePath": "api36-candidate-94af-files-only.log"}
+  ],
+  "foreignFileAuthorization": [
+    {
+      "apiLevel": 29,
+      "revision": "candidate-94af",
+      "initialState": "READ and WRITE revoked",
+      "deniedAttempt": "PermissionController returned result=6 for both permissions; foreign read/list failed with EACCES and the probe emitted OBSERVED_DENIAL",
+      "recoveryAttempt": "After a new app invocation, Allow returned result=4 for both permissions; the 29-byte foreign fixture read and directory listing passed",
+      "status": "PASS",
+      "evidencePath": "foreign-permission-events.log"
+    },
+    {
+      "apiLevel": 29,
+      "revision": "official-730",
+      "initialState": "READ and WRITE granted",
+      "result": "The host-seeded foreign fixture read and directory listing passed",
+      "status": "PASS",
+      "evidencePath": "foreign-permission-events.log"
+    },
+    {
+      "apiLevel": 30,
+      "revision": "candidate-94af",
+      "initialState": "READ and WRITE revoked; MANAGE_EXTERNAL_STORAGE app-op ignored",
+      "result": "One PermissionController request for READ_EXTERNAL_STORAGE was denied (result=6); no WRITE_EXTERNAL_STORAGE request was issued; foreign read/list failed with EACCES",
+      "status": "PASS",
+      "observationClass": "EXPECTED_DENIAL_NO_LEGACY_LOOP",
+      "evidencePath": "foreign-permission-events.log",
+      "screenshotPath": "api30-media-permission-dialog.png"
+    },
+    {
+      "apiLevel": 35,
+      "revision": "candidate-94af",
+      "initialState": "READ and WRITE revoked; MANAGE_EXTERNAL_STORAGE and legacy app-ops ignored",
+      "result": "Foreign read/list failed with EACCES; no permission dialog or PermissionController request was observed",
+      "status": "PASS",
+      "observationClass": "EXPECTED_DENIAL_NO_LEGACY_LOOP",
+      "evidencePath": "foreign-permission-events.log"
+    },
+    {
+      "apiLevel": 36,
+      "revision": "candidate-94af",
+      "initialState": "READ and WRITE revoked; MANAGE_EXTERNAL_STORAGE and legacy app-ops ignored",
+      "result": "Foreign read/list failed with EACCES; no permission dialog or PermissionController request was observed",
+      "status": "PASS",
+      "observationClass": "EXPECTED_DENIAL_NO_LEGACY_LOOP",
+      "evidencePath": "foreign-permission-events.log"
+    }
+  ],
+  "findings": [
+    "All three CRUD roots passed on both SDK revisions at all four API levels.",
+    "Shared files created by this app remain accessible on APIs 30+ with READ/WRITE denied; that does not establish access to pre-existing content owned outside the app.",
+    "The deployed manifest does not declare MANAGE_EXTERNAL_STORAGE. Broad foreign-file access on API 30+ is therefore unavailable in this package; API 30 requests only READ_EXTERNAL_STORAGE and APIs 35/36 issue no legacy prompt.",
+    "The corrected candidate's API 29 File permission recovery reaches a successful later read after a user grant. The first denied attempt terminates as a permission error rather than retrying without a permission change."
+  ],
+  "limitations": [
+    "The Android runner reports activity launch success but not the application process exit status; each run had startup and completion markers, and pidof found no app process after completion.",
+    "API levels 24 and 31 were not run; they are conditional in the investigation plan.",
+    "This probe tests filesystem access only; SQLite native-open authorization is a separate investigation (I09)."
+  ]
+}

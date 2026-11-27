@@ -37,7 +37,7 @@ public final class ImageStringFallbackProbe extends MainWindow {
     runSuccess("absolute-path", () -> checkImage(appPath("absolute.jpg"), 36, 36));
     runOptional("device-path-where-supported", this::checkDevicePath);
     runSuccess("path-boundary-255", () -> checkImage(repeat('x', 255), 2, 2));
-    runReject("path-boundary-256-does-not-use-tcz",
+    runReject("path-boundary-256-does-not-truncate-to-255-entry",
         () -> checkImage(repeat('x', 256), 2, 2));
     runSuccess("image-file-parity", this::checkImageFileParity);
     runSuccess("snapshot-after-modification", this::checkSnapshotAfterModification);

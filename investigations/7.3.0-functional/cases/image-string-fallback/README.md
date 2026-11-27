@@ -13,7 +13,8 @@ decoder result.
 The probe covers relative and absolute filesystem paths, a device path when the
 runtime exposes one, TCZ-only loading, filesystem fallback, TCZ precedence when
 both copies exist, malformed and empty TCZ entries without fallback, missing,
-invalid, and empty filesystem files, 255/256-character TCZ path boundaries,
+invalid, and empty filesystem files, a 255-character TCZ entry and a
+256-character lookup that must not truncate to that entry,
 `Image(File)` pixel parity, snapshots after the backing file changes, and the
 native persistent-owner count while an `ImageControl` attaches and detaches.
 

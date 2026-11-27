@@ -58,6 +58,18 @@ in ten clean file-I/O cycles; the native stack and mutex owner remain unknown.
   issue #432; no remote issue was edited.
 - **I06 Windows Win32/I386:** PASS for the Windows target; overall I06 remains
   pending its required Linux x86_64 validation.
+- **I06 Linux x86_64:** INCOMPLETE. Hosted run 45978158503 compiled and
+  deployed the baseline ownership probe, but the runtime aborted with exit 134
+  and `*** buffer overflow detected ***` before the first application marker
+  on Ubuntu 22.04/glibc 2.35. No ownership assertions ran. The runtime hashes
+  match the I01-B build with the captured `__realpath_chk -> startVM` stack;
+  evidence and source identities are recorded in
+  [the Linux I06 record](evidence/I06/linux-x86_64-45978158503.json). A
+  conditional shimmed continuation is planned, and any resulting pass will
+  remain conditional on the Linux startup workaround.
+- **I07 `Image(String)` fallback:** NOT_RUN. The probe and branch-push workflow
+  are prepared; Windows I386 and Linux/macOS hosted runs plus a local Android
+  ARM64 emulator run are pending.
 - **I01-B, Linux x86_64:** official 7.3.0 and frozen master failed before
   startup on all four tested path forms, including short paths. Official 7.2.2
   is inconclusive as a realpath control: three cases failed in dynamic loading;

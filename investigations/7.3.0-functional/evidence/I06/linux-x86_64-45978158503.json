@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "investigationId": "I06",
+  "platform": "linux-x86_64",
+  "status": "INCOMPLETE",
+  "workflow": {
+    "repository": "TotalCross/totalcross-performance-lab",
+    "runId": 45978158503,
+    "runUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45978158503",
+    "jobId": 140436912079,
+    "jobUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45978158503/job/140436912079",
+    "conclusion": "failure"
+  },
+  "runner": {
+    "image": "ubuntu-22.04",
+    "architecture": "x86_64",
+    "glibc": "2.35"
+  },
+  "bundleArtifact": {
+    "runId": 45978158503,
+    "id": 15187074937,
+    "name": "tc730-linux-frozen-master-bundle",
+    "digest": "sha256:32f287687f0beab78902c9e1b847e1815543b1cdfd7f36df5549cff1bd8cabc9"
+  },
+  "sources": {
+    "baseline": {
+      "commit": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+      "tree": "44047160610b7efcb3d49768736af95bde19f85f",
+      "sdkJarSha256": "ad28e5c5770c95849a3ca41caa3c9175d9c82edf48921e05ba0bd2df4d224ab0"
+    },
+    "candidate": {
+      "commit": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+      "tree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+      "sdkJarSha256": "381a99b8835069e64d2e079c9796446992f2f8eed8fac236270c142e14ee64ee"
+    },
+    "totalCrossVmSubtree": "7b288d4f732a01c9e87ad5290b628cad7e56c513",
+    "generatedNativeBridgeInputsSha256": "27f29ddfd1378665b58936ff859ba8c1725e9a8770cd2cddf0c783343fc9fb24",
+    "candidateVmSubtreeMatchesBaseline": true,
+    "candidateNativeBridgeInputsMatchBaseline": true
+  },
+  "runtime": {
+    "sourceCommit": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+    "sourceTree": "44047160610b7efcb3d49768736af95bde19f85f",
+    "libtcvmSha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4",
+    "launcherSha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166",
+    "buildImage": "totalcross/linux-amd64:v1.0.7",
+    "depotToolsRevision": "0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a"
+  },
+  "probe": {
+    "compile": "PASS",
+    "deploy": "PASS",
+    "preparedExecutableSha256": "319f17274a023db60f94c7d726a9b1c192c226da99319d4d1cceccd081b5fd50",
+    "processExitCode": 134,
+    "timeout": false,
+    "applicationMarker": false,
+    "assertionCasesExecuted": 0,
+    "failureMessage": "*** buffer overflow detected ***; Aborted",
+    "failureClass": "Linux startup blocker; ownership behavior was not reached"
+  },
+  "matchingStartupEvidence": {
+    "investigationId": "I01-B",
+    "resultRunId": 45978158503,
+    "stackFromSameRuntimeHashes": "__realpath_chk -> startVM -> executeProgram -> main",
+    "priorReport": "reports/I01-B-linux-realpath.md"
+  },
+  "resultArtifact": {
+    "id": 15187598928,
+    "name": "tc730-linux-image-ownership-results",
+    "sizeBytes": 10038461,
+    "digest": "sha256:60fd5df7d68a53bb875441acad0d67df0e1ea782de794837954ed385d7f06bd5"
+  },
+  "nextAction": "Record this unmodified startup abort, then run baseline and candidate ownership assertions with the existing test-only __realpath_chk shim. Preserve the conditional classification."
+}

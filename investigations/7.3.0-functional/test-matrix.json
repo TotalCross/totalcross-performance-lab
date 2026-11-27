@@ -905,10 +905,10 @@
         "draw-after-mutation",
         "shutdown-with-images"
       ],
-      "status": "NOT_RUN",
+      "status": "INCOMPLETE",
       "scopeStatus": "IN_SCOPE",
-      "evidenceOrigin": "CAMPAIGN_PENDING",
-      "statusRationale": "I06 requires Linux x86_64; its Windows Win32/I386 correction check is independently PASS and retained below.",
+      "evidenceOrigin": "CAMPAIGN_EXECUTED_STARTUP_BLOCKER",
+      "statusRationale": "The Linux ownership job compiled and deployed the baseline probe, then aborted in VM startup with exit 134 before any ownership case. The error matches I01-B. The corrected candidate ownership run remains unexecuted pending a conditional shimmed continuation.",
       "results": [
         {
           "platform": "windows-win32-i386",
@@ -954,7 +954,41 @@
           "limitations": [
             "Existing hosted evidence was reused; this campaign did not dispatch a duplicate Windows run.",
             "Windows host runner is X64; every tested TotalCross PE is verified as I386.",
-            "The required Linux x86_64 I06 execution remains NOT_RUN."
+            "The required Linux x86_64 ownership assertions remain incomplete because startup aborts before the probe."
+          ]
+        },
+        {
+          "platform": "linux-x86_64",
+          "runtimeArchitecture": "x86_64",
+          "sourceRevision": "6b915883dd202f6db891990f6c3af26fb645ecc7 baseline SDK; corrected SDK 94af2b8b653cad509994b5ccf3dbb60ac28ef920 prepared",
+          "sourceTree": "44047160610b7efcb3d49768736af95bde19f85f baseline; candidate tree 539f5b424b6f4593c7d96074d69ff077a38ed361",
+          "status": "INCOMPLETE",
+          "scopeStatus": "IN_SCOPE",
+          "evidenceOrigin": "CAMPAIGN_HOSTED_ACTIONS",
+          "workflowRunId": 45978158503,
+          "workflowJobId": 140436912079,
+          "runner": "ubuntu-22.04; glibc 2.35",
+          "runtimeSourceCommit": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+          "runtimeSourceTree": "44047160610b7efcb3d49768736af95bde19f85f",
+          "runtimeSourceSubtreeMatchesCandidate": true,
+          "nativeBridgeInputsMatchCandidate": true,
+          "runtimeLibrarySha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4",
+          "runtimeLauncherSha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166",
+          "baselineProbe": {
+            "compile": "PASS",
+            "deploy": "PASS",
+            "processExitCode": 134,
+            "applicationMarker": false,
+            "ownershipCasesExecuted": 0,
+            "failureMessage": "*** buffer overflow detected ***; Aborted",
+            "failureClassification": "I01-B Linux VM-startup blocker"
+          },
+          "correctedOwnershipSmoke": "NOT_EXECUTED",
+          "evidencePath": "investigations/7.3.0-functional/evidence/I06/linux-x86_64-45978158503.json",
+          "limitations": [
+            "The unmodified app process aborted before ownership behavior was reached.",
+            "The existing __realpath_chk test-only shim will be used only after preserving this unmodified result.",
+            "A shimmed pass will remain conditional and will not establish an unmodified Linux startup pass."
           ]
         }
       ]

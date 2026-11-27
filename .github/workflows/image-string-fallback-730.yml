@@ -1,0 +1,413 @@
+name: TotalCross 7.3.0 Image(String) fallback validation
+
+on:
+  push:
+    branches:
+      - investigation/totalcross-7.3.0-functional-validation
+    paths:
+      - '.github/workflows/image-string-fallback-730.yml'
+      - 'tools/image_string_fallback_730.py'
+      - 'tools/linux_image_ownership_730.py'
+      - 'tests/functional-validation/totalcross/ui/image/ImageStringFallbackProbe.java'
+      - 'investigations/7.3.0-functional/cases/image-string-fallback/**'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  windows-i386:
+    name: Run I07 on the corrected Windows Win32/I386 runtime
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download the verified corrected SDK and Win32/I386 runtime
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/tc730-i07-sdk-artifact" \
+            "$RUNNER_TEMP/tc730-i07-win32-artifact" \
+            "$RUNNER_TEMP/tc730-i07-sdk-root" \
+            "$RUNNER_TEMP/tc730-i07/windows-i386"
+          gh run download 45884551862 --repo TotalCross/totalcross \
+            --name sdk-build-fixed --dir "$RUNNER_TEMP/tc730-i07-sdk-artifact"
+          gh run download 45907759163 --repo TotalCross/totalcross \
+            --name windows-fixed-win32-runtime \
+            --dir "$RUNNER_TEMP/tc730-i07-win32-artifact"
+          tar -xzf "$RUNNER_TEMP/tc730-i07-sdk-artifact/sdk-build.tar.gz" \
+            -C "$RUNNER_TEMP/tc730-i07-sdk-root"
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path(os.environ["RUNNER_TEMP"])
+          expected = {
+              "commit": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+              "tree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+          }
+          sdk = json.loads((root / "tc730-i07-sdk-root/build-provenance.json").read_text())
+          runtime = json.loads((root / "tc730-i07-win32-artifact/build-provenance.json").read_text())
+          manifest = json.loads((root / "tc730-i07-win32-artifact/win32-build-manifest.json").read_text())
+          for label, identity in (("SDK", sdk), ("Win32 runtime", runtime)):
+              source = identity.get("source", {})
+              if source.get("commit") != expected["commit"] or source.get("tree") != expected["tree"]:
+                  raise SystemExit(label + " source provenance does not match I07 candidate")
+          if manifest.get("configuration") != "Visual Studio 17 2022; Win32; Release":
+              raise SystemExit("Win32 runtime is not the production Win32 Release build")
+          if manifest.get("graphics") != {
+              "gles": False, "legacyRenderer": False, "nativeWindowing": False,
+              "sdlWindowing": True, "skia": True, "softwareSurface": True,
+          }:
+              raise SystemExit("Win32 runtime rendering configuration differs from production")
+          provenance = {
+              "sourceCommit": expected["commit"], "sourceTree": expected["tree"],
+              "sdkArtifact": {"runId": 45884551862, "id": 15148184230,
+                              "digest": "sha256:82bfd5bf558dba1bba6a703477fe1feb146d5dae05df84d1d1551baa5db18df8"},
+              "runtimeArtifact": {"runId": 45907759163, "id": 15158467793,
+                                  "digest": "sha256:81c313cf8c6ab83c0a9b722a153f2b13e344358a91c99df806dcd613e64a73ec"},
+              "configuration": manifest["configuration"],
+              "graphics": manifest["graphics"],
+          }
+          (root / "tc730-i07/windows-i386/artifact-provenance.json").write_text(
+              json.dumps(provenance, indent=2) + "\n")
+          print("Verified corrected SDK and production Win32/I386 runtime provenance")
+          PY
+
+      - name: Prepare and run the I07 probe
+        shell: bash
+        env:
+          RESULT_DIR: ${{ runner.temp }}/tc730-i07/windows-i386
+        run: |
+          set -euo pipefail
+          python3 tools/image_string_fallback_730.py prepare \
+            --platform windows \
+            --sdk-root "$RUNNER_TEMP/tc730-i07-sdk-root/build/TotalCross" \
+            --native-dir "$RUNNER_TEMP/tc730-i07-win32-artifact" \
+            --source-commit 94af2b8b653cad509994b5ccf3dbb60ac28ef920 \
+            --source-tree 539f5b424b6f4593c7d96074d69ff077a38ed361 \
+            --probe-source-commit "$GITHUB_SHA" --out "$RESULT_DIR"
+          python3 tools/image_string_fallback_730.py run --out "$RESULT_DIR"
+
+      - name: Upload Windows I386 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tc730-i07-windows-win32-i386
+          path: ${{ runner.temp }}/tc730-i07/windows-i386
+          if-no-files-found: warn
+          retention-days: 30
+
+  linux-x86_64:
+    name: Run I06 and I07 with the frozen Linux runtime
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: tc730-linux-frozen-master-bundle
+          path: ${{ runner.temp }}/tc730-linux-bundle
+          repository: TotalCross/totalcross-performance-lab
+          run-id: 45978158503
+          github-token: ${{ github.token }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install the headless Linux runtime
+        run: sudo apt-get update && sudo apt-get install -y xvfb libsdl2-2.0-0 libgl1 libegl1 libgles2 libglu1-mesa libx11-6 libxext6 libxrender1 libfontconfig1
+
+      - name: Verify Linux source and runtime equivalence
+        env:
+          BUNDLE_DIR: ${{ runner.temp }}/tc730-linux-bundle
+          RESULT_DIR: ${{ runner.temp }}/tc730-i07/linux-x86_64
+        run: |
+          set -euo pipefail
+          mkdir -p "$RESULT_DIR"
+          jq -e '.sourceSha == "6b915883dd202f6db891990f6c3af26fb645ecc7" and .totalCrossVmTree == "7b288d4f732a01c9e87ad5290b628cad7e56c513"' \
+            "$BUNDLE_DIR/build-identity.json" >/dev/null
+          jq -e '.sourceSha == "94af2b8b653cad509994b5ccf3dbb60ac28ef920" and .totalCrossVmTree == "7b288d4f732a01c9e87ad5290b628cad7e56c513" and .nativeSourceTreeMatchesBaseline == true and .nativeBridgeInputsMatchBaseline == true' \
+            "$BUNDLE_DIR/corrected-sdk-build-identity.json" >/dev/null
+          cp "$BUNDLE_DIR/build-identity.json" "$RESULT_DIR/frozen-master-build-identity.json"
+          cp "$BUNDLE_DIR/corrected-sdk-build-identity.json" "$RESULT_DIR/corrected-sdk-build-identity.json"
+          cp "$BUNDLE_DIR/native-toolchain.txt" "$RESULT_DIR/native-toolchain.txt"
+          cp "$BUNDLE_DIR/build-identity.json" "$RESULT_DIR/runtime-provenance.json"
+          python3 - "$RESULT_DIR/runtime-provenance.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          path = Path(sys.argv[1])
+          identity = json.loads(path.read_text())
+          identity["workflowArtifact"] = {
+              "runId": 45978158503, "id": 15187074937,
+              "digest": "sha256:32f287687f0beab78902c9e1b847e1815543b1cdfd7f36df5549cff1bd8cabc9",
+          }
+          path.write_text(json.dumps(identity, indent=2) + "\n")
+          PY
+          ldd --version | head -n 1 > "$RESULT_DIR/glibc-version.txt"
+          uname -a > "$RESULT_DIR/host.txt"
+
+      - name: Run ownership controls and image fallback on Linux
+        env:
+          BUNDLE_DIR: ${{ runner.temp }}/tc730-linux-bundle
+          RESULT_DIR: ${{ runner.temp }}/tc730-i07/linux-x86_64
+          PROBE_SOURCE_COMMIT: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          baseline_home="$BUNDLE_DIR/TotalCross"
+          fixed_home="$BUNDLE_DIR/Corrected/TotalCross"
+          native_dir="$BUNDLE_DIR/native"
+          vm_tree="$(jq -r .totalCrossVmTree "$BUNDLE_DIR/corrected-sdk-build-identity.json")"
+          bridge_hash="$(jq -r .generatedNativeBridgesSha256 "$BUNDLE_DIR/corrected-sdk-build-identity.json")"
+          baseline_source="$(jq -r .sourceSha "$BUNDLE_DIR/build-identity.json")"
+          baseline_tree="$(jq -r .sourceTree "$BUNDLE_DIR/build-identity.json")"
+          fixed_source="$(jq -r .sourceSha "$BUNDLE_DIR/corrected-sdk-build-identity.json")"
+          fixed_tree="$(jq -r .sourceTree "$BUNDLE_DIR/corrected-sdk-build-identity.json")"
+          shim="$RUNNER_TEMP/realpath-compat-test-only.so"
+          cc -shared -fPIC -O2 -o "$shim" \
+            investigations/7.3.0-functional/cases/linux-startup/realpath-compat-test-only.c
+
+          python3 tools/linux_image_ownership_730.py prepare \
+            --sdk-root "$baseline_home" --native-dir "$native_dir" --mode baseline \
+            --source-commit "$baseline_source" --source-tree "$baseline_tree" \
+            --runtime-source-commit "$baseline_source" --runtime-source-tree "$baseline_tree" \
+            --runtime-source-subtree "$vm_tree" --runtime-native-bridges-sha256 "$bridge_hash" \
+            --runtime-subtree-matches-candidate --probe-source-commit "$PROBE_SOURCE_COMMIT" \
+            --out "$RESULT_DIR/I06/baseline" > "$RESULT_DIR/I06/baseline-prepare.log" 2>&1
+          python3 tools/linux_image_ownership_730.py prepare \
+            --sdk-root "$fixed_home" --native-dir "$native_dir" --mode fixed \
+            --source-commit "$fixed_source" --source-tree "$fixed_tree" \
+            --runtime-source-commit "$baseline_source" --runtime-source-tree "$baseline_tree" \
+            --runtime-source-subtree "$vm_tree" --runtime-native-bridges-sha256 "$bridge_hash" \
+            --runtime-subtree-matches-candidate --probe-source-commit "$PROBE_SOURCE_COMMIT" \
+            --out "$RESULT_DIR/I06/fixed" > "$RESULT_DIR/I06/fixed-prepare.log" 2>&1
+
+          LD_PRELOAD="$shim" python3 tools/linux_image_ownership_730.py run \
+            --mode baseline --out "$RESULT_DIR/I06/baseline" > "$RESULT_DIR/I06/baseline-run.log" 2>&1
+          baseline_status=$?
+          LD_PRELOAD="$shim" python3 tools/linux_image_ownership_730.py run \
+            --mode fixed --out "$RESULT_DIR/I06/fixed" > "$RESULT_DIR/I06/fixed-run.log" 2>&1
+          fixed_status=$?
+
+          python3 tools/image_string_fallback_730.py prepare \
+            --platform linux --sdk-root "$fixed_home" --native-dir "$native_dir" \
+            --source-commit "$fixed_source" --source-tree "$fixed_tree" \
+            --probe-source-commit "$PROBE_SOURCE_COMMIT" \
+            --out "$RESULT_DIR/I07" > "$RESULT_DIR/I07-prepare.log" 2>&1
+          python3 tools/image_string_fallback_730.py run --xvfb --out "$RESULT_DIR/I07" \
+            > "$RESULT_DIR/I07-unmodified-run.log" 2>&1
+          unmodified_status=$?
+          cp "$RESULT_DIR/I07/result.json" "$RESULT_DIR/I07/result-unmodified.json"
+          cp "$RESULT_DIR/I07/runtime.log" "$RESULT_DIR/I07/runtime-unmodified.log"
+          python3 tools/image_string_fallback_730.py run --xvfb --shim "$shim" --out "$RESULT_DIR/I07" \
+            > "$RESULT_DIR/I07-conditional-run.log" 2>&1
+          conditional_status=$?
+
+          python3 - "$RESULT_DIR" "$baseline_status" "$fixed_status" \
+            "$unmodified_status" "$conditional_status" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          root = Path(sys.argv[1])
+          codes = [int(value) for value in sys.argv[2:]]
+          expected = [
+              ("I06/baseline/result.json", "BASELINE_OBSERVED"),
+              ("I06/fixed/result.json", "PASS"),
+          ]
+          for relative, status in expected:
+              path = root / relative
+              if not path.is_file() or json.loads(path.read_text()).get("status") != status:
+                  raise SystemExit("Linux ownership result did not reach " + status)
+          i07 = root / "I07/result.json"
+          if not i07.is_file():
+              raise SystemExit("Linux I07 result record is missing")
+          result = json.loads(i07.read_text())
+          if result.get("status") != "PASS" or not result.get("conditionalRealpathShim"):
+              raise SystemExit("conditional Linux I07 result did not pass")
+          unmodified_path = root / "I07/result-unmodified.json"
+          unmodified_runtime = (root / "I07/runtime-unmodified.log").read_text(errors="replace")
+          if not unmodified_path.is_file():
+              raise SystemExit("unmodified Linux I07 result record is missing")
+          unmodified = json.loads(unmodified_path.read_text())
+          if unmodified.get("status") == "PASS":
+              if codes[2] != 0:
+                  raise SystemExit("unmodified Linux I07 passed in its result but the runner failed")
+          elif (unmodified.get("status") != "INCOMPLETE"
+                or unmodified.get("processExitCode") != 134
+                or codes[2] == 0
+                or "buffer overflow detected" not in unmodified_runtime):
+              raise SystemExit("unmodified Linux startup was blocked for an unexpected reason")
+          if codes[0] or codes[1] or codes[3]:
+              raise SystemExit("one or more Linux ownership or I07 checks failed")
+          print("Linux I06 shimmed controls and I07 conditional assertions passed; unmodified startup evidence retained")
+          PY
+
+      - name: Upload Linux evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tc730-i07-linux-x86_64
+          path: ${{ runner.temp }}/tc730-i07/linux-x86_64
+          if-no-files-found: warn
+          retention-days: 30
+
+  macos-arm64:
+    name: Build and run I07 on macOS ARM64
+    runs-on: xcode-27
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: TotalCross/totalcross
+          ref: 94af2b8b653cad509994b5ccf3dbb60ac28ef920
+          path: product
+          fetch-depth: 1
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download exact SDK, prepared native dependencies, and bridges
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+          RESULT_DIR: ${{ runner.temp }}/tc730-i07/macos-arm64
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/tc730-i07-sdk-artifact" \
+            "$RUNNER_TEMP/tc730-i07-sdk-root" \
+            "$RUNNER_TEMP/tc730-i07-deps-artifact" \
+            "$RUNNER_TEMP/tc730-i07-bridge-artifact" "$RESULT_DIR"
+          gh run download 45884551862 --repo TotalCross/totalcross \
+            --name sdk-build-fixed --dir "$RUNNER_TEMP/tc730-i07-sdk-artifact"
+          gh run download 45884551862 --repo TotalCross/totalcross \
+            --name prepared-native-dependencies-fixed \
+            --dir "$RUNNER_TEMP/tc730-i07-deps-artifact"
+          gh run download 45884551862 --repo TotalCross/totalcross \
+            --name native-bridges-fixed \
+            --dir "$RUNNER_TEMP/tc730-i07-bridge-artifact"
+          tar -xzf "$RUNNER_TEMP/tc730-i07-sdk-artifact/sdk-build.tar.gz" \
+            -C "$RUNNER_TEMP/tc730-i07-sdk-root"
+          tar -xzf "$RUNNER_TEMP/tc730-i07-deps-artifact/depot-tools-native-dependencies.tar.gz" \
+            -C product
+          mkdir -p product/TotalCrossSDK/build/generated/native-bridges
+          cp -a "$RUNNER_TEMP/tc730-i07-bridge-artifact"/. \
+            product/TotalCrossSDK/build/generated/native-bridges/
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path(os.environ["RUNNER_TEMP"])
+          sdk_identity = json.loads((root / "tc730-i07-sdk-root/build-provenance.json").read_text())
+          expected = ("94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+                      "539f5b424b6f4593c7d96074d69ff077a38ed361")
+          source = sdk_identity.get("source", {})
+          if (source.get("commit"), source.get("tree")) != expected:
+              raise SystemExit("SDK artifact provenance does not match candidate source")
+          archive = root / "tc730-i07-deps-artifact/depot-tools-native-dependencies.tar.gz"
+          digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+          if digest != "252691d3709d238e9228f20409dfab496e30ae632b45b578a1538b255635754a":
+              raise SystemExit("prepared dependency archive differs from the Win32 build identity")
+          (root / "tc730-i07/macos-arm64/artifact-provenance.json").write_text(
+              json.dumps({"sdkSourceCommit": expected[0], "sdkSourceTree": expected[1],
+                          "sdkArtifact": {"runId": 45884551862, "id": 15148184230,
+                                          "digest": "sha256:82bfd5bf558dba1bba6a703477fe1feb146d5dae05df84d1d1551baa5db18df8"},
+                          "preparedDependenciesRunId": 45884551862,
+                          "preparedDependenciesArtifactId": 15148893237,
+                          "preparedDependenciesSha256": digest,
+                          "preparedDependenciesArtifactDigest": "sha256:d2b007713e7bc374e4b190585efb7156893bf2ab15ae08b121ea865f2f216d1c",
+                          "nativeBridgesRunId": 45884551862,
+                          "nativeBridgesArtifactId": 15147749510,
+                          "nativeBridgesArtifactDigest": "sha256:a977aac5cbf59c355e5c9f178453952113eaf8588579c31a31d9a95e7d7643c8"}, indent=2) + "\n")
+          print("Verified exact candidate SDK and prepared dependency archive")
+          PY
+
+      - name: Export canonical dependency overrides
+        env:
+          SQLITE3_RELEASE_TAG_OVERRIDE: ${{ secrets.SQLITE3_RELEASE_TAG }}
+          SQLITE3_GITHUB_REPO_OVERRIDE: ${{ secrets.SQLITE3_GITHUB_REPO }}
+          ZLIB_NG_RELEASE_TAG_OVERRIDE: ${{ secrets.ZLIB_NG_RELEASE_TAG }}
+          ZLIB_NG_GITHUB_REPO_OVERRIDE: ${{ secrets.ZLIB_NG_GITHUB_REPO }}
+          LIBPNG_RELEASE_TAG_OVERRIDE: ${{ secrets.LIBPNG_RELEASE_TAG }}
+          LIBPNG_GITHUB_REPO_OVERRIDE: ${{ secrets.LIBPNG_GITHUB_REPO }}
+          MBEDTLS_RELEASE_TAG_OVERRIDE: ${{ secrets.MBEDTLS_RELEASE_TAG }}
+          MBEDTLS_GITHUB_REPO_OVERRIDE: ${{ secrets.MBEDTLS_GITHUB_REPO }}
+          SKIA_RELEASE_TAG_OVERRIDE: ${{ secrets.SKIA_RELEASE_TAG }}
+          SKIA_GITHUB_REPO_OVERRIDE: ${{ secrets.SKIA_GITHUB_REPO }}
+        shell: bash
+        run: |
+          for name in SQLITE3_RELEASE_TAG SQLITE3_GITHUB_REPO ZLIB_NG_RELEASE_TAG ZLIB_NG_GITHUB_REPO LIBPNG_RELEASE_TAG LIBPNG_GITHUB_REPO MBEDTLS_RELEASE_TAG MBEDTLS_GITHUB_REPO SKIA_RELEASE_TAG SKIA_GITHUB_REPO; do
+            value_name="${name}_OVERRIDE"
+            if [ -n "${!value_name:-}" ]; then
+              printf '%s=%s\n' "$name" "${!value_name}" >> "$GITHUB_ENV"
+            fi
+          done
+
+      - name: Build the exact ARM64 VM and launcher with the canonical CMake targets
+        working-directory: product
+        run: |
+          test "$(uname -m)" = arm64
+          brew install ninja
+          cmake -S TotalCrossVM -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -G Ninja
+          cmake --build build --target tcvm Launcher --parallel
+          lipo -archs build/libtcvm.dylib | rg -q '(^| )arm64($| )'
+          lipo -archs build/Launcher | rg -q '(^| )arm64($| )'
+
+      - name: Prepare and run the I07 probe
+        env:
+          RESULT_DIR: ${{ runner.temp }}/tc730-i07/macos-arm64
+        run: |
+          set -euo pipefail
+          python3 tools/image_string_fallback_730.py prepare \
+            --platform macos \
+            --sdk-root "$RUNNER_TEMP/tc730-i07-sdk-root/build/TotalCross" \
+            --native-dir product/build \
+            --source-commit 94af2b8b653cad509994b5ccf3dbb60ac28ef920 \
+            --source-tree 539f5b424b6f4593c7d96074d69ff077a38ed361 \
+            --probe-source-commit "$GITHUB_SHA" --out "$RESULT_DIR"
+          python3 tools/image_string_fallback_730.py run --out "$RESULT_DIR"
+
+      - name: Upload macOS ARM64 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tc730-i07-macos-arm64
+          path: ${{ runner.temp }}/tc730-i07/macos-arm64
+          if-no-files-found: warn
+          retention-days: 30

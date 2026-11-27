@@ -3,7 +3,8 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
-- Last completed investigation checkpoint: `357d877` (I04 findings).
+- Last completed investigation checkpoint: `53c552a` (I05 findings); Windows
+  Win32/I386 I06 result is independently verified from run `45907759163`.
 - Shared Android probe sources: `dd3a916`.
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 - Active milestone: 3 — Image functional validation
@@ -128,22 +129,40 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   foreground shutdown was blocked by the I03 EGL crash before the exit control.
   Native stack and mutex owner remain unknown. Proposed update to issue #432 is
   committed as a draft only.
+- Hosted run `45978158503` built and paired frozen-master Linux plus corrected
+  SDK artifacts. The baseline ownership probe compiled and deployed, then
+  aborted before its first application marker with exit 134 and
+  `*** buffer overflow detected ***` on Ubuntu 22.04/glibc 2.35. Its VM and
+  launcher hashes match the I01-B build whose captured stack is
+  `__realpath_chk -> startVM -> executeProgram -> main`. No ownership assertion
+  ran; I06 Linux is INCOMPLETE and classified under I01-B. The bundle and
+  result artifact are indexed in
+  `evidence/I06/linux-x86_64-45978158503.json`.
+- Added the I07 `Image(String)` probe, cross-platform prepare/run harness, and
+  branch-push workflow. It reuses the verified Windows I386 artifacts, the
+  Linux frozen-master bundle, and the exact prepared dependency/bridge artifacts
+  for the canonical macOS ARM64 build. The workflow is statically validated but
+  has not yet been pushed or executed. Android remains a local ARM64 emulator
+  run after building the matching candidate AAB template.
 
 ## Pending investigations
 
-I06 Linux ownership, I07, I08/I09/I10, I11; remaining provenance; proposed
-issue updates; and final consolidation. I03 repeated requests and
+I06 Linux conditional ownership execution, I07 cross-platform execution,
+I08/I09/I10, I11; remaining provenance; proposed issue updates; and final
+consolidation. I03 repeated requests and
 corrected-candidate validation remain explicitly unrun because no candidate is
 available and the first denied transition already reproduces the crash.
 
 ## Next concrete action
 
-Windows Win32/I386 priority validation is complete using verified run
-`45907759163`; do not repeat it while inputs remain unchanged. Linux I01-B/I02
-reports and matrix are consolidated from hosted run `45949849457`. I03/I04/I05
-results are recorded. Start I06 Linux ownership validation using GitHub Actions
-and the committed functional-validation workflow. Linux evidence is at
-`https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457`.
+Commit and push the branch-only I07 workflow to run Windows Win32/I386 using the
+existing corrected runtime, Linux I06/I07 after preserving the unmodified
+startup abort, and the canonical macOS ARM64 build. In parallel, build the
+candidate Android AAB from exact source `94af2b8b653cad509994b5ccf3dbb60ac28ef920`
+in an isolated source archive and execute it on the existing hardware-
+accelerated ARM64 emulator. Do not run Windows AMD64. The unmodified Linux
+startup blocker and artifact hashes are indexed in
+`evidence/I06/linux-x86_64-45978158503.json`.
 
 ## Constraints and blockers
 

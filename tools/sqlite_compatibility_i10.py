@@ -161,9 +161,8 @@ def stage_candidate(sdk_archive, target, runtime_root, destination,
     elif target == "linux-x86_64":
         if runtime_root is None:
             raise RuntimeError("Linux candidate runtime bundle is required")
-        corrected = find_sdk_root(runtime_root / "Corrected")
-        launcher = corrected / "etc/launchers/linux/Launcher"
-        vm = corrected / "dist/vm/linux/libtcvm.so"
+        launcher = runtime_root / "native/Launcher"
+        vm = runtime_root / "native/libtcvm.so"
         copy_runtime_files(sdk_root, "linux", launcher, vm)
     elif target == "android-arm64":
         if official_730_root is None or candidate_apk is None:
@@ -450,7 +449,7 @@ def run_desktop_case(target, build, mode, database_path, out, expected_origin=""
     if mode == "create":
         for suffix in ("", "-wal", "-shm", "-journal"):
             Path(str(database_path) + suffix).unlink(missing_ok=True)
-    if source_file:
+    if source_file and Path(source_file).resolve() != database_path.resolve():
         shutil.copy2(source_file, database_path)
     if wal_file:
         shutil.copy2(wal_file, str(database_path) + "-wal")

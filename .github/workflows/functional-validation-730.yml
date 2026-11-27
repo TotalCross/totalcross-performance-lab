@@ -243,7 +243,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install headless Linux runtime libraries
-        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1 libegl1 libgles2 libglu1-mesa libx11-6 libxext6 libxrender1 libfontconfig1
+        run: sudo apt-get update && sudo apt-get install -y xvfb gdb libsdl2-2.0-0 libgl1 libegl1 libgles2 libglu1-mesa libx11-6 libxext6 libxrender1 libfontconfig1
 
       - name: Fetch and verify official 7.2.2 release package
         env:
@@ -342,6 +342,32 @@ jobs:
             for scenario in long-path symlink; do
               python3 tools/functional_validation_730.py run-startup --install-dir "$install" \
                 --scenario "$scenario" --out "$RESULT_DIR/I01-B/$revision" --work-dir "$RUNNER_TEMP/scenario-work/$revision/$scenario"
+            done
+          done
+
+      - name: Capture native stacks for aborted Linux startups
+        env:
+          RESULT_DIR: ${{ runner.temp }}/tc730-results
+        run: |
+          ulimit -c 0
+          for revision in 7.2.2 7.3.0 frozen-master; do
+            for scenario in normal-path short-path long-path symlink; do
+              result="$RESULT_DIR/I01-B/$revision/$scenario/result.json"
+              process_rc="$(jq -r '.observed.processReturnCode // empty' "$result")"
+              if [ "$process_rc" = 134 ]; then
+                runtime_dir="$(jq -r '.observed.workingDirectory' "$result")"
+                launch_path="$(jq -r '.observed.launchPath' "$result")"
+                (
+                  cd "$runtime_dir"
+                  xvfb-run -a env "LD_LIBRARY_PATH=$runtime_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+                    gdb --batch --quiet \
+                      -ex 'set pagination off' \
+                      -ex 'set debuginfod enabled off' \
+                      -ex run \
+                      -ex 'thread apply all bt' \
+                      --args "$launch_path"
+                ) > "$RESULT_DIR/I01-B/$revision/$scenario/gdb-stack.log" 2>&1 || true
+              fi
             done
           done
 

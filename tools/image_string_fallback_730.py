@@ -178,7 +178,7 @@ def prepare(args: argparse.Namespace) -> dict:
         archive.write(FIXTURES / "tcz-small.jpg", "precedence.jpg")
         archive.writestr("malformed.jpg", bytes((1, 2, 3, 4, 5, 6)))
         archive.writestr("empty-tcz.jpg", b"")
-        archive.write(FIXTURES / "filesystem-large.jpg", "x" * 255)
+        archive.write(FIXTURES / "tcz-small.jpg", "x" * 255)
 
     deployed = out / "deployed"
     deployed.mkdir()

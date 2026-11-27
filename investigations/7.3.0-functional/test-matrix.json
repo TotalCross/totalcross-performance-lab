@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "campaign": "TotalCross 7.3.0 functional validation",
+  "updatedAt": "2026-11-27",
+  "statusDefinitions": [
+    "PASS",
+    "FAIL",
+    "REGRESSION",
+    "PREEXISTING",
+    "BLOCKED",
+    "NOT_REPRODUCED",
+    "INCONCLUSIVE",
+    "OUT_OF_SCOPE",
+    "NOT_RUN"
+  ],
+  "records": [
+    {
+      "investigationId": "I01-B",
+      "title": "Linux realpath startup abort",
+      "requiredPlatforms": ["linux-x86_64"],
+      "requiredRevisions": ["official-7.2.2", "official-7.3.0", "frozen-master"],
+      "scenarios": ["normal-path", "short-path", "long-path", "symlink", "realpath-shim-conditional"],
+      "status": "NOT_RUN",
+      "scopeStatus": "IN_SCOPE",
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": []
+    },
+    {
+      "investigationId": "I02",
+      "title": "Linux PNG decoding failure and controls",
+      "requiredPlatforms": ["windows-win32-i386", "linux-x86_64", "macos-arm64", "android-arm64-emulator"],
+      "requiredScenarios": ["image-file-png", "image-byte-array-png", "tcz-png", "alpha-png", "indexed-png", "jpeg-positive", "invalid-image-negative", "force-pixel-materialization"],
+      "status": "NOT_RUN",
+      "scopeStatus": "IN_SCOPE",
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": []
+    },
+    {
+      "investigationId": "I03",
+      "title": "Android Skia/EGL lifecycle crash",
+      "requiredPlatforms": ["android-arm64-emulator"],
+      "priorityApiLevels": [29, 30, 35, 36],
+      "conditionalApiLevels": [24, 31],
+      "requiredScenarios": ["pregranted", "grant-in-flow", "deny", "settings-return-unchanged", "repeated-requests", "background-foreground", "rotation-transition"],
+      "status": "NOT_RUN",
+      "scopeStatus": "IN_SCOPE",
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": []
+    },
+    {
+      "investigationId": "I04",
+      "title": "Android File.writeBytes SIGABRT",
+      "requiredPlatforms": ["android-arm64-emulator"],
+      "legacyPortCheck": "PENDING",
+      "requiredScenarios": ["normal-write", "failed-open", "after-close", "denied-authorization", "permission-recovery", "invalid-path", "controlled-shutdown", "controlled-write-close-race"],
+      "status": "NOT_RUN",
+      "scopeStatus": "CONDITIONAL_ON_4X_PORT_CHECK",
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": []
+    },
+    {
+      "investigationId": "I05",
+      "title": "Android native shutdown SIGABRT",
+      "requiredPlatforms": ["android-arm64-emulator"],
+      "legacyPortCheck": "PENDING",
+      "maxIntermittentRepetitions": 10,
+      "requiredScenarios": ["normal-exit", "exit-during-file-io", "exit-during-sqlite", "exit-after-permission-request", "exit-after-background-transition", "exit-with-worker-threads", "repeated-init-termination"],
+      "status": "NOT_RUN",
+      "scopeStatus": "CONDITIONAL_ON_4X_PORT_CHECK",
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": []
+    },
+    {
+      "investigationId": "I06",
+      "title": "ImageDrawingBridge ownership correction",
+      "requiredPlatforms": ["linux-x86_64"],
+      "historicalPlatformsToImport": ["javase", "windows-win32-i386", "macos-arm64", "android-arm64-api36"],
+      "requiredScenarios": ["baseline-and-candidate", "shared-image", "replacement", "owner-removal", "ancestor-detach", "reattach", "reparent", "repeat-create-dispose", "gc-while-owned", "resource-release", "draw-after-mutation", "shutdown-with-images"],
+      "status": "NOT_RUN",
+      "scopeStatus": "IN_SCOPE",
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": [
+        {
+          "platform": "windows-win32-i386",
+          "runtimeArchitecture": "I386",
+          "sourceRevision": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+          "status": "PASS",
+          "scopeStatus": "IN_SCOPE",
+          "evidenceOrigin": "HISTORICAL",
+          "campaignExecution": "NOT_RUN",
+          "workflowRunId": 45907759163,
+          "evidenceUrl": "https://github.com/TotalCross/totalcross/actions/runs/45907759163",
+          "assertions": "Two 1,510-control screens, detach release, all seven stages, zero mismatches, red pixel 16711680; see committed Windows evidence report.",
+          "limitations": ["Imported evidence; not executed by this campaign."]
+        }
+      ]
+    },
+    {
+      "investigationId": "I07",
+      "title": "Image(String) filesystem fallback",
+      "requiredPlatforms": ["windows-win32-i386", "linux-x86_64", "macos-arm64", "android-arm64-emulator"],
+      "requiredScenarios": ["filesystem-only", "tcz-only", "both-tcz-precedence", "malformed-tcz-no-fallback", "empty-tcz", "missing-filesystem", "invalid-filesystem", "empty-filesystem", "absolute-path", "relative-path", "device-path-where-supported", "path-boundaries", "image-file-parity", "snapshot-after-modification", "native-ownership"],
+      "status": "NOT_RUN",
+      "scopeStatus": "IN_SCOPE",
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": []
+    },
+    {
+      "investigationId": "I08",
+      "title": "Android filesystem permission recovery",
+      "requiredPlatforms": ["android-arm64-emulator"],
+      "priorityApiLevels": [29, 30, 35, 36],
+      "conditionalApiLevels": [24, 31],
+      "storageScopes": ["application-private", "app-specific-external", "shared-external"],
+      "operations": ["create-file", "create-directory", "read", "write", "list", "metadata", "rename", "delete-file", "delete-directory"],
+      "authorizationStates": ["pregranted", "initially-denied", "granted-during-recovery", "denied-during-recovery"],
+      "status": "NOT_RUN",
+      "scopeStatus": "IN_SCOPE",
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": []
+    },
+    {
+      "investigationId": "I09",
+      "title": "Android SQLite permission recovery",
+      "requiredPlatforms": ["android-arm64-emulator"],
+      "status": "NOT_RUN",
+      "scopeStatus": "IN_SCOPE",
+      "requiredScenarios": ["private-create-open", "authorized-shared-create-open", "denied-open", "grant-during-open", "deny-during-open", "readonly", "invalid-or-corrupt", "close-reopen", "restart-persistence", "integrity-check"],
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": []
+    },
+    {
+      "investigationId": "I10",
+      "title": "SQLite compatibility and customer-reported error",
+      "requiredPlatforms": ["windows-win32-i386", "linux-x86_64", "macos-arm64", "android-arm64-emulator"],
+      "requiredRevisions": ["official-7.2.2", "official-7.3.0", "corrected-candidate"],
+      "requiredScenarios": ["external-sqlite-origin", "generated-by-7.2.2", "generated-by-7.3.0", "cross-platform-transfer", "application-update-persistence", "wal-consistent-snapshot", "invalid-database-negative"],
+      "status": "NOT_RUN",
+      "scopeStatus": "IN_SCOPE",
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": []
+    },
+    {
+      "investigationId": "I11",
+      "title": "Restricted release workflow validation",
+      "requiredPlatforms": ["windows-win32-i386", "linux-x86_64", "macos-arm64", "sdk-host"],
+      "requiredScenarios": ["sdk-build", "native-build", "sdk-packaging", "artifact-inventory", "version-consistency", "versioned-release-notes", "dry-run", "no-tag", "no-release", "no-maven-publication"],
+      "prohibitedPlatforms": ["windows-amd64", "ios", "android-runtime-actions"],
+      "status": "NOT_RUN",
+      "scopeStatus": "IN_SCOPE",
+      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "results": []
+    },
+    {
+      "investigationId": "WINDOWS-AMD64-STARTUP",
+      "title": "Windows AMD64 early startup failure",
+      "requiredPlatforms": [],
+      "status": "PREEXISTING",
+      "defectClassification": "PREEXISTING",
+      "scopeStatus": "OUT_OF_SCOPE",
+      "evidenceOrigin": "HISTORICAL",
+      "campaignExecution": "NOT_RUN",
+      "relatedPullRequest": "https://github.com/TotalCross/totalcross/pull/567",
+      "limitations": ["No claim that the defect was fixed or that its root cause is known."]
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-11-27",
+  "repositories": {
+    "product": "https://github.com/TotalCross/totalcross",
+    "investigation": "https://github.com/TotalCross/totalcross-performance-lab",
+    "investigationBranch": "investigation/totalcross-7.3.0-functional-validation",
+    "investigationBase": "fe23e009fa2fcdbf8c36746cea58b9946a138858"
+  },
+  "references": [
+    {
+      "name": "TotalCross master at campaign snapshot",
+      "repository": "TotalCross/totalcross",
+      "branch": "master",
+      "sourceSha": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+      "verifiedFromGitHub": true,
+      "notes": "Current branch API confirmed this SHA during campaign preparation."
+    },
+    {
+      "name": "ImageDrawingBridge ownership implementation",
+      "repository": "TotalCross/totalcross",
+      "sourceSha": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+      "pullRequest": 567,
+      "pullRequestHead": "926e964841ac64dca172a648bce1ffcc6d60d153",
+      "pullRequestState": "open",
+      "baseBranch": "master",
+      "baseSha": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+      "productionFileEquivalence": "Verified byte-for-byte for the complete TotalCrossSDK tree by comparing source commit 94af2b8b653cad509994b5ccf3dbb60ac28ef920 with PR head 926e964841ac64dca172a648bce1ffcc6d60d153"
+    },
+    {
+      "name": "Android filesystem and SQLite permission correction",
+      "repository": "TotalCross/totalcross",
+      "pullRequest": 545,
+      "sourceSha": "c7cf79575602f3cc19e107643f0fa39d3e151004",
+      "pullRequestState": "merged",
+      "mergedAt": "2026-11-26T02:45:11Z",
+      "baseBranch": "fix/ios-screen-initialization-pen-coordinates",
+      "baseSha": "8d214a2fa795b0e30bbe553873f7838c73b8d572",
+      "relationshipToFrozenMaster": "PR head diverges from frozen master (merge base 61034a7562e7fa43df076dcc38bcd48128605395); the changed-file comparison includes AndroidPermissionManager.java and NativeDB.c. Exact correction-source comparison remains in progress."
+    },
+    {
+      "name": "Image(String) filesystem fallback correction",
+      "repository": "TotalCross/totalcross",
+      "pullRequest": 565,
+      "sourceSha": "53fa02b36eb51ec9667ad0353c68aa5f3e4fd7a5",
+      "pullRequestState": "merged",
+      "mergedAt": "2026-11-26T02:45:12Z",
+      "baseBranch": "fix/android-sqlite-file-permission-recovery",
+      "baseSha": "c7cf79575602f3cc19e107643f0fa39d3e151004",
+      "relationshipToFrozenMaster": "PR head diverges from frozen master (merge base 61034a7562e7fa43df076dcc38bcd48128605395); the changed-file comparison includes EncodedImageSource.java. Exact correction-source comparison remains in progress."
+    },
+    {
+      "name": "Versioned release notes",
+      "repository": "TotalCross/totalcross",
+      "pullRequest": 539,
+      "sourceSha": "b01262a8f9c096b72522d6e4d2e2448da50cbb32",
+      "pullRequestState": "open",
+      "baseBranch": "fix/android-sqlite-file-permission-recovery",
+      "baseSha": "c7cf79575602f3cc19e107643f0fa39d3e151004"
+    },
+    {
+      "name": "7.3.0 release version bump",
+      "repository": "TotalCross/totalcross",
+      "pullRequest": 538,
+      "sourceSha": "b9efeff51e5515121684a2a00db7bdbdd3aacee6",
+      "pullRequestState": "open",
+      "baseBranch": "ci/versioned-release-notes",
+      "baseSha": "b01262a8f9c096b72522d6e4d2e2448da50cbb32"
+    },
+    {
+      "name": "Historical Windows Win32/I386 ownership validation",
+      "repository": "TotalCross/totalcross",
+      "sourceSha": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+      "workflowRunId": 45907759163,
+      "workflowUrl": "https://github.com/TotalCross/totalcross/actions/runs/45907759163",
+      "workflowConclusion": "success",
+      "correctedSdkArtifactId": 15148184230,
+      "correctedRuntimeArtifactId": 15158467793,
+      "resultsArtifactId": 15158866549,
+      "correctedRuntimePeMachine": "I386",
+      "evidenceOrigin": "HISTORICAL",
+      "campaignExecution": "NOT_RUN"
+    }
+  ],
+  "officialReleases": {
+    "7.2.2": {"tag": "v7.2.2", "sourceSha": null, "sdkArtifact": null, "vmArtifact": null, "status": "GITHUB_RELEASE_FOUND_SOURCE_AND_ARTIFACT_PROVENANCE_PENDING"},
+    "7.3.0": {"tag": null, "sourceSha": null, "sdkArtifact": null, "vmArtifact": null, "status": "NO_GITHUB_RELEASE_OR_TAG_FOUND_ACTION_ARTIFACT_SEARCH_PENDING"}
+  },
+  "dependencies": [],
+  "artifactDigests": [],
+  "toolchains": [],
+  "unknowns": [
+    "Official 7.2.2 source/SDK/VM provenance and any official 7.3.0 Actions artifact identities and hashes; no 7.3.0 GitHub release or tag was found.",
+    "Exact candidate composition that combines the independently stacked PR #545, #565, and #567 corrections.",
+    "Recoverable run, job, and artifact IDs for the imported JavaSE, macOS ARM64, and Android ARM64 ownership evidence.",
+    "Legacy 4.x commits relevant to I04 and I05.",
+    "Exact dependency identities and toolchain versions for each future campaign build."
+  ]
+}

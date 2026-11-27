@@ -111,23 +111,32 @@ jobs:
           SDL2_GITHUB_REPO: ${{ secrets.SDL2_GITHUB_REPO }}
         run: |
           mkdir -p build
+          docker_env_args=(
+            -e SQLITE3_GITHUB_TOKEN -e ZLIB_NG_GITHUB_TOKEN
+            -e MINIZIP_NG_GITHUB_TOKEN
+            -e LIBPNG_GITHUB_TOKEN -e MBEDTLS_GITHUB_TOKEN
+            -e AXTLS_GITHUB_TOKEN -e QRCODEGEN_GITHUB_TOKEN
+            -e LIBJPEG_TURBO_GITHUB_TOKEN -e SKIA_GITHUB_TOKEN
+            -e SDL2_GITHUB_TOKEN
+          )
+          for env_name in \
+            SQLITE3_RELEASE_TAG SQLITE3_GITHUB_REPO \
+            ZLIB_NG_RELEASE_TAG ZLIB_NG_GITHUB_REPO \
+            MINIZIP_NG_RELEASE_TAG MINIZIP_NG_GITHUB_REPO \
+            LIBPNG_RELEASE_TAG LIBPNG_GITHUB_REPO \
+            MBEDTLS_RELEASE_TAG MBEDTLS_GITHUB_REPO \
+            AXTLS_RELEASE_TAG AXTLS_GITHUB_REPO \
+            QRCODEGEN_RELEASE_TAG QRCODEGEN_GITHUB_REPO \
+            LIBJPEG_TURBO_RELEASE_TAG LIBJPEG_TURBO_GITHUB_REPO \
+            SKIA_RELEASE_TAG SKIA_GITHUB_REPO \
+            SDL2_RELEASE_TAG SDL2_GITHUB_REPO
+          do
+            if [ -n "${!env_name:-}" ]; then
+              docker_env_args+=(-e "$env_name")
+            fi
+          done
           docker run --platform linux/amd64 \
-            -e SQLITE3_GITHUB_TOKEN -e ZLIB_NG_GITHUB_TOKEN \
-            -e MINIZIP_NG_GITHUB_TOKEN \
-            -e LIBPNG_GITHUB_TOKEN -e MBEDTLS_GITHUB_TOKEN \
-            -e AXTLS_GITHUB_TOKEN -e QRCODEGEN_GITHUB_TOKEN \
-            -e LIBJPEG_TURBO_GITHUB_TOKEN -e SKIA_GITHUB_TOKEN \
-            -e SDL2_GITHUB_TOKEN \
-            -e SQLITE3_RELEASE_TAG -e SQLITE3_GITHUB_REPO \
-            -e ZLIB_NG_RELEASE_TAG -e ZLIB_NG_GITHUB_REPO \
-            -e MINIZIP_NG_RELEASE_TAG -e MINIZIP_NG_GITHUB_REPO \
-            -e LIBPNG_RELEASE_TAG -e LIBPNG_GITHUB_REPO \
-            -e MBEDTLS_RELEASE_TAG -e MBEDTLS_GITHUB_REPO \
-            -e AXTLS_RELEASE_TAG -e AXTLS_GITHUB_REPO \
-            -e QRCODEGEN_RELEASE_TAG -e QRCODEGEN_GITHUB_REPO \
-            -e LIBJPEG_TURBO_RELEASE_TAG -e LIBJPEG_TURBO_GITHUB_REPO \
-            -e SKIA_RELEASE_TAG -e SKIA_GITHUB_REPO \
-            -e SDL2_RELEASE_TAG -e SDL2_GITHUB_REPO \
+            "${docker_env_args[@]}" \
             -v "$PWD/build:/build" -v "$PWD:/sources" -w /build \
             totalcross/linux-amd64:v1.0.7 bash -lc '
               set -e

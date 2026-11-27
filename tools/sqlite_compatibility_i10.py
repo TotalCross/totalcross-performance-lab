@@ -446,9 +446,11 @@ def run_desktop_case(target, build, mode, database_path, out, expected_origin=""
                      origin="", source_file=None, wal_file=None, shim=None):
     app_dir = Path(build["appDir"])
     database_path = Path(database_path)
-    if mode == "create":
+    if mode in ("create", "invalid"):
         for suffix in ("", "-wal", "-shm", "-journal"):
             Path(str(database_path) + suffix).unlink(missing_ok=True)
+        if mode == "invalid":
+            database_path.mkdir(parents=True)
     if source_file and Path(source_file).resolve() != database_path.resolve():
         shutil.copy2(source_file, database_path)
     if wal_file:
@@ -469,11 +471,20 @@ def run_desktop_case(target, build, mode, database_path, out, expected_origin=""
     log = Path(out) / "runtime.log"
     code = run_command(command, app_dir, log, env, timeout=120)
     text = log.read_text(encoding="utf-8", errors="replace") if log.exists() else ""
+    debug_console = app_dir / "DebugConsole.txt" if target == "windows-i386" else None
+    if debug_console and debug_console.is_file():
+        debug_text = debug_console.read_text(encoding="utf-8", errors="replace")
+        if debug_text:
+            with log.open("a", encoding="utf-8") as stream:
+                stream.write("\n--- DebugConsole.txt ---\n")
+                stream.write(debug_text)
+            text += "\n--- DebugConsole.txt ---\n" + debug_text
     events, result = parse_result(text)
     record = {"target": target, "revision": build["revision"], "mode": mode,
               "processExitCode": code, "completionMarkerObserved": result is not None,
               "events": events, "runtimeLog": str(log),
-              "databasePath": str(database_path)}
+              "databasePath": str(database_path),
+              "debugConsoleLog": str(debug_console) if debug_console else None}
     if result is None:
         record["status"] = "BLOCKED_BEFORE_SQLITE"
         record["failureExcerpt"] = relevant_error(text)
@@ -557,10 +568,15 @@ def run_android_case(serial, build, mode, remote_db, out, expected_origin="", or
     if remove_db:
         files_to_remove.append(remote_db)
     cleanup = adb_command(serial, "shell", "run-as", APP_ID, "sh", "-c",
-                          "rm -f " + " ".join(files_to_remove))
+                          "rm -rf " + " ".join(files_to_remove))
     if cleanup.returncode:
         raise RuntimeError("could not clear Android test database: "
                            + cleanup.stdout.decode(errors="replace")[-500:])
+    if mode == "invalid":
+        make_directory = adb_command(serial, "shell", "run-as", APP_ID, "mkdir", "-p", remote_db)
+        if make_directory.returncode:
+            raise RuntimeError("could not create Android invalid database path: "
+                               + make_directory.stdout.decode(errors="replace")[-500:])
     if source_file:
         android_write(serial, remote_db, Path(source_file).read_bytes())
     if wal_file:
@@ -788,9 +804,8 @@ def suite(args):
 
         invalid_db = out / "invalid" / (revision + ".sqlite")
         invalid_db.parent.mkdir(parents=True, exist_ok=True)
-        invalid_db.write_bytes(b"not-a-sqlite-database;I10-negative-control")
         run = run_case(platform_name, builds, revision, "invalid", invalid_db,
-                       out / "invalid-runs" / revision, source_file=invalid_db,
+                       out / "invalid-runs" / revision,
                        shim=args.linux_shim,
                        adb_serial=args.adb_serial)
         runs.append({"suite":"invalid-database-negative-control", **run})

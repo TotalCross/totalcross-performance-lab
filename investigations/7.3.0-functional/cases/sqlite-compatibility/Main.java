@@ -103,13 +103,27 @@ public final class Main extends MainWindow {
 
   private static void verifyInvalidDatabase(Config config) throws Exception {
     boolean rejected = false;
+    Connection connection = null;
+    Statement statement = null;
+    ResultSet integrity = null;
     try {
-      Connection connection = open(config.databasePath, true);
-      connection.close();
+      connection = open(config.databasePath, true);
+      statement = connection.createStatement();
+      integrity = statement.executeQuery("PRAGMA integrity_check");
+      String answer = integrity.next() ? integrity.getString(1) : "<no-row>";
+      if ("ok".equalsIgnoreCase(answer)) {
+        throw new IllegalStateException("invalid non-SQLite file passed integrity_check");
+      }
+      rejected = true;
+      event("invalid-negative", "EXPECTED_ERROR", "integrityCheck=" + clean(answer));
     } catch (SQLException expected) {
       rejected = true;
       event("invalid-negative", "EXPECTED_ERROR", "reportedErrorCode=" + expected.getErrorCode()
           + ";sqlState=" + clean(expected.getSQLState()) + ";message=" + clean(expected.getMessage()));
+    } finally {
+      if (integrity != null) integrity.close();
+      if (statement != null) statement.close();
+      if (connection != null) connection.close();
     }
     if (!rejected) {
       throw new IllegalStateException("invalid non-SQLite file opened successfully");

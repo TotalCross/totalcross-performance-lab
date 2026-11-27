@@ -65,12 +65,17 @@ jobs:
           import hashlib
           import json
           import sys
+          import tarfile
           from pathlib import Path
 
           root = Path(sys.argv[1])
           expected = ("94af2b8b653cad509994b5ccf3dbb60ac28ef920",
                       "539f5b424b6f4593c7d96074d69ff077a38ed361")
-          sdk = json.loads((root / "inputs/candidate-sdk/build-provenance.json").read_text())
+          with tarfile.open(root / "inputs/candidate-sdk/sdk-build.tar.gz", "r:gz") as archive:
+              sdk_provenance = archive.extractfile("build-provenance.json")
+              if sdk_provenance is None:
+                  raise SystemExit("SDK artifact has no build provenance")
+              sdk = json.load(sdk_provenance)
           runtime = json.loads((root / "inputs/candidate-win32/build-provenance.json").read_text())
           manifest = json.loads((root / "inputs/candidate-win32/win32-build-manifest.json").read_text())
           for name, identity in (("SDK", sdk), ("Win32 runtime", runtime)):

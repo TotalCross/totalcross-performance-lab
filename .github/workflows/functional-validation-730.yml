@@ -1,0 +1,361 @@
+name: TotalCross 7.3.0 Linux functional validation
+
+on:
+  push:
+    branches:
+      - investigation/totalcross-7.3.0-functional-validation
+
+permissions:
+  contents: read
+
+jobs:
+  build-frozen-master:
+    name: Build frozen master Linux package
+    runs-on: ubuntu-22.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out frozen product source
+        uses: actions/checkout@v4
+        with:
+          repository: TotalCross/totalcross
+          ref: 6b915883dd202f6db891990f6c3af26fb645ecc7
+          path: product
+          fetch-depth: 1
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build SDK with the canonical packaging script
+        working-directory: product/scripts
+        run: ./package-sdk.sh
+
+      - name: Fetch pinned native dependencies
+        working-directory: product
+        env:
+          PREPARED_NATIVE_DEPENDENCIES_INDEX: ${{ runner.temp }}/tc730-native-dependencies.jsonl
+          SQLITE3_GITHUB_TOKEN: ${{ secrets.SQLITE3_GITHUB_TOKEN }}
+          ZLIB_NG_GITHUB_TOKEN: ${{ secrets.ZLIB_NG_GITHUB_TOKEN }}
+          MINIZIP_NG_GITHUB_TOKEN: ${{ secrets.MINIZIP_NG_GITHUB_TOKEN }}
+          LIBPNG_GITHUB_TOKEN: ${{ secrets.LIBPNG_GITHUB_TOKEN }}
+          MBEDTLS_GITHUB_TOKEN: ${{ secrets.MBEDTLS_GITHUB_TOKEN }}
+          AXTLS_GITHUB_TOKEN: ${{ secrets.AXTLS_GITHUB_TOKEN }}
+          QRCODEGEN_GITHUB_TOKEN: ${{ secrets.QRCODEGEN_GITHUB_TOKEN }}
+          LIBJPEG_TURBO_GITHUB_TOKEN: ${{ secrets.LIBJPEG_TURBO_GITHUB_TOKEN }}
+          SKIA_GITHUB_TOKEN: ${{ secrets.SKIA_GITHUB_TOKEN }}
+          SDL2_GITHUB_TOKEN: ${{ secrets.SDL2_GITHUB_TOKEN }}
+          SQLITE3_RELEASE_TAG: ${{ secrets.SQLITE3_RELEASE_TAG }}
+          SQLITE3_GITHUB_REPO: ${{ secrets.SQLITE3_GITHUB_REPO }}
+          ZLIB_NG_RELEASE_TAG: ${{ secrets.ZLIB_NG_RELEASE_TAG }}
+          ZLIB_NG_GITHUB_REPO: ${{ secrets.ZLIB_NG_GITHUB_REPO }}
+          MINIZIP_NG_RELEASE_TAG: ${{ secrets.MINIZIP_NG_RELEASE_TAG }}
+          MINIZIP_NG_GITHUB_REPO: ${{ secrets.MINIZIP_NG_GITHUB_REPO }}
+          LIBPNG_RELEASE_TAG: ${{ secrets.LIBPNG_RELEASE_TAG }}
+          LIBPNG_GITHUB_REPO: ${{ secrets.LIBPNG_GITHUB_REPO }}
+          MBEDTLS_RELEASE_TAG: ${{ secrets.MBEDTLS_RELEASE_TAG }}
+          MBEDTLS_GITHUB_REPO: ${{ secrets.MBEDTLS_GITHUB_REPO }}
+          AXTLS_RELEASE_TAG: ${{ secrets.AXTLS_RELEASE_TAG }}
+          AXTLS_GITHUB_REPO: ${{ secrets.AXTLS_GITHUB_REPO }}
+          QRCODEGEN_RELEASE_TAG: ${{ secrets.QRCODEGEN_RELEASE_TAG }}
+          QRCODEGEN_GITHUB_REPO: ${{ secrets.QRCODEGEN_GITHUB_REPO }}
+          LIBJPEG_TURBO_RELEASE_TAG: ${{ secrets.LIBJPEG_TURBO_RELEASE_TAG }}
+          LIBJPEG_TURBO_GITHUB_REPO: ${{ secrets.LIBJPEG_TURBO_GITHUB_REPO }}
+          SKIA_RELEASE_TAG: ${{ secrets.SKIA_RELEASE_TAG }}
+          SKIA_GITHUB_REPO: ${{ secrets.SKIA_GITHUB_REPO }}
+          SDL2_RELEASE_TAG: ${{ secrets.SDL2_RELEASE_TAG }}
+          SDL2_GITHUB_REPO: ${{ secrets.SDL2_GITHUB_REPO }}
+        run: |
+          TotalCrossVM/deps/fetch-depot-tools.sh
+          scripts/prepare-native-dependencies.sh
+
+      - name: Generate native bridge sources
+        working-directory: product/TotalCrossSDK
+        run: ./gradlew-agent generateNativeBridgeSources
+
+      - name: Build Linux VM and launcher with the canonical container
+        working-directory: product
+        env:
+          SQLITE3_GITHUB_TOKEN: ${{ secrets.SQLITE3_GITHUB_TOKEN }}
+          ZLIB_NG_GITHUB_TOKEN: ${{ secrets.ZLIB_NG_GITHUB_TOKEN }}
+          MINIZIP_NG_GITHUB_TOKEN: ${{ secrets.MINIZIP_NG_GITHUB_TOKEN }}
+          LIBPNG_GITHUB_TOKEN: ${{ secrets.LIBPNG_GITHUB_TOKEN }}
+          MBEDTLS_GITHUB_TOKEN: ${{ secrets.MBEDTLS_GITHUB_TOKEN }}
+          AXTLS_GITHUB_TOKEN: ${{ secrets.AXTLS_GITHUB_TOKEN }}
+          QRCODEGEN_GITHUB_TOKEN: ${{ secrets.QRCODEGEN_GITHUB_TOKEN }}
+          LIBJPEG_TURBO_GITHUB_TOKEN: ${{ secrets.LIBJPEG_TURBO_GITHUB_TOKEN }}
+          SKIA_GITHUB_TOKEN: ${{ secrets.SKIA_GITHUB_TOKEN }}
+          SDL2_GITHUB_TOKEN: ${{ secrets.SDL2_GITHUB_TOKEN }}
+          SQLITE3_RELEASE_TAG: ${{ secrets.SQLITE3_RELEASE_TAG }}
+          SQLITE3_GITHUB_REPO: ${{ secrets.SQLITE3_GITHUB_REPO }}
+          ZLIB_NG_RELEASE_TAG: ${{ secrets.ZLIB_NG_RELEASE_TAG }}
+          ZLIB_NG_GITHUB_REPO: ${{ secrets.ZLIB_NG_GITHUB_REPO }}
+          MINIZIP_NG_RELEASE_TAG: ${{ secrets.MINIZIP_NG_RELEASE_TAG }}
+          MINIZIP_NG_GITHUB_REPO: ${{ secrets.MINIZIP_NG_GITHUB_REPO }}
+          LIBPNG_RELEASE_TAG: ${{ secrets.LIBPNG_RELEASE_TAG }}
+          LIBPNG_GITHUB_REPO: ${{ secrets.LIBPNG_GITHUB_REPO }}
+          MBEDTLS_RELEASE_TAG: ${{ secrets.MBEDTLS_RELEASE_TAG }}
+          MBEDTLS_GITHUB_REPO: ${{ secrets.MBEDTLS_GITHUB_REPO }}
+          AXTLS_RELEASE_TAG: ${{ secrets.AXTLS_RELEASE_TAG }}
+          AXTLS_GITHUB_REPO: ${{ secrets.AXTLS_GITHUB_REPO }}
+          QRCODEGEN_RELEASE_TAG: ${{ secrets.QRCODEGEN_RELEASE_TAG }}
+          QRCODEGEN_GITHUB_REPO: ${{ secrets.QRCODEGEN_GITHUB_REPO }}
+          LIBJPEG_TURBO_RELEASE_TAG: ${{ secrets.LIBJPEG_TURBO_RELEASE_TAG }}
+          LIBJPEG_TURBO_GITHUB_REPO: ${{ secrets.LIBJPEG_TURBO_GITHUB_REPO }}
+          SKIA_RELEASE_TAG: ${{ secrets.SKIA_RELEASE_TAG }}
+          SKIA_GITHUB_REPO: ${{ secrets.SKIA_GITHUB_REPO }}
+          SDL2_RELEASE_TAG: ${{ secrets.SDL2_RELEASE_TAG }}
+          SDL2_GITHUB_REPO: ${{ secrets.SDL2_GITHUB_REPO }}
+        run: |
+          mkdir -p build
+          docker run --platform linux/amd64 \
+            -e SQLITE3_GITHUB_TOKEN -e ZLIB_NG_GITHUB_TOKEN \
+            -e MINIZIP_NG_GITHUB_TOKEN \
+            -e LIBPNG_GITHUB_TOKEN -e MBEDTLS_GITHUB_TOKEN \
+            -e AXTLS_GITHUB_TOKEN -e QRCODEGEN_GITHUB_TOKEN \
+            -e LIBJPEG_TURBO_GITHUB_TOKEN -e SKIA_GITHUB_TOKEN \
+            -e SDL2_GITHUB_TOKEN \
+            -e SQLITE3_RELEASE_TAG -e SQLITE3_GITHUB_REPO \
+            -e ZLIB_NG_RELEASE_TAG -e ZLIB_NG_GITHUB_REPO \
+            -e MINIZIP_NG_RELEASE_TAG -e MINIZIP_NG_GITHUB_REPO \
+            -e LIBPNG_RELEASE_TAG -e LIBPNG_GITHUB_REPO \
+            -e MBEDTLS_RELEASE_TAG -e MBEDTLS_GITHUB_REPO \
+            -e AXTLS_RELEASE_TAG -e AXTLS_GITHUB_REPO \
+            -e QRCODEGEN_RELEASE_TAG -e QRCODEGEN_GITHUB_REPO \
+            -e LIBJPEG_TURBO_RELEASE_TAG -e LIBJPEG_TURBO_GITHUB_REPO \
+            -e SKIA_RELEASE_TAG -e SKIA_GITHUB_REPO \
+            -e SDL2_RELEASE_TAG -e SDL2_GITHUB_REPO \
+            -v "$PWD/build:/build" -v "$PWD:/sources" -w /build \
+            totalcross/linux-amd64:v1.0.7 bash -lc '
+              set -e
+              { cmake --version | head -n 1; c++ --version | head -n 1; ninja --version; } > /build/native-toolchain.txt
+              cmake /sources/TotalCrossVM -DCMAKE_BUILD_TYPE=Release -G Ninja
+              ninja
+            '
+
+      - name: Assemble the frozen SDK and native runtime bundle
+        env:
+          BUNDLE_DIR: ${{ runner.temp }}/tc730-linux-bundle
+          SOURCE_SHA: 6b915883dd202f6db891990f6c3af26fb645ecc7
+          DEPENDENCY_INDEX: ${{ runner.temp }}/tc730-native-dependencies.jsonl
+        run: |
+          mkdir -p "$BUNDLE_DIR/TotalCross" "$BUNDLE_DIR/native"
+          cp -a product/build/TotalCross/. "$BUNDLE_DIR/TotalCross/"
+          cp product/build/libtcvm.so "$BUNDLE_DIR/native/libtcvm.so"
+          cp product/build/Launcher "$BUNDLE_DIR/native/Launcher"
+          cp product/build/native-toolchain.txt "$BUNDLE_DIR/native-toolchain.txt"
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          root = Path(os.environ["BUNDLE_DIR"])
+          def sha(path):
+              digest = hashlib.sha256()
+              with path.open("rb") as stream:
+                  for block in iter(lambda: stream.read(1024 * 1024), b""):
+                      digest.update(block)
+              return digest.hexdigest()
+
+          record = {
+              "sourceSha": os.environ["SOURCE_SHA"],
+              "buildImage": "totalcross/linux-amd64:v1.0.7",
+              "depotToolsRevision": subprocess.check_output([
+                  "git", "-C", "product/TotalCrossVM/deps/totalcross-depot-tools",
+                  "rev-parse", "HEAD"], text=True).strip(),
+              "sdkJarSha256": sha(root / "TotalCross/dist/totalcross-sdk.jar"),
+              "linuxLibtcvmSha256": sha(root / "native/libtcvm.so"),
+              "linuxLauncherSha256": sha(root / "native/Launcher"),
+              "nativeToolchainSha256": sha(root / "native-toolchain.txt"),
+              "dependencyIndexSha256": sha(Path(os.environ["DEPENDENCY_INDEX"])),
+              "preparedDependencies": [
+                  {key: item[key] for key in ("dependency", "platform", "arch", "release_tag", "sha256")
+                   if key in item}
+                  for item in (json.loads(line) for line in Path(os.environ["DEPENDENCY_INDEX"]).read_text().splitlines())
+              ],
+          }
+          (root / "build-identity.json").write_text(json.dumps(record, indent=2) + "\n")
+          print(json.dumps(record))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tc730-linux-frozen-master-bundle
+          path: ${{ runner.temp }}/tc730-linux-bundle
+          retention-days: 1
+          if-no-files-found: error
+
+  run-linux-cases:
+    name: Run Linux cases on glibc 2.39
+    needs: build-frozen-master
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: tc730-linux-frozen-master-bundle
+          path: ${{ runner.temp }}/tc730-linux-bundle
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install headless Linux runtime libraries
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1 libegl1 libgles2 libglu1-mesa libx11-6 libxext6 libxrender1 libfontconfig1
+
+      - name: Fetch and verify official 7.2.2 release package
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/tc730-releases"
+          gh release download v7.2.2 --repo TotalCross/totalcross \
+            --pattern TotalCross-7.2.2.zip --dir "$RUNNER_TEMP/tc730-releases"
+          echo 'ba72e64d08874321da9df52b2042e84bee10800723fa97749ce224988b0a0a06  '"$RUNNER_TEMP/tc730-releases/TotalCross-7.2.2.zip" | sha256sum --check
+          sha256sum "$RUNNER_TEMP/tc730-releases/TotalCross-7.2.2.zip" > "$RUNNER_TEMP/tc730-releases/7.2.2-package.sha256"
+
+      - name: Fetch and verify archived official 7.3.0 package artifact
+        env:
+          GH_TOKEN: ${{ secrets.PERFORMANCE_LAB_GH_TOKEN || github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/tc730-releases"
+          gh api repos/TotalCross/totalcross/actions/runs/40878222908 \
+            --jq '{id,head_sha,conclusion}' > "$RUNNER_TEMP/tc730-releases/7.3.0-run-metadata.json"
+          test "$(gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq .head_sha)" = "5464c21e3107e3f1ce9c287b724829e2bb870c1d"
+          test "$(gh api repos/TotalCross/totalcross/actions/runs/40878222908 --jq .conclusion)" = "success"
+          gh api repos/TotalCross/totalcross/actions/artifacts/12899147776 \
+            --jq '{id,name,digest,expired}' > "$RUNNER_TEMP/tc730-releases/7.3.0-artifact-metadata.json"
+          test "$(gh api repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq .name)" = "TotalCross-7.3.0"
+          test "$(gh api repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq .digest)" = "sha256:a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5"
+          test "$(gh api repos/TotalCross/totalcross/actions/artifacts/12899147776 --jq .expired)" = "false"
+          gh api repos/TotalCross/totalcross/actions/artifacts/12899147776/zip > "$RUNNER_TEMP/tc730-releases/7.3.0-artifact.zip"
+          echo 'a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5  '"$RUNNER_TEMP/tc730-releases/7.3.0-artifact.zip" | sha256sum --check
+          sha256sum "$RUNNER_TEMP/tc730-releases/7.3.0-artifact.zip" > "$RUNNER_TEMP/tc730-releases/7.3.0-artifact.sha256"
+
+      - name: Capture runner identity and validate campaign contract
+        env:
+          RESULT_DIR: ${{ runner.temp }}/tc730-results
+        run: |
+          mkdir -p "$RESULT_DIR"
+          python3 tools/functional_validation_730.py validate-config > "$RESULT_DIR/config-validation.json"
+          python3 -m unittest discover -s tests/functional-validation -p 'test_*.py' -v > "$RESULT_DIR/harness-contract-tests.log" 2>&1
+          ldd --version | head -n 1 > "$RESULT_DIR/glibc-version.txt"
+          uname -a > "$RESULT_DIR/host.txt"
+          cp "$RUNNER_TEMP/tc730-linux-bundle/build-identity.json" "$RESULT_DIR/frozen-master-build-identity.json"
+          cp "$RUNNER_TEMP/tc730-linux-bundle/native-toolchain.txt" "$RESULT_DIR/frozen-master-native-toolchain.txt"
+          cp "$RUNNER_TEMP/tc730-releases/7.3.0-artifact-metadata.json" "$RESULT_DIR/official-7.3.0-artifact-metadata.json"
+          cp "$RUNNER_TEMP/tc730-releases/7.3.0-run-metadata.json" "$RESULT_DIR/official-7.3.0-run-metadata.json"
+          cp "$RUNNER_TEMP/tc730-releases/"*.sha256 "$RESULT_DIR/"
+          cat > "$RESULT_DIR/revisions.json" <<'JSON'
+          {
+            "official-7.2.2": {
+              "tag": "v7.2.2",
+              "sourceSha": "153fd11b03ea7004b08d2f61183650faeaf0bc16",
+              "releaseAssetId": 463654239,
+              "packageSha256": "ba72e64d08874321da9df52b2042e84bee10800723fa97749ce224988b0a0a06"
+            },
+            "official-7.3.0": {
+              "sourceSha": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+              "workflowRunId": 40878222908,
+              "artifactId": 12899147776,
+              "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+              "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e"
+            },
+            "frozen-master": {
+              "sourceSha": "6b915883dd202f6db891990f6c3af26fb645ecc7"
+            }
+          }
+          JSON
+
+      - name: Build startup probes for all pinned revisions
+        env:
+          RESULT_DIR: ${{ runner.temp }}/tc730-results
+          BUNDLE_DIR: ${{ runner.temp }}/tc730-linux-bundle
+          RELEASE_DIR: ${{ runner.temp }}/tc730-releases
+        run: |
+          python3 tools/functional_validation_730.py build-probe --kind startup \
+            --package "$RELEASE_DIR/TotalCross-7.2.2.zip" --out "$RUNNER_TEMP/probes/7.2.2-startup"
+          python3 tools/functional_validation_730.py build-probe --kind startup \
+            --package "$RELEASE_DIR/7.3.0-artifact.zip" --out "$RUNNER_TEMP/probes/7.3.0-startup"
+          python3 tools/functional_validation_730.py build-probe --kind startup \
+            --sdk-root "$BUNDLE_DIR/TotalCross" --native-dir "$BUNDLE_DIR/native" \
+            --out "$RUNNER_TEMP/probes/frozen-master-startup"
+          for revision in 7.2.2 7.3.0 frozen-master; do
+            mkdir -p "$RESULT_DIR/build-$revision"
+            cp "$RUNNER_TEMP/probes/$revision-startup/"{compile.log,jar.log,deploy.log,prepared.json} "$RESULT_DIR/build-$revision/"
+          done
+          jq -e '.sdkJarSha256 == "5f6d5c7f6f08f8635aa648497320bf547b310c6a3c9073659421f1167ff0efe4" and .linuxLibtcvmSha256 == "3d8a081d6510e5c2a1e05e38c26b0467180f871af1c5ed0501739bf158341dde" and .linuxLauncherSha256 == "3f8b78f4864681b91cde95443b10a488846b696e62fee1766d071eb7fec3c723"' "$RESULT_DIR/build-7.2.2/prepared.json" > /dev/null
+          jq -e '.sdkJarSha256 == "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475" and .linuxLibtcvmSha256 == "94e823963427a67decdb2aaeb99722e297e375a7d772b438ef85cae1449160fb" and .linuxLauncherSha256 == "444d78555242d1bfd0401967a59430003f6eaa8e602eda53c733f59554794baa"' "$RESULT_DIR/build-7.3.0/prepared.json" > /dev/null
+
+      - name: Run unmodified startup paths
+        env:
+          RESULT_DIR: ${{ runner.temp }}/tc730-results
+        run: |
+          ulimit -c 0
+          for revision in 7.2.2 7.3.0 frozen-master; do
+            install="$RUNNER_TEMP/probes/$revision-startup/deployed/install/linux"
+            python3 tools/functional_validation_730.py run-startup --install-dir "$install" \
+              --scenario normal-path --out "$RESULT_DIR/I01-B/$revision" --work-dir "$RUNNER_TEMP/scenario-work/$revision/normal"
+            python3 tools/functional_validation_730.py run-startup --install-dir "$install" \
+              --scenario short-path --out "$RESULT_DIR/I01-B/$revision" --work-dir "/tmp/tc730-short-$revision"
+            for scenario in long-path symlink; do
+              python3 tools/functional_validation_730.py run-startup --install-dir "$install" \
+                --scenario "$scenario" --out "$RESULT_DIR/I01-B/$revision" --work-dir "$RUNNER_TEMP/scenario-work/$revision/$scenario"
+            done
+          done
+
+      - name: Build and run frozen-master PNG probe without a shim
+        env:
+          RESULT_DIR: ${{ runner.temp }}/tc730-results
+          BUNDLE_DIR: ${{ runner.temp }}/tc730-linux-bundle
+        run: |
+          ulimit -c 0
+          python3 tools/functional_validation_730.py build-probe --kind png \
+            --sdk-root "$BUNDLE_DIR/TotalCross" --native-dir "$BUNDLE_DIR/native" \
+            --out "$RUNNER_TEMP/probes/frozen-master-png"
+          mkdir -p "$RESULT_DIR/build-frozen-master-png"
+          cp "$RUNNER_TEMP/probes/frozen-master-png/"{compile.log,jar.log,deploy.log,prepared.json} "$RESULT_DIR/build-frozen-master-png/"
+          python3 tools/functional_validation_730.py run-png \
+            --install-dir "$RUNNER_TEMP/probes/frozen-master-png/deployed/install/linux" \
+            --out "$RESULT_DIR/I02/frozen-master/unmodified"
+
+      - name: Apply the test-only startup shim only when startup blocked PNG
+        env:
+          RESULT_DIR: ${{ runner.temp }}/tc730-results
+        run: |
+          ulimit -c 0
+          unmodified="$RESULT_DIR/I02/frozen-master/unmodified/result.json"
+          startup_ok="$(python3 -c 'import json,sys; print(str(json.load(open(sys.argv[1]))["observed"]["startupMarker"]).lower())' "$unmodified")"
+          if [ "$startup_ok" = false ]; then
+            cc -shared -fPIC -O2 -o "$RUNNER_TEMP/realpath-compat-test-only.so" \
+              investigations/7.3.0-functional/cases/linux-startup/realpath-compat-test-only.c
+            python3 tools/functional_validation_730.py run-png \
+              --install-dir "$RUNNER_TEMP/probes/frozen-master-png/deployed/install/linux" \
+              --shim "$RUNNER_TEMP/realpath-compat-test-only.so" --ld-debug \
+              --out "$RESULT_DIR/I02/frozen-master/conditional-shim"
+          fi
+
+      - name: Print focused diagnostics on failure
+        if: failure()
+        env:
+          RESULT_DIR: ${{ runner.temp }}/tc730-results
+        run: |
+          find "$RESULT_DIR" -type f \( -name runtime.log -o -name compile.log -o -name deploy.log \) -print -exec tail -n 100 {} \; 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tc730-linux-functional-results
+          path: ${{ runner.temp }}/tc730-results
+          retention-days: 30
+          if-no-files-found: warn

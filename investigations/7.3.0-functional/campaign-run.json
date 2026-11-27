@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "sequence": 1,
+  "platform": "linux-x86_64",
+  "frozenMasterSha": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+  "cases": {
+    "I01-B": {
+      "revisionsToRun": ["official-7.2.2", "official-7.3.0", "frozen-master"],
+      "importedRevision": "official-7.3.0",
+      "scenarios": ["normal-path", "short-path", "long-path", "symlink"]
+    },
+    "I02": {
+      "revisionsToRun": ["frozen-master"],
+      "scenarios": [
+        "image-file-png",
+        "image-byte-array-png",
+        "tcz-png",
+        "alpha-png",
+        "indexed-png",
+        "jpeg-positive",
+        "invalid-image-negative",
+        "force-pixel-materialization"
+      ],
+      "startupShimOrder": ["unmodified-first", "test-only-shim-second"]
+    }
+  },
+  "prohibitedRuntimePlatforms": ["windows-amd64", "ios", "android-actions"]
+}

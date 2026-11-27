@@ -252,6 +252,13 @@ platforms. Record headers, hashes, logical content, SQLite version/options,
 errors, queries, and integrity results. Use synthetic data if the customer DB
 is unavailable; do not claim the exact customer file was validated.
 
+The existing `sqlite-plaintext-7.3.0.yml` covers only official 7.3.0 and also
+contains Android Actions, iOS, and deploy-only jobs that are out of scope here.
+Reuse its SDK/deployer conventions, but keep I10 desktop execution in a narrow
+version-matrix workflow and run Android only on the local ARM64 emulator. The
+alternate workflow can be removed after a canonical version-matrix path
+supports the same platforms without those prohibited jobs.
+
 ### Milestone 5 — Release workflow and closure
 
 **I11:** inspect #538/#539 and canonical release workflows. Validate SDK,

@@ -42,8 +42,9 @@ The official SDK jar and ARM64 VM hashes are
 `bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad`. All
 mode-specific APK hashes are in the [machine record](../evidence/I09/android-sqlite-matrix.json).
 
-The probe source is retained in `cases/android-sqlite/Main.java`. The foreign
-fixture was created by host SQLite 3.54.0, passed `integrity_check`, and
+The probe source is retained in `cases/android-sqlite/Main.java`. Python's host
+SQLite 3.54.1 created the foreign fixture; the separately checked command-line
+SQLite was 3.54.0. The fixture passed `integrity_check` and
 contained the row `host-seeded-i09`; its SHA-256 is
 `5dbfebcca5f40951c322f014d336ac02866a93eaad237b8adf63a4396bd8bbf6`. Both
 TotalCross packages reported embedded SQLite 3.32.3.

@@ -89,6 +89,7 @@
   "sqlite": {
     "embeddedRuntimeVersion": "3.32.3",
     "hostSqliteCliVersion": "3.54.0",
+    "hostPythonSqliteVersion": "3.54.1",
     "foreignFixturePath": "/sdcard/Download/tc730-i09-foreign.sqlite",
     "foreignFixtureSha256": "5dbfebcca5f40951c322f014d336ac02866a93eaad237b8adf63a4396bd8bbf6",
     "foreignFixtureIntegrityCheck": "ok",

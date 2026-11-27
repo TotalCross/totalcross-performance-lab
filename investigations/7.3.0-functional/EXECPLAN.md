@@ -47,8 +47,12 @@ provenance, proposed issue updates, and a consolidated report.
 - [x] 2026-11-27: Compared the historical Linux build source with frozen
   master and confirmed the native VM tree changed; current-master evidence
   requires an exact-source rebuild.
-- [ ] Milestone 0: finish provenance, legacy-port exclusion, historical
-  evidence import, reusable test harness, and CI/emulator capability checks.
+- [x] 2026-11-27: Added deterministic PNG fixtures, Linux startup/PNG probes,
+  a reusable observation harness, and a dedicated-branch Actions workflow.
+  Harness/config checks and Java compilation passed; runtime results are
+  pending the Actions run.
+- [x] Milestone 0: provenance, legacy-port review, historical evidence import,
+  harness/workflow contract, and CI/emulator capability checks are complete.
 - [ ] Milestone 1: investigate Linux realpath startup (I01-B), then PNG decode
   (I02), preserving independent findings.
 - [ ] Milestone 2: investigate Android EGL lifecycle (I03), then I04/I05,
@@ -88,16 +92,16 @@ test, revision bisect, or new crash dump is allowed.
    Windows I386, macOS ARM64, and Android ARM64 evidence where recoverable.
 3. Check legacy TotalCross 4.x for applicable Android `File.writeBytes` and
    shutdown fixes. Exclude I04/I05 only with source-commit evidence.
-4. Reuse the existing case fixtures, define a single dispatchable workflow and
-   adapters, and verify the runner/emulator capabilities. A workflow newly
+4. Reuse the existing case fixtures, define a single branch-triggered workflow
+   and adapters, and verify the runner/emulator capabilities. A workflow newly
    added only on this branch must not depend on `workflow_dispatch`; use a
    dedicated-branch push trigger when an Actions run is required.
 5. Commit the completed provenance inventory and explicit initial matrix before
    starting the full case campaign. A focused branch-only Linux workflow is
    justified because the canonical reusable workflow cannot select Linux
-   alone; reuse its runner image, dependency artifacts, and CMake/Ninja build
-   path, then remove or upstream the focused path when the canonical workflow
-   supports case-scoped platform selection.
+   alone; reuse its runner image, pinned dependency bootstrap, and CMake/Ninja
+   build path, then remove or upstream the focused path when the canonical
+   workflow supports case-scoped platform selection.
 
 ### Milestone 1 — Linux startup and PNG blockers
 

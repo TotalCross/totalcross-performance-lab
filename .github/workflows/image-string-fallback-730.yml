@@ -41,7 +41,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/tc730-i07-sdk-artifact" \
             "$RUNNER_TEMP/tc730-i07-win32-artifact" \
             "$RUNNER_TEMP/tc730-i07-sdk-root" \
-            "$RUNNER_TEMP/tc730-i07/windows-i386"
+            "$RUNNER_TEMP/tc730-i07"
           gh run download 45884551862 --repo TotalCross/totalcross \
             --name sdk-build-fixed --dir "$RUNNER_TEMP/tc730-i07-sdk-artifact"
           gh run download 45907759163 --repo TotalCross/totalcross \
@@ -83,7 +83,7 @@ jobs:
               "configuration": manifest["configuration"],
               "graphics": manifest["graphics"],
           }
-          (root / "tc730-i07/windows-i386/artifact-provenance.json").write_text(
+          (root / "tc730-i07-windows-provenance.json").write_text(
               json.dumps(provenance, indent=2) + "\n")
           print("Verified corrected SDK and production Win32/I386 runtime provenance")
           PY
@@ -101,6 +101,8 @@ jobs:
             --source-commit 94af2b8b653cad509994b5ccf3dbb60ac28ef920 \
             --source-tree 539f5b424b6f4593c7d96074d69ff077a38ed361 \
             --probe-source-commit "$GITHUB_SHA" --out "$RESULT_DIR"
+          cp "$RUNNER_TEMP/tc730-i07-windows-provenance.json" \
+            "$RESULT_DIR/artifact-provenance.json"
           python3 tools/image_string_fallback_730.py run --out "$RESULT_DIR"
 
       - name: Upload Windows I386 evidence
@@ -207,26 +209,38 @@ jobs:
             --runtime-subtree-matches-candidate --probe-source-commit "$PROBE_SOURCE_COMMIT" \
             --out "$RESULT_DIR/I06/fixed" > "$RESULT_DIR/I06/fixed-prepare.log" 2>&1
 
-          LD_PRELOAD="$shim" python3 tools/linux_image_ownership_730.py run \
-            --mode baseline --out "$RESULT_DIR/I06/baseline" > "$RESULT_DIR/I06/baseline-run.log" 2>&1
-          baseline_status=$?
-          LD_PRELOAD="$shim" python3 tools/linux_image_ownership_730.py run \
-            --mode fixed --out "$RESULT_DIR/I06/fixed" > "$RESULT_DIR/I06/fixed-run.log" 2>&1
-          fixed_status=$?
+          if LD_PRELOAD="$shim" python3 tools/linux_image_ownership_730.py run \
+            --mode baseline --out "$RESULT_DIR/I06/baseline" > "$RESULT_DIR/I06/baseline-run.log" 2>&1; then
+            baseline_status=0
+          else
+            baseline_status=$?
+          fi
+          if LD_PRELOAD="$shim" python3 tools/linux_image_ownership_730.py run \
+            --mode fixed --out "$RESULT_DIR/I06/fixed" > "$RESULT_DIR/I06/fixed-run.log" 2>&1; then
+            fixed_status=0
+          else
+            fixed_status=$?
+          fi
 
           python3 tools/image_string_fallback_730.py prepare \
             --platform linux --sdk-root "$fixed_home" --native-dir "$native_dir" \
             --source-commit "$fixed_source" --source-tree "$fixed_tree" \
             --probe-source-commit "$PROBE_SOURCE_COMMIT" \
             --out "$RESULT_DIR/I07" > "$RESULT_DIR/I07-prepare.log" 2>&1
-          python3 tools/image_string_fallback_730.py run --xvfb --out "$RESULT_DIR/I07" \
-            > "$RESULT_DIR/I07-unmodified-run.log" 2>&1
-          unmodified_status=$?
+          if python3 tools/image_string_fallback_730.py run --xvfb --out "$RESULT_DIR/I07" \
+            > "$RESULT_DIR/I07-unmodified-run.log" 2>&1; then
+            unmodified_status=0
+          else
+            unmodified_status=$?
+          fi
           cp "$RESULT_DIR/I07/result.json" "$RESULT_DIR/I07/result-unmodified.json"
           cp "$RESULT_DIR/I07/runtime.log" "$RESULT_DIR/I07/runtime-unmodified.log"
-          python3 tools/image_string_fallback_730.py run --xvfb --shim "$shim" --out "$RESULT_DIR/I07" \
-            > "$RESULT_DIR/I07-conditional-run.log" 2>&1
-          conditional_status=$?
+          if python3 tools/image_string_fallback_730.py run --xvfb --shim "$shim" --out "$RESULT_DIR/I07" \
+            > "$RESULT_DIR/I07-conditional-run.log" 2>&1; then
+            conditional_status=0
+          else
+            conditional_status=$?
+          fi
 
           python3 - "$RESULT_DIR" "$baseline_status" "$fixed_status" \
             "$unmodified_status" "$conditional_status" <<'PY'
@@ -343,7 +357,7 @@ jobs:
           digest = hashlib.sha256(archive.read_bytes()).hexdigest()
           if digest != "252691d3709d238e9228f20409dfab496e30ae632b45b578a1538b255635754a":
               raise SystemExit("prepared dependency archive differs from the Win32 build identity")
-          (root / "tc730-i07/macos-arm64/artifact-provenance.json").write_text(
+          (root / "tc730-i07-macos-provenance.json").write_text(
               json.dumps({"sdkSourceCommit": expected[0], "sdkSourceTree": expected[1],
                           "sdkArtifact": {"runId": 45884551862, "id": 15148184230,
                                           "digest": "sha256:82bfd5bf558dba1bba6a703477fe1feb146d5dae05df84d1d1551baa5db18df8"},
@@ -403,6 +417,8 @@ jobs:
             --source-commit 94af2b8b653cad509994b5ccf3dbb60ac28ef920 \
             --source-tree 539f5b424b6f4593c7d96074d69ff077a38ed361 \
             --probe-source-commit "$GITHUB_SHA" --out "$RESULT_DIR"
+          cp "$RUNNER_TEMP/tc730-i07-macos-provenance.json" \
+            "$RESULT_DIR/artifact-provenance.json"
           python3 tools/image_string_fallback_730.py run --out "$RESULT_DIR"
 
       - name: Upload macOS ARM64 evidence

@@ -5,7 +5,7 @@
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 - Active milestone: 1 — Linux startup and PNG blockers
-- Last completed campaign commit: `0294d6f` (runner and harness)
+- Last completed campaign commit: `3394d9b` (pin native dependency metadata)
 - Previous evidence checkpoint: `42008b9`
 - Production source edits: none
 
@@ -58,6 +58,13 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
 - Validated campaign configuration and harness contracts, compiled both Java
   probes against the official 7.2.2 SDK, and parsed the workflow plus embedded
   shell, Python, and JSON blocks. Actions runtime execution is still pending.
+- First hosted run `45942723832` passed SDK packaging, dependency fetch, and
+  native-bridge generation, then stopped during CMake configuration. Frozen
+  source `6b915` has no depot-tools ref file, so bootstrap followed the moving
+  default branch, whose `deps.yml` lacked the zlib-ng release CMake requires.
+  Commit `3394d9b` pins depot-tools to
+  `0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a`; the corrected Actions run is
+  pending. No runtime case ran in the first run.
 
 ## Pending investigations
 
@@ -66,12 +73,11 @@ provenance, case reports, proposed issue updates, and final consolidation.
 
 ## Next concrete action
 
-Push the dedicated branch to trigger
-`.github/workflows/functional-validation-730.yml`. Review its compact result
-artifact, record the exact run and binary identities,
-then update I01-B/I02 reports and the matrix. The archived 7.3.0 artifact is
-verified and unexpired as of 2026-11-27; current campaign runtime cases have not
-run yet.
+Push the pinned-dependency correction to trigger
+`.github/workflows/functional-validation-730.yml` again. Review its result
+artifact, record the exact run and binary identities, then update I01-B/I02
+reports and the matrix. The archived 7.3.0 artifact is verified and unexpired
+as of 2026-11-27; current campaign runtime cases have not run yet.
 
 ## Constraints and blockers
 

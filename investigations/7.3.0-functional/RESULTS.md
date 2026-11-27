@@ -34,6 +34,13 @@ remain.
   left `WRITE_EXTERNAL_STORAGE` denied and the directory operation failed;
   the explicitly pregranted control succeeded. The permission result is
   tracked separately under I08.
+- **I03 API 30 lifecycle follow-up:** Rotating while the all-files Settings
+  page was open and returning without changing authorization reproduced the
+  common Skia/GLES SIGSEGV. A separate pregranted customer-app control survived
+  background/foreground and 90-degree rotation; a diagnostic worker-screen
+  variant crashed on foreground surface reinitialization. Repeated permission
+  requests remain NOT_RUN because the first denied transition already crashes
+  and no corrected candidate is available.
 - **I06 Windows Win32/I386:** PASS for the Windows target; overall I06 remains
   pending its required Linux x86_64 validation.
 - **I01-B, Linux x86_64:** official 7.3.0 and frozen master failed before

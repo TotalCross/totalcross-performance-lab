@@ -8,6 +8,13 @@ each of API 30, 35, and 36 across denied and grant-in-place permission flows.
 The exact customer APK and a diagnostic build showed the same native failure.
 Pregranted controls stayed alive on all four APIs.
 
+Follow-up lifecycle cases on API 30 are mixed. Rotating the device while the
+all-files Settings screen was open, then returning without changing access,
+reproduced the same SIGSEGV. A separate pregranted customer-app control
+survived background/foreground and 90-degree rotation transitions. A
+diagnostic worker-screen variant crashed on foreground surface reinitialization
+in the same Skia/GLES path. Repeated permission requests were not exercised.
+
 API 29 did not produce a native crash in the tested denied, grant-in-place, or
 pregranted flows. However, its interactive Allow action left
 `WRITE_EXTERNAL_STORAGE` denied and the customer directory operation failed
@@ -192,12 +199,24 @@ the committed crash evidence.
 - Behavior of the corrected candidate.
 - Behavior on physical Android devices.
 
-Settings return without changing authorization, repeated requests,
-background/foreground, and rotation were not separately exercised. The
-primary denied, in-flow, and pregranted controls already reproduce the crash
-on three priority APIs; those additional scenarios would not distinguish its
-current platform classification. APIs 24 and 31 were not provisioned. Record
-these combinations as untested rather than inferring results.
+The denied permission cases return from Settings without changing authorization
+and reproduce the crash on APIs 30, 35, and 36. On API 30, rotation while
+Settings remained open also reproduces the same stack. A pregranted customer
+control survived a separate background/foreground and rotation sequence, while
+the diagnostic worker-screen variant crashed when its surface was recreated
+after returning to the foreground. These outcomes show that the failure is not
+limited to a permission-state change, but the diagnostic app is not the
+original customer workload. Repeated requests were not run: the first denied
+transition already crashes on three priority APIs, and no corrected candidate
+is available to compare. APIs 24 and 31 were not provisioned. Record these
+combinations as untested rather than inferring results.
+
+The API 30 follow-up JSON and compact stacks are preserved in
+`../evidence/I03/android-api30-permission-rotation.json`,
+`../evidence/I03/android-api30-permission-rotation-stack.log`,
+`../evidence/I03/android-api30-pregranted-background-rotation.json`, and
+`../evidence/I03/android-api30-background-foreground-diagnostic.json` with its
+stack in `../evidence/I03/android-api30-background-foreground-diagnostic-stack.log`.
 
 ## Recommended diagnostic sequence
 
@@ -234,5 +253,10 @@ validated.
 - `../evidence/I03/android-api35-native-stack-excerpts.log`
 - `../evidence/I03/android-api35-permission-prompt.png`
 - `../evidence/I03/android-api36-run.json`
+- `../evidence/I03/android-api30-permission-rotation.json`
+- `../evidence/I03/android-api30-permission-rotation-stack.log`
+- `../evidence/I03/android-api30-pregranted-background-rotation.json`
+- `../evidence/I03/android-api30-background-foreground-diagnostic.json`
+- `../evidence/I03/android-api30-background-foreground-diagnostic-stack.log`
 - `../evidence/I03/native-crash-excerpts.log`
 - `../evidence/I03/first-attempt-systemui-anr.png`

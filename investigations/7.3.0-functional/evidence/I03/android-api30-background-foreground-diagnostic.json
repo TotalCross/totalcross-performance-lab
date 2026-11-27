@@ -1,0 +1,27 @@
+{
+  "investigation": "I03",
+  "testCase": "api30-pregranted-background-foreground-worker-screen-diagnostic-variant",
+  "api": 30,
+  "abi": "arm64-v8a",
+  "deviceFingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+  "package": "totalcross.appzmtw",
+  "apkSha256": "86c247eb0612f35af18b195858cd914c439227ecb34914f357525687cc38aa70",
+  "apkMode": "worker screen with active Java thread; no permission request",
+  "steps": [
+    "launch cold",
+    "observe worker READY",
+    "send HOME",
+    "bring same Loader activity to foreground with am start",
+    "process SIGSEGV before button could be inspected or tapped"
+  ],
+  "markers": [
+    "11-27 05:53:58.430  9371  9409 I TotalCross: TC_I05 startup mode=worker appPath=/data/user/0/totalcross.appzmtw",
+    "11-27 05:53:58.445  9371  9416 I TotalCross: TC_I05 case=worker state=READY",
+    "11-27 05:54:02.785  9371  9409 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x30 in tid 9409 (TC Event Thread), pid 9371 (alcross.appzmtw)"
+  ],
+  "exitInfo": "ACTIVITY MANAGER PROCESS EXIT INFO (dumpsys activity exit-info)\nLast Timestamp of Persistence Into Persistent Storage: 2026-11-27 05:53:48.179\n  package: totalcross.appzmtw\n    Historical Process Exit for userId=10189\n        ApplicationExitInfo #0:\n          timestamp=2026-11-27 05:54:04.053\n          pid=9371\n          realUid=10189\n          packageUid=10189\n          definingUid=10189\n          user=0\n          process=totalcross.appzmtw\n          reason=5 (APP CRASH(NATIVE))\n          status=11\n          importance=100\n          pss=0.00\n          rss=0.00\n          description=crash\n          state=empty\n          trace=null\n",
+  "stackEvidence": "evidence/I03/android-api30-background-foreground-diagnostic-stack.log",
+  "observed": "SIGSEGV fault address 0x30 in TC Event Thread; native stack enters GLES2Encoder glDrawRangeElements while FillRectOp is executed during GrDirectContext/SkGpuDevice/SkSurface destruction from initSkia -> initGLES -> nativeSurfaceChanged.",
+  "status": "FAIL",
+  "limitation": "This diagnostic app differs from the original customer reproducer. An earlier pregranted customer-app background/foreground control survived. The worker-exit assertion was not reached because the independent surface lifecycle crash occurred first."
+}

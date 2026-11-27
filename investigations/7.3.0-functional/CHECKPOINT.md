@@ -108,21 +108,29 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   reports, machine-readable results, provenance, and issue drafts are recorded.
 - The verified Windows Win32/I386 priority result remains PASS; AMD64 remains
   outside campaign scope.
+- I03 API 30 follow-ups are now recorded: rotation while All files access
+  Settings is open reproduces the Skia/GLES SIGSEGV; a separate pregranted
+  customer-app background/foreground plus rotation control passed once; a
+  diagnostic worker-screen foreground transition crashed in the same surface
+  path. Repeated permission requests remain NOT_RUN because no corrected
+  candidate exists and the first denied transition already crashes.
 
 ## Pending investigations
 
-Additional I03 lifecycle scenarios and corrected-candidate validation; I04/I05,
-I06 Linux, I07, I08, I09, I10, I11; remaining provenance; proposed issue
-updates; and final consolidation.
+I04/I05 Android native-failure investigations; I06 Linux ownership, I07,
+I08/I09/I10, I11; remaining provenance; proposed issue updates; and final
+consolidation. I03 repeated requests and corrected-candidate validation remain
+explicitly unrun because no candidate is available and the first denied
+transition already reproduces the crash.
 
 ## Next concrete action
 
 Windows Win32/I386 priority validation is complete using verified run
 `45907759163`; do not repeat it while inputs remain unchanged. Linux I01-B/I02
-reports and matrix are consolidated from hosted run `45949849457`. Continue
-with the remaining I03 Android lifecycle diagnostics and corrected-candidate
-validation on the already provisioned hardware-accelerated ARM64 AVDs, then
-execute the in-scope I04/I05 scenarios. Linux evidence is at
+reports and matrix are consolidated from hosted run `45949849457`. I03 lifecycle
+follow-ups are recorded; continue with I04/I05 Android native-failure tests on
+the hardware-accelerated API 30 ARM64 AVD, then move to Linux I06. Linux
+evidence is at
 `https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457`.
 
 ## Constraints and blockers

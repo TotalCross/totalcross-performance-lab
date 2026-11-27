@@ -448,6 +448,36 @@
             "pregranted": {
               "exact": "process remained alive",
               "trace": "directory create/delete succeeded; process remained alive"
+            },
+            "settings-return-unchanged": {
+              "status": "FAIL",
+              "observed": "MANAGE_EXTERNAL_STORAGE remained denied; customer operation reported permission error and the app then SIGSEGVed on TC Event Thread.",
+              "evidence": "evidence/I03/android-api30-permission-rotation.json"
+            },
+            "repeated-requests": {
+              "status": "NOT_RUN",
+              "reason": "First denied request crashes on API 30; no corrected candidate is available for a discriminating repeated-request comparison."
+            },
+            "background-foreground": {
+              "status": "INCONCLUSIVE",
+              "customerPregrantedControl": "PASS; process survived HOME/foreground and screen rotation in one run.",
+              "diagnosticWorkerScreen": "FAIL; SIGSEGV during nativeSurfaceChanged after HOME/foreground.",
+              "limitation": "Different app screens and triggers; the diagnostic variant is not the original customer workload.",
+              "evidenceFiles": [
+                "evidence/I03/android-api30-pregranted-background-rotation.json",
+                "evidence/I03/android-api30-background-foreground-diagnostic.json",
+                "evidence/I03/android-api30-background-foreground-diagnostic-stack.log"
+              ]
+            },
+            "rotation-transition": {
+              "status": "FAIL",
+              "permissionSettingsTransition": "SIGSEGV after rotation while All files access Settings remained open, returning without authorization.",
+              "pregrantedControl": "PASS; a separate 90-degree rotation/restoration run stayed alive.",
+              "evidenceFiles": [
+                "evidence/I03/android-api30-permission-rotation.json",
+                "evidence/I03/android-api30-permission-rotation-stack.log",
+                "evidence/I03/android-api30-pregranted-background-rotation.json"
+              ]
             }
           },
           "rootCause": "OPEN",
@@ -460,14 +490,18 @@
           ],
           "limitations": [
             "Corrected candidate not tested.",
-            "Settings return without change, repeated requests, background/foreground, and rotation were not tested.",
-            "No physical-device conclusion."
+            "No physical-device conclusion.",
+            "Repeated permission requests were NOT_RUN; first denied transition already crashes and no corrected candidate is available.",
+            "Background/foreground and rotation results are mixed across a pregranted customer control and a diagnostic worker-screen variant; only API 30 was exercised for these follow-ups."
           ],
           "runnerHostArchitecture": "arm64 (Apple Silicon local host)",
           "caseIds": [
             "I03-API30-DENIED",
             "I03-API30-GRANT_IN_PLACE",
-            "I03-API30-PREGRANTED"
+            "I03-API30-PREGRANTED",
+            "I03-API30-SETTINGS_ROTATION",
+            "I03-API30-PREGRANTED_LIFECYCLE",
+            "I03-API30-WORKER_SURFACE_REINIT"
           ],
           "workaroundsUsed": [
             "Manifest launcher activity via am start -W because monkey exited 251 after launch"
@@ -541,8 +575,8 @@
           ],
           "limitations": [
             "Corrected candidate not tested.",
-            "Settings return without change, repeated requests, background/foreground, and rotation were not tested.",
-            "No physical-device conclusion."
+            "No physical-device conclusion.",
+            "Repeated requests, background/foreground, and rotation were not tested on this API."
           ],
           "runnerHostArchitecture": "arm64 (Apple Silicon local host)",
           "caseIds": [
@@ -607,7 +641,8 @@
           "limitations": [
             "Corrected candidate not tested.",
             "Repeated requests, background/foreground, and rotation scenarios not tested.",
-            "The trigger and root cause are not isolated; no physical-device conclusion."
+            "The trigger and root cause are not isolated; no physical-device conclusion.",
+            "Repeated requests, background/foreground, and rotation were not tested on this API."
           ],
           "runnerHostArchitecture": "arm64 (Apple Silicon local host)",
           "executionEnvironment": "local hardware-accelerated Android ARM64 emulator",
@@ -631,15 +666,27 @@
       "coverageLimitations": [
         "Only denied, grant-in-flow, and pregranted customer scenarios were tested.",
         "Corrected candidate and API 24/31 were not tested.",
-        "Settings-return-unchanged, repeated requests, background/foreground, and rotation remain NOT_RUN."
+        "Repeated permission requests were NOT_RUN; first denied transitions already reproduce the native crash on APIs 30/35/36, and no corrected candidate is available.",
+        "API 30 pregranted customer lifecycle controls passed once, while Settings rotation and a diagnostic worker-screen foreground transition failed with the common Skia/GLES stack; the variant results are not interchangeable."
       ]
     },
     {
       "investigationId": "I04",
       "title": "Android File.writeBytes SIGABRT",
-      "requiredPlatforms": ["android-arm64-emulator"],
+      "requiredPlatforms": [
+        "android-arm64-emulator"
+      ],
       "legacyPortCheck": "REVIEWED_NO_EXACT_APPLICABLE_LEGACY_FIX",
-      "requiredScenarios": ["normal-write", "failed-open", "after-close", "denied-authorization", "permission-recovery", "invalid-path", "controlled-shutdown", "controlled-write-close-race"],
+      "requiredScenarios": [
+        "normal-write",
+        "failed-open",
+        "after-close",
+        "denied-authorization",
+        "permission-recovery",
+        "invalid-path",
+        "controlled-shutdown",
+        "controlled-write-close-race"
+      ],
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
       "evidenceOrigin": "SOURCE_HISTORY",
@@ -648,10 +695,20 @@
     {
       "investigationId": "I05",
       "title": "Android native shutdown SIGABRT",
-      "requiredPlatforms": ["android-arm64-emulator"],
+      "requiredPlatforms": [
+        "android-arm64-emulator"
+      ],
       "legacyPortCheck": "REVIEWED_NO_EXACT_APPLICABLE_LEGACY_FIX",
       "maxIntermittentRepetitions": 10,
-      "requiredScenarios": ["normal-exit", "exit-during-file-io", "exit-during-sqlite", "exit-after-permission-request", "exit-after-background-transition", "exit-with-worker-threads", "repeated-init-termination"],
+      "requiredScenarios": [
+        "normal-exit",
+        "exit-during-file-io",
+        "exit-during-sqlite",
+        "exit-after-permission-request",
+        "exit-after-background-transition",
+        "exit-with-worker-threads",
+        "repeated-init-termination"
+      ],
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
       "evidenceOrigin": "SOURCE_HISTORY",
@@ -660,9 +717,29 @@
     {
       "investigationId": "I06",
       "title": "ImageDrawingBridge ownership correction",
-      "requiredPlatforms": ["linux-x86_64"],
-      "historicalPlatformsToImport": ["javase", "windows-win32-i386", "macos-arm64", "android-arm64-api36"],
-      "requiredScenarios": ["baseline-and-candidate", "shared-image", "replacement", "owner-removal", "ancestor-detach", "reattach", "reparent", "repeat-create-dispose", "gc-while-owned", "resource-release", "draw-after-mutation", "shutdown-with-images"],
+      "requiredPlatforms": [
+        "linux-x86_64"
+      ],
+      "historicalPlatformsToImport": [
+        "javase",
+        "windows-win32-i386",
+        "macos-arm64",
+        "android-arm64-api36"
+      ],
+      "requiredScenarios": [
+        "baseline-and-candidate",
+        "shared-image",
+        "replacement",
+        "owner-removal",
+        "ancestor-detach",
+        "reattach",
+        "reparent",
+        "repeat-create-dispose",
+        "gc-while-owned",
+        "resource-release",
+        "draw-after-mutation",
+        "shutdown-with-images"
+      ],
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
       "evidenceOrigin": "CAMPAIGN_PENDING",
@@ -720,8 +797,29 @@
     {
       "investigationId": "I07",
       "title": "Image(String) filesystem fallback",
-      "requiredPlatforms": ["windows-win32-i386", "linux-x86_64", "macos-arm64", "android-arm64-emulator"],
-      "requiredScenarios": ["filesystem-only", "tcz-only", "both-tcz-precedence", "malformed-tcz-no-fallback", "empty-tcz", "missing-filesystem", "invalid-filesystem", "empty-filesystem", "absolute-path", "relative-path", "device-path-where-supported", "path-boundaries", "image-file-parity", "snapshot-after-modification", "native-ownership"],
+      "requiredPlatforms": [
+        "windows-win32-i386",
+        "linux-x86_64",
+        "macos-arm64",
+        "android-arm64-emulator"
+      ],
+      "requiredScenarios": [
+        "filesystem-only",
+        "tcz-only",
+        "both-tcz-precedence",
+        "malformed-tcz-no-fallback",
+        "empty-tcz",
+        "missing-filesystem",
+        "invalid-filesystem",
+        "empty-filesystem",
+        "absolute-path",
+        "relative-path",
+        "device-path-where-supported",
+        "path-boundaries",
+        "image-file-parity",
+        "snapshot-after-modification",
+        "native-ownership"
+      ],
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
       "evidenceOrigin": "CAMPAIGN_PENDING",
@@ -730,12 +828,41 @@
     {
       "investigationId": "I08",
       "title": "Android filesystem permission recovery",
-      "requiredPlatforms": ["android-arm64-emulator"],
-      "priorityApiLevels": [29, 30, 35, 36],
-      "conditionalApiLevels": [24, 31],
-      "storageScopes": ["application-private", "app-specific-external", "shared-external"],
-      "operations": ["create-file", "create-directory", "read", "write", "list", "metadata", "rename", "delete-file", "delete-directory"],
-      "authorizationStates": ["pregranted", "initially-denied", "granted-during-recovery", "denied-during-recovery"],
+      "requiredPlatforms": [
+        "android-arm64-emulator"
+      ],
+      "priorityApiLevels": [
+        29,
+        30,
+        35,
+        36
+      ],
+      "conditionalApiLevels": [
+        24,
+        31
+      ],
+      "storageScopes": [
+        "application-private",
+        "app-specific-external",
+        "shared-external"
+      ],
+      "operations": [
+        "create-file",
+        "create-directory",
+        "read",
+        "write",
+        "list",
+        "metadata",
+        "rename",
+        "delete-file",
+        "delete-directory"
+      ],
+      "authorizationStates": [
+        "pregranted",
+        "initially-denied",
+        "granted-during-recovery",
+        "denied-during-recovery"
+      ],
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
       "evidenceOrigin": "CAMPAIGN_PENDING",
@@ -744,19 +871,49 @@
     {
       "investigationId": "I09",
       "title": "Android SQLite permission recovery",
-      "requiredPlatforms": ["android-arm64-emulator"],
+      "requiredPlatforms": [
+        "android-arm64-emulator"
+      ],
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
-      "requiredScenarios": ["private-create-open", "authorized-shared-create-open", "denied-open", "grant-during-open", "deny-during-open", "readonly", "invalid-or-corrupt", "close-reopen", "restart-persistence", "integrity-check"],
+      "requiredScenarios": [
+        "private-create-open",
+        "authorized-shared-create-open",
+        "denied-open",
+        "grant-during-open",
+        "deny-during-open",
+        "readonly",
+        "invalid-or-corrupt",
+        "close-reopen",
+        "restart-persistence",
+        "integrity-check"
+      ],
       "evidenceOrigin": "CAMPAIGN_PENDING",
       "results": []
     },
     {
       "investigationId": "I10",
       "title": "SQLite compatibility and customer-reported error",
-      "requiredPlatforms": ["windows-win32-i386", "linux-x86_64", "macos-arm64", "android-arm64-emulator"],
-      "requiredRevisions": ["official-7.2.2", "official-7.3.0", "corrected-candidate"],
-      "requiredScenarios": ["external-sqlite-origin", "generated-by-7.2.2", "generated-by-7.3.0", "cross-platform-transfer", "application-update-persistence", "wal-consistent-snapshot", "invalid-database-negative"],
+      "requiredPlatforms": [
+        "windows-win32-i386",
+        "linux-x86_64",
+        "macos-arm64",
+        "android-arm64-emulator"
+      ],
+      "requiredRevisions": [
+        "official-7.2.2",
+        "official-7.3.0",
+        "corrected-candidate"
+      ],
+      "requiredScenarios": [
+        "external-sqlite-origin",
+        "generated-by-7.2.2",
+        "generated-by-7.3.0",
+        "cross-platform-transfer",
+        "application-update-persistence",
+        "wal-consistent-snapshot",
+        "invalid-database-negative"
+      ],
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
       "evidenceOrigin": "CAMPAIGN_PENDING",
@@ -765,9 +922,29 @@
     {
       "investigationId": "I11",
       "title": "Restricted release workflow validation",
-      "requiredPlatforms": ["windows-win32-i386", "linux-x86_64", "macos-arm64", "sdk-host"],
-      "requiredScenarios": ["sdk-build", "native-build", "sdk-packaging", "artifact-inventory", "version-consistency", "versioned-release-notes", "dry-run", "no-tag", "no-release", "no-maven-publication"],
-      "prohibitedPlatforms": ["windows-amd64", "ios", "android-runtime-actions"],
+      "requiredPlatforms": [
+        "windows-win32-i386",
+        "linux-x86_64",
+        "macos-arm64",
+        "sdk-host"
+      ],
+      "requiredScenarios": [
+        "sdk-build",
+        "native-build",
+        "sdk-packaging",
+        "artifact-inventory",
+        "version-consistency",
+        "versioned-release-notes",
+        "dry-run",
+        "no-tag",
+        "no-release",
+        "no-maven-publication"
+      ],
+      "prohibitedPlatforms": [
+        "windows-amd64",
+        "ios",
+        "android-runtime-actions"
+      ],
       "status": "NOT_RUN",
       "scopeStatus": "IN_SCOPE",
       "evidenceOrigin": "CAMPAIGN_PENDING",
@@ -783,7 +960,9 @@
       "evidenceOrigin": "HISTORICAL",
       "campaignExecution": "NOT_RUN",
       "relatedPullRequest": "https://github.com/TotalCross/totalcross/pull/567",
-      "limitations": ["No claim that the defect was fixed or that its root cause is known."]
+      "limitations": [
+        "No claim that the defect was fixed or that its root cause is known."
+      ]
     }
   ]
 }

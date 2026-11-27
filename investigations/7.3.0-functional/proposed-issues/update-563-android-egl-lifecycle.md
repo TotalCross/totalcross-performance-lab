@@ -35,6 +35,16 @@ consistent with the observed stack, but the campaign did not record context
 handles/current-context state or Skia resource ownership. The root cause is
 therefore **not established**.
 
+Additional API 30 lifecycle evidence shows that the original pregranted
+customer app survived a separate HOME/foreground and 90-degree rotation
+sequence. Rotation while the all-files Settings page was open, followed by
+return without granting access, reproduced the same SIGSEGV. A separate
+diagnostic app with an active worker thread also crashed on foreground surface
+reinitialization before its shutdown button could be tested. This variant was
+not the original customer workload. Repeated permission requests remain
+untested because the first denied request already crashes on API 30 and no
+corrected candidate is available.
+
 The exact source, artifact hashes, API fingerprints, phase results, native
 stacks, limitations, and reproduction commands are in:
 
@@ -45,6 +55,11 @@ stacks, limitations, and reproduction commands are in:
 - `investigations/7.3.0-functional/evidence/I03/android-api35-run.json`
 - `investigations/7.3.0-functional/evidence/I03/android-api35-native-stack-excerpts.log`
 - `investigations/7.3.0-functional/evidence/I03/android-api36-run.json`
+- `investigations/7.3.0-functional/evidence/I03/android-api30-permission-rotation.json`
+- `investigations/7.3.0-functional/evidence/I03/android-api30-permission-rotation-stack.log`
+- `investigations/7.3.0-functional/evidence/I03/android-api30-pregranted-background-rotation.json`
+- `investigations/7.3.0-functional/evidence/I03/android-api30-background-foreground-diagnostic.json`
+- `investigations/7.3.0-functional/evidence/I03/android-api30-background-foreground-diagnostic-stack.log`
 
 Recommended next diagnostic: instrument EGL context and surface handles,
 `eglGetCurrentContext()`, surface generation, and Skia surface/context release;

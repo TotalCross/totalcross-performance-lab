@@ -1,0 +1,60 @@
+{
+  "investigationId": "I03",
+  "testCase": "pregranted-background-foreground-and-rotation-control",
+  "apiLevel": 30,
+  "androidVersion": "11",
+  "runtimeArchitecture": "arm64-v8a",
+  "deviceFingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+  "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+  "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+  "steps": [
+    {
+      "name": "before-lifecycle-transitions",
+      "pid": "4743",
+      "focus": [
+        "",
+        "WINDOW MANAGER LAST ANR (dumpsys window lastanr)"
+      ]
+    },
+    {
+      "name": "background-home",
+      "pid": "4743",
+      "focus": [
+        "",
+        "WINDOW MANAGER LAST ANR (dumpsys window lastanr)"
+      ]
+    },
+    {
+      "name": "foreground-return",
+      "pid": "4743",
+      "focus": [
+        "",
+        "WINDOW MANAGER LAST ANR (dumpsys window lastanr)"
+      ]
+    },
+    {
+      "name": "rotation-90",
+      "pid": "4743",
+      "focus": [
+        "",
+        "WINDOW MANAGER LAST ANR (dumpsys window lastanr)"
+      ]
+    },
+    {
+      "name": "rotation-restored",
+      "pid": "4743",
+      "focus": [
+        "",
+        "WINDOW MANAGER LAST ANR (dumpsys window lastanr)"
+      ]
+    }
+  ],
+  "customerMarkers": [
+    "11-27 05:23:36.184  4743  4769 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+    "11-27 05:23:36.204  4743  4769 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd",
+    "11-27 05:23:36.210  4743  4769 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd"
+  ],
+  "processAliveAfterAllTransitions": true,
+  "status": "PASS",
+  "limitation": "Single customer-app control run; a separate diagnostic worker-screen run later crashed on foreground surface reinitialization."
+}

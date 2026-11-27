@@ -1,0 +1,21 @@
+{
+  "investigationId": "I03",
+  "testCase": "rotate-while-all-files-settings-open-then-return-unchanged",
+  "apiLevel": 30,
+  "runtimeArchitecture": "arm64-v8a",
+  "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+  "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+  "settingsScreenSeen": true,
+  "rotatedSettingsStillFocused": true,
+  "authorizationAfterReturn": "MANAGE_EXTERNAL_STORAGE: default; rejectTime=+4s520ms ago",
+  "appStillRunning": false,
+  "observations": [
+    "11-27 05:24:58.524  5014  5040 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+    "11-27 05:25:07.360  5014  5040 I TotalCross: TC_CLIENT_MAIN FAIL totalcross.io.IOException: Error Code: 1 - Operation not permitted",
+    "11-27 05:25:07.943  5014  5040 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x30 in tid 5040 (TC Event Thread), pid 5014 (alcross.appzmtw)",
+    "11-27 05:25:09.140   287   287 E tombstoned: Tombstone written to: /data/tombstones/tombstone_10"
+  ],
+  "stackEvidence": "evidence/I03/android-api30-permission-rotation-stack.log",
+  "status": "FAIL",
+  "interpretation": "The app returned from Settings without authorization, logged the expected permission error, then SIGSEGVed in the same Skia/GLES nativeSurfaceChanged path."
+}

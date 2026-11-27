@@ -83,8 +83,14 @@ provenance, proposed issue updates, and a consolidated report.
 - [x] Milestone 1: Linux realpath startup (I01-B) and PNG decode (I02) runtime
   findings are consolidated; the original failure and conditional shim result
   remain separately reported.
-- [ ] Milestone 2: complete Android EGL lifecycle diagnostics (I03), then I04/I05,
-  which remain in scope after the verified 4.6.0 source check.
+- [x] I03: official 7.3.0 customer scenarios ran on API 29/30/35/36; API 30
+  follow-ups recorded the Settings-rotation crash, a passing pregranted
+  lifecycle control, and a diagnostic foreground surface crash. Repeated
+  requests remain NOT_RUN because the first denied transition crashes and no
+  corrected candidate is available.
+- [ ] I04/I05: remain in scope after the verified 4.6.0 source check; Android
+  probe execution and findings are in progress.
+- [ ] Milestone 2: I04/I05 findings and reports remain to be committed.
 - [ ] Milestone 3: run Linux ownership validation (I06) and remaining
   `Image(String)` checks (I07), importing equivalent historical evidence.
 - [ ] Milestone 4: validate Android filesystem and SQLite permission recovery
@@ -162,7 +168,13 @@ and discriminating. Cover pregranted, in-flow grant/denial, unchanged Settings
 return, repeated requests, background/foreground, and rotation where
 applicable. Preserve logcat, tombstone, lifecycle, surface, EGL, Skia, and file
 operation evidence. Do not promote the EGL hypothesis to a root cause without
-direct evidence; no physical-device claim.
+direct evidence; no physical-device claim. The official package fails denied
+and grant-in-place flows on API 30/35/36; API 29 did not crash but Allow left
+WRITE denied. API 30 rotation within Settings reproduces the crash; a separate
+pregranted customer lifecycle control passed once, while a diagnostic worker
+screen failed on foreground surface recreation. Repeated requests are recorded
+NOT_RUN because the first denied transition already crashes and no candidate is
+available.
 
 **I04/I05:** first complete the 4.x port exclusion check. If still in scope,
 test only valid and deliberately invalid API behavior that distinguishes the

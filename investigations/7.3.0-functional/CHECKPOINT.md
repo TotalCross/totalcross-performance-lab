@@ -3,6 +3,7 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
+- Last completed campaign commit: `b7bfd900fcc8c6e09f2caa555a76677978c0aca0`
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 - Active milestone: 1 — Linux startup and PNG blockers
 - Previous campaign checkpoint: `1a602fa` (native build retry findings)
@@ -76,9 +77,9 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   alive. API 29 produced no native crash, but interactive Allow left
   `WRITE_EXTERNAL_STORAGE` denied and the directory operation failed; the
   explicit pregrant passed. Source ordering supports a diagnostic hypothesis,
-  not a confirmed root cause. The consolidated report, machine results,
-  sanitized stacks/logs, and prompt screenshots are in `reports/` and
-  `evidence/I03/`; the current I03 changes are pending commit.
+  not a confirmed root cause. Commit `b7bfd90` contains the consolidated report,
+  matrix/provenance updates, sanitized stacks/logs, prompt screenshots, and the
+  proposed #563 update.
 - Hosted run `45944696531` passed SDK packaging, pinned dependency fetch, native
   bridge generation, and CMake configuration, then failed when the canonical
   Docker build could not access Actions' external Git metadata and the frozen
@@ -96,10 +97,9 @@ issue updates; and final consolidation.
 
 ## Next concrete action
 
-Commit the I03 API 29/30/35 evidence and harness improvements. Then inspect the
-result artifact from hosted Actions run `45949849457`, update the I01-B/I02
-reports and matrix, and commit those Linux findings before moving to I04/I05.
-The Linux workflow and result artifact are at
+Inspect the result artifact from hosted Actions run `45949849457`, update the
+I01-B/I02 reports and matrix, and commit those Linux findings before moving to
+I04/I05. The Linux workflow and result artifact are at
 `https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457`.
 
 ## Constraints and blockers

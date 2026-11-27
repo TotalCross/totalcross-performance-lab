@@ -1,7 +1,7 @@
 # Campaign Results
 
-The campaign remains in progress. I01-B and I02 Linux runtime evidence from
-hosted Actions run 45949849457 is consolidated in the reports, result matrix,
+The campaign is closed with recorded limitations. I01-B and I02 Linux runtime
+evidence from hosted Actions run 45949849457 is consolidated in the reports, result matrix,
 and provenance record. I03 priority API runs are recorded for Android API 29,
 30, 35, and 36; API 30 lifecycle follow-ups are also recorded. I04 is
 inconclusive on API 30. I05 recorded one destroyed-mutex abort during shutdown
@@ -24,8 +24,9 @@ API levels.
   reused hosted evidence, not a duplicate campaign execution. The production
   Windows Win32/I386 correction is functionally validated.
 - **Windows AMD64 startup:** PREEXISTING / OUT_OF_SCOPE. No campaign execution.
-- JavaSE, macOS ARM64, and Android ARM64 PR #567 claims: imported evidence
-  verification remains pending.
+- JavaSE, macOS ARM64, and Android ARM64 PR #567 claims: audited against the
+  accessible PR checks and diagnostic branch. No durable run/artifact IDs were
+  recoverable, so the claims are not imported as verified historical evidence.
 
 ## Completed campaign image validation
 
@@ -120,6 +121,29 @@ API levels.
   With the test-only startup shim, 8/9 cases passed; a valid indexed PNG was
   rejected during construction. Other platforms remain untested.
 
-No production source was changed. I03 repeated requests and corrected-candidate
-validation remain explicitly unrun. I11, remaining provenance, and the final
-report remain pending.
+## I11 restricted release workflow
+
+I11 is **PARTIAL**. The release workflow and package workflow were parsed and
+reviewed statically; the four version inputs agree on 7.3.0, and the exact
+versioned release-note heading is present. The #538 SDK and Linux/macOS native
+build checks passed; its package run passed inventory and Linux/macOS ZIP
+checks. Public endpoint probes found
+no v7.3.0 tag, release, Maven Central coordinate, or sampled S3/Artifactory
+objects. The release workflow was not dispatched, a v7.3.0 tag was not pushed,
+and no public release or publication was created by this campaign. The full
+release dry-run remains unexecuted, and a Win32/I386-specific package result
+was not established. See [the I11 report](reports/I11-release-workflow.md).
+
+## Closure
+
+The Windows production target decision is explicit: the persistent image
+ownership correction is functionally validated on Win32/I386. The x64 startup
+failure was not retested or analyzed and remains a separate preexisting issue.
+I10 remains INCOMPLETE, I11 remains PARTIAL, and the documented I03/I04/I05
+limitations remain open product findings. These statuses do not require
+additional campaign execution under the authorized scope. See
+[`FINAL-REPORT.md`](reports/FINAL-REPORT.md) for the consolidated outcome.
+
+No production source was changed. Proposed issue updates are local drafts;
+no issue or product PR was created or edited. The campaign's release workflow
+was not run.

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "investigationId": "I11",
+  "checkedAtDate": "2026-11-27",
+  "method": "Read-only HTTP/API requests from the campaign host; no authentication tokens were used.",
+  "checks": [
+    {
+      "surface": "GitHub tag",
+      "url": "https://api.github.com/repos/TotalCross/totalcross/git/ref/tags/v7.3.0",
+      "httpStatus": 404,
+      "finding": "No v7.3.0 tag reference was returned."
+    },
+    {
+      "surface": "GitHub release",
+      "url": "https://api.github.com/repos/TotalCross/totalcross/releases/tags/v7.3.0",
+      "httpStatus": 404,
+      "finding": "No v7.3.0 release was returned."
+    },
+    {
+      "surface": "Maven Central search",
+      "url": "https://search.maven.org/solrsearch/select?q=g:%22com.totalcross%22%20AND%20a:%22totalcross-sdk%22%20AND%20v:%227.3.0%22&rows=1&wt=json",
+      "httpStatus": 200,
+      "numFound": 0,
+      "finding": "No exact com.totalcross:totalcross-sdk:7.3.0 result."
+    },
+    {
+      "surface": "Maven Central POM",
+      "url": "https://repo1.maven.org/maven2/com/totalcross/totalcross-sdk/7.3.0/totalcross-sdk-7.3.0.pom",
+      "httpStatus": 404,
+      "finding": "The exact POM URL was not found."
+    },
+    {
+      "surface": "Release S3 object",
+      "url": "https://totalcross-release.s3.amazonaws.com/7.3/TotalCross-7.3.0.zip",
+      "httpStatus": 404,
+      "finding": "The versioned object path used by release.yml was not found."
+    },
+    {
+      "surface": "Legacy Artifactory POM",
+      "url": "https://maven.totalcross.com/artifactory/repo1-release/com/totalcross/totalcross-sdk/7.3.0/totalcross-sdk-7.3.0.pom",
+      "httpStatus": 404,
+      "finding": "The exact checked POM URL was not found."
+    }
+  ],
+  "limitations": [
+    "Point-in-time probes cover only the listed identifiers and URLs; they do not prove absence from every mirror, alternate coordinate, or private repository.",
+    "No release workflow was dispatched."
+  ]
+}

@@ -6,8 +6,8 @@ corrections. It does not modify production code in `TotalCross/totalcross`.
 
 ## Scope
 
-The active backlog is I01-B through I11 in `EXECPLAN.md`. Windows AMD64 startup
-is recorded as a preexisting, out-of-scope defect. Windows native validation
+The completed campaign covers I01-B through I11 in `EXECPLAN.md`. Windows
+AMD64 startup is recorded as a preexisting, out-of-scope defect. Windows native validation
 uses Win32/I386 on GitHub Actions only. Linux x86_64 and macOS ARM64 native
 tests also use GitHub Actions; Android ARM64 runtime tests use a local
 hardware-accelerated emulator only. JavaSE is used only for SDK-level controls.
@@ -24,8 +24,8 @@ evidence under `evidence/`.
 
 ## Result semantics
 
-The matrix uses `PASS`, `FAIL`, `REGRESSION`, `PREEXISTING`, `BLOCKED`,
-`NOT_REPRODUCED`, `INCONCLUSIVE`, `OUT_OF_SCOPE`, and `NOT_RUN`. Test outcome,
+The matrix uses `PASS`, `PARTIAL`, `FAIL`, `REGRESSION`, `PREEXISTING`,
+`BLOCKED`, `NOT_REPRODUCED`, `INCONCLUSIVE`, `OUT_OF_SCOPE`, and `NOT_RUN`. Test outcome,
 scope, evidence origin, startup, execution, assertions, exit code, and
 limitations are separate fields. Historical validation is never represented as
 a test run from this campaign.

@@ -3,7 +3,7 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
-- Last completed investigation checkpoint: I10. Win32/I386 passed 24 cases,
+- Last completed investigation checkpoint: I11. Win32/I386 passed 24 I10 cases,
   Android API 36 ARM64 passed 21, Linux x86_64 passed 15 with seven 7.2.2
   startup blocks, and macOS ARM64 passed 15 with its 7.2.2 runtime unavailable.
   Earlier I09 passed on Android API 29/30/35/36.
@@ -11,7 +11,7 @@
   `c65d09b87873db63016ba3a209ac453f49a1cf038c0dbdd88a34bb36581f172b`.
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 - I10 workflow commit: `b0a9639fefd45751cc35ec635252f48e7874d70f`
-- Active milestone: 5 — Release workflow and closure
+- Active milestone: closed; I11 is PARTIAL and final reporting is complete
 - Previous campaign checkpoint: `1a602fa` (native build retry findings)
 - Previous evidence checkpoint: `42008b9`
 - Production source edits: none
@@ -75,7 +75,8 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   attempt before any conditional startup shim.
 - Validated campaign configuration and harness contracts, compiled both Java
   probes against the official 7.2.2 SDK, and parsed the workflow plus embedded
-  shell, Python, and JSON blocks. Actions runtime execution is still pending.
+  shell, Python, and JSON blocks. At that checkpoint, Actions runtime
+  execution was pending.
 - First hosted run `45942723832` passed SDK packaging, dependency fetch, and
   native-bridge generation, then stopped during CMake configuration. Frozen
   source `6b915` has no depot-tools ref file, so bootstrap followed the moving
@@ -195,18 +196,19 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
 
 ## Pending investigations
 
-PR #567 historical JavaSE/macOS/Android ownership evidence verification,
-I11, remaining provenance, proposed issue updates, and final consolidation.
-I03 repeated requests and corrected-candidate validation remain explicitly
-unrun because no candidate is available and the first denied transition
-already reproduces the crash.
+No additional campaign work is authorized or required. I03 repeated requests
+and corrected-candidate validation remain explicitly unrun because no
+candidate is available and the first denied transition already reproduces the
+crash. I10 is INCOMPLETE and I11 is PARTIAL for the reasons in their reports.
+PR #567 JavaSE/macOS/Android historical smoke claims were checked against the
+accessible PR checks and diagnostic branch; durable run/artifact IDs were not
+recoverable, so those claims remain unverified and are not campaign evidence.
 
 ## Next concrete action
 
-Inspect and statically validate the #538/#539 restricted release workflow as
-I11. Confirm version consistency, versioned notes, dry-run guards, and that the
-workflow has no tag, release, or Maven publication side effects. Do not dispatch
-the release workflow or run Windows AMD64.
+The campaign is closed. Final report:
+`investigations/7.3.0-functional/reports/FINAL-REPORT.md`. The release workflow
+was reviewed statically only; it was not dispatched. Do not run Windows AMD64.
 
 ## Constraints and blockers
 

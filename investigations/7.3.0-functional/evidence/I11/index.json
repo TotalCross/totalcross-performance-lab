@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "investigationId": "I11",
+  "status": "PARTIAL",
+  "reviewedAt": "2026-11-27",
+  "repositories": {
+    "product": "TotalCross/totalcross",
+    "campaign": "TotalCross/totalcross-performance-lab"
+  },
+  "pullRequests": [
+    {
+      "number": 539,
+      "url": "https://github.com/TotalCross/totalcross/pull/539",
+      "state": "OPEN",
+      "isDraft": true,
+      "head": "b01262a8f9c096b72522d6e4d2e2448da50cbb32",
+      "base": "c7cf79575602f3cc19e107643f0fa39d3e151004",
+      "mergeable": "CONFLICTING"
+    },
+    {
+      "number": 538,
+      "url": "https://github.com/TotalCross/totalcross/pull/538",
+      "state": "OPEN",
+      "isDraft": true,
+      "head": "b9efeff51e5515121684a2a00db7bdbdd3aacee6",
+      "base": "b01262a8f9c096b72522d6e4d2e2448da50cbb32",
+      "mergeable": "MERGEABLE"
+    }
+  ],
+  "reviewedFiles": [
+    {
+      "path": ".github/workflows/release.yml",
+      "sha256": "7809edce725e86534896120219d603e8691f1b30ca74a781f6fcbf78e65d3e3f",
+      "identicalAtBothHeads": true,
+      "url": "https://github.com/TotalCross/totalcross/blob/b9efeff51e5515121684a2a00db7bdbdd3aacee6/.github/workflows/release.yml"
+    },
+    {
+      "path": ".github/workflows/package.yml",
+      "sha256": "6622a64c7c6b1f8f25c6f16265c8375b9e2c3f66602ff34665199fba89848bde",
+      "url": "https://github.com/TotalCross/totalcross/blob/b9efeff51e5515121684a2a00db7bdbdd3aacee6/.github/workflows/package.yml"
+    },
+    {
+      "path": "scripts/package-sdk.sh",
+      "sha256": "cd252838669f9248b234a6f038e38bc07650831b9b2775c0879a8320cd3c70af",
+      "url": "https://github.com/TotalCross/totalcross/blob/b9efeff51e5515121684a2a00db7bdbdd3aacee6/scripts/package-sdk.sh"
+    },
+    {
+      "path": "scripts/check-package.sh",
+      "sha256": "057c8d8f80387925fc76f4c1b266ed65aa9d3bdf19ee8fd9dfa991b81def3afd",
+      "url": "https://github.com/TotalCross/totalcross/blob/b9efeff51e5515121684a2a00db7bdbdd3aacee6/scripts/check-package.sh"
+    },
+    {
+      "path": "scripts/release-version.py",
+      "sha256": "7e800406864098c76beb7d240ce44917719b840f85746eabcc80f75c22655be6",
+      "url": "https://github.com/TotalCross/totalcross/blob/b9efeff51e5515121684a2a00db7bdbdd3aacee6/scripts/release-version.py"
+    },
+    {
+      "path": "docs/releases/7.3.0.md",
+      "sha256": "a7d5ee1f9c9bfd1e4ae128b72adbf75fc473f6759d3e5fd02c3ecaa05831a51c",
+      "title": "# TotalCross 7.3.0",
+      "titleLine": 7,
+      "url": "https://github.com/TotalCross/totalcross/blob/b9efeff51e5515121684a2a00db7bdbdd3aacee6/docs/releases/7.3.0.md"
+    },
+    {
+      "path": "TotalCrossSDK/build.gradle",
+      "sha256": "84e1ef1fcdead45546a4a781892f0b54ece19fa3d2e89cc38c1005fa2325e73c"
+    },
+    {
+      "path": "TotalCrossSDK/src/main/java/totalcross/sys/Settings.java",
+      "sha256": "bbdb0b51dcbedc23bee8ffa1849ca2aa8773754d38413ff4dc49555cdb36a023"
+    },
+    {
+      "path": "TotalCrossVM/CMakeLists.txt",
+      "sha256": "81876a6a710d5ab03fa13f6597253b8d9b58e0e2630689c928b77f68b958f8a1"
+    }
+  ],
+  "versionAgreement": {
+    "gradle": "7.3.0",
+    "settingsVersion": 730,
+    "settingsVersionStr": "7.3.0",
+    "cmake": "7.3.0",
+    "releaseNotesHeading": "# TotalCross 7.3.0",
+    "result": "PASS"
+  },
+  "staticValidation": {
+    "releaseWorkflowYaml": "PASS",
+    "canonicalPackageWorkflowYaml": "PASS",
+    "packageShellHelpersBashSyntax": "PASS",
+    "releaseVersionPythonSyntax": "PASS",
+    "exactReleaseNotesHeading": "PASS",
+    "workflowCommand": "ruby -e 'require \"yaml\"; ARGV.each { |f| YAML.load_file(f) }' release.yml package.yml",
+    "shellCommand": "bash -n scripts/package-sdk.sh scripts/check-package.sh",
+    "releaseWorkflowDispatched": false,
+    "tagPushedByCampaign": false
+  },
+  "releaseWorkflowBehavior": {
+    "manualDryRunDefault": true,
+    "manualPublicationInputsDefault": false,
+    "explicitDryRunFalseEnablesLiveMode": true,
+    "vTagPushSelectsLiveMode": true,
+    "publicStepsGatedByDryRun": true,
+    "mavenStepsAlsoRequireOptIn": true,
+    "dryRunStillRequestsPermissions": [
+      "contents:write",
+      "id-token:write"
+    ],
+    "dryRunStillUsesProtectedEnvironment": "maven-central",
+    "dryRunStillImportsGpgSigningKey": true,
+    "dryRunStillPreparesSignedMavenCentralBundle": true,
+    "dryRunStillUploadsActionsArtifacts": true,
+    "liveTagPushCanCreateS3AndGitHubReleaseWithMavenFlagsFalse": true
+  },
+  "packageWorkflowEvidence": {
+    "runId": 44003872364,
+    "url": "https://github.com/TotalCross/totalcross/actions/runs/44003872364",
+    "event": "workflow_dispatch",
+    "head": "b9efeff51e5515121684a2a00db7bdbdd3aacee6",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Package TotalCross",
+        "jobId": 133776277133,
+        "conclusion": "success"
+      },
+      {
+        "name": "Test packaged ZIP on Linux x86/64",
+        "jobId": 133776451256,
+        "conclusion": "success"
+      },
+      {
+        "name": "Test packaged ZIP on macOS ARM",
+        "jobId": 133776451411,
+        "conclusion": "success"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14294016698,
+        "name": "TotalCross-7.3.0",
+        "sizeBytes": 109260329,
+        "actionsDigest": "sha256:26817d29624082a1cc426306f783a319a1cc04700d81a3638095e1e85c55b83c"
+      },
+      {
+        "id": 14293313848,
+        "name": "sdk-build",
+        "sizeBytes": 65433043,
+        "actionsDigest": "sha256:65b8cb8f8485a4d25383f67242b0dc5cddbf39af19ce4e8e87df4b59438140dd"
+      },
+      {
+        "id": 14293279168,
+        "name": "TotalCross-7.3.0-jars",
+        "sizeBytes": 16743917,
+        "actionsDigest": "sha256:061d4cf8c62605a98c032abb864df3c4dcbcf73fc526c1b6aa2537d7659afde6"
+      }
+    ],
+    "sdkBuildRunId": 43979197934,
+    "sdkBuildJobId": 133691160297,
+    "sdkBuildConclusion": "success",
+    "limitations": [
+      "The Windows package from this workflow was not used to make any Windows architecture claim.",
+      "No Win32/I386-specific release-package result was established."
+    ]
+  },
+  "supportingExistingPackageEvidence": {
+    "runId": 40878222908,
+    "url": "https://github.com/TotalCross/totalcross/actions/runs/40878222908",
+    "workflow": "package.yml",
+    "notReleaseWorkflow": true,
+    "usedBy": "I10 official 7.3.0 runtime matrix"
+  },
+  "publicAvailabilityProbePath": "investigations/7.3.0-functional/evidence/I11/public-availability-probes.json",
+  "historicalPR567Audit": {
+    "prUrl": "https://github.com/TotalCross/totalcross/pull/567",
+    "prCheckRunId": 45911731475,
+    "sdkBuildJobId": 140221539171,
+    "sdkBuild": "success",
+    "macosNativeJobId": 140221541127,
+    "macosNativeJob": "skipped",
+    "androidNativeJobId": 140221541466,
+    "androidNativeJob": "skipped",
+    "crossPlatformDiagnosticBranch": "TotalCross/totalcross-performance-lab:codex/image-ownership-cross-platform-smoke",
+    "branchCommit": "9f378cde4578ff257a6ba8082b7eac47ea176ad4",
+    "actionsRunCount": 0,
+    "assessment": "The PR description claims JavaSE, macOS ARM64, and Android ARM64 smoke passes, but no durable linked run/artifact IDs were recoverable. Claims are not imported as verified historical I06 evidence."
+  },
+  "campaignActions": {
+    "releaseWorkflowDispatched": false,
+    "tagCreatedOrPushed": false,
+    "githubReleaseCreated": false,
+    "mavenCentralPublished": false,
+    "legacyArtifactoryUploaded": false,
+    "s3Uploaded": false,
+    "productCheckoutModified": false
+  },
+  "limitations": [
+    "No release-workflow dry-run was executed.",
+    "No Win32/I386-specific package result was established for the release PR.",
+    "PR #539 remains draft and conflicting.",
+    "PR #567 JavaSE/macOS/Android historical smoke claims remain unverified due missing durable evidence references."
+  ],
+  "nativeBuildEvidence": {
+    "runId": 43979197934,
+    "url": "https://github.com/TotalCross/totalcross/actions/runs/43979197934",
+    "head": "b9efeff51e5515121684a2a00db7bdbdd3aacee6",
+    "event": "pull_request",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "platform": "sdk-host",
+        "name": "build / Build `SDK`",
+        "jobId": 133691160297,
+        "conclusion": "success"
+      },
+      {
+        "platform": "linux-x86_64",
+        "name": "build / Build 'linux-amd64'",
+        "jobId": 133691517598,
+        "conclusion": "success"
+      },
+      {
+        "platform": "macos-arm64",
+        "name": "build / Build `macos-arm64`",
+        "jobId": 133691517355,
+        "conclusion": "success"
+      }
+    ]
+  }
+}

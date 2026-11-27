@@ -25,7 +25,20 @@
       "pullRequestState": "open",
       "baseBranch": "master",
       "baseSha": "6b915883dd202f6db891990f6c3af26fb645ecc7",
-      "productionFileEquivalence": "Verified byte-for-byte for the complete TotalCrossSDK tree by comparing source commit 94af2b8b653cad509994b5ccf3dbb60ac28ef920 with PR head 926e964841ac64dca172a648bce1ffcc6d60d153"
+      "productionFileEquivalence": "Verified byte-for-byte for the complete TotalCrossSDK tree by comparing source commit 94af2b8b653cad509994b5ccf3dbb60ac28ef920 with PR head 926e964841ac64dca172a648bce1ffcc6d60d153",
+      "historicalEvidenceAudit": {
+        "accessiblePRCheckRunId": 45911731475,
+        "sdkBuildJobId": 140221539171,
+        "sdkBuildConclusion": "success",
+        "macosNativeJobId": 140221541127,
+        "macosNativeJobConclusion": "skipped",
+        "androidNativeJobId": 140221541466,
+        "androidNativeJobConclusion": "skipped",
+        "crossPlatformDiagnosticBranch": "TotalCross/totalcross-performance-lab:codex/image-ownership-cross-platform-smoke",
+        "crossPlatformBranchCommit": "9f378cde4578ff257a6ba8082b7eac47ea176ad4",
+        "actionsRunCountOnBranch": 0,
+        "assessment": "PR description claims for JavaSE, macOS ARM64, and Android ARM64 lack recoverable linked run/artifact IDs; they are not treated as verified historical evidence."
+      }
     },
     {
       "name": "Android filesystem and SQLite permission correction",
@@ -337,6 +350,29 @@
       "status": "INCOMPLETE",
       "reason": "Linux 7.2.2 failed before SQLite at unresolved glCompressedTexSubImage2D; the 7.2.2 package has no macOS runtime.",
       "evidencePath": "investigations/7.3.0-functional/evidence/I10/index.json"
+    },
+    {
+      "name": "I11 restricted release workflow and package verification",
+      "repository": "TotalCross/totalcross",
+      "pullRequests": [
+        538,
+        539
+      ],
+      "releaseWorkflowSha256": "7809edce725e86534896120219d603e8691f1b30ca74a781f6fcbf78e65d3e3f",
+      "packageRunId": 44003872364,
+      "packageRunHead": "b9efeff51e5515121684a2a00db7bdbdd3aacee6",
+      "packageArtifactId": 14294016698,
+      "packageArtifactActionsDigest": "sha256:26817d29624082a1cc426306f783a319a1cc04700d81a3638095e1e85c55b83c",
+      "staticValidation": "YAML and shell syntax passed; release version inputs and notes heading agree.",
+      "campaignReleaseWorkflowExecution": "NOT_RUN_BY_SCOPE",
+      "status": "PARTIAL",
+      "evidencePath": "investigations/7.3.0-functional/evidence/I11/index.json",
+      "nativeBuildRunId": 43979197934,
+      "nativeBuildJobIds": {
+        "sdk": 133691160297,
+        "linuxX8664": 133691517598,
+        "macosArm64": 133691517355
+      }
     }
   ],
   "officialReleases": {
@@ -458,12 +494,26 @@
       "caseSourceSha256": "a93ead1f1d3d06cb47d2cecc8af4c84f1c211de23a6fd18ac0eb076f57d378ef",
       "harnessSha256": "546277eda9e621e64a8304dbcc804e1b66e3e90e778badec7a912ff6ab2e8625",
       "workflowSha256": "a3d903d436de52908e36868a3cad7a3a1643c1ee1df87ac89eb9fcb53245fe5a"
+    },
+    {
+      "name": "I11 PR #538 7.3.0 package workflow artifact",
+      "repository": "TotalCross/totalcross",
+      "workflowRunId": 44003872364,
+      "sourceSha": "b9efeff51e5515121684a2a00db7bdbdd3aacee6",
+      "artifactId": 14294016698,
+      "artifactName": "TotalCross-7.3.0",
+      "sizeBytes": 109260329,
+      "actionsDigest": "sha256:26817d29624082a1cc426306f783a319a1cc04700d81a3638095e1e85c55b83c",
+      "linuxZipTestJobId": 133776451256,
+      "macosZipTestJobId": 133776451411,
+      "evidencePath": "investigations/7.3.0-functional/evidence/I11/index.json"
     }
   ],
   "toolchains": [],
   "unknowns": [
     "Exact candidate composition that combines the independently stacked PR #545, #565, and #567 corrections.",
-    "Recoverable run, job, and artifact IDs for the imported JavaSE, macOS ARM64, and Android ARM64 ownership evidence.",
-    "Exact dependency identities and toolchain versions for each future campaign build."
+    "Exact dependency identities and toolchain versions for each future campaign build.",
+    "No durable run/artifact IDs were recoverable for PR #567 JavaSE, macOS ARM64, and Android ARM64 smoke claims; current campaign evidence is independent of those claims.",
+    "I11 release workflow dry-run was not executed; live workflow behavior is established only by static inspection and existing package workflow evidence."
   ]
 }

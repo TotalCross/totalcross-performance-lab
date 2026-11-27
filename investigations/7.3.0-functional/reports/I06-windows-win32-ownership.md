@@ -9,8 +9,9 @@ This campaign reuses the completed hosted run because it already matches the
 requested source, I386 architecture, production rendering configuration, and
 same-runner historical comparison. It is verified existing Actions evidence,
 not a new run dispatched from the performance-lab branch. The broader I06
-investigation remains `NOT_RUN` until its required Linux x86_64 execution is
-completed.
+investigation is now `PASS`: the Linux x86_64 ownership assertions also
+completed, conditionally under its test-only startup shim, as recorded in the
+[Linux report](I06-linux-ownership.md).
 
 ## Historical I386 comparison
 

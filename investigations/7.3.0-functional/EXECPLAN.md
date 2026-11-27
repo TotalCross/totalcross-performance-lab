@@ -49,8 +49,8 @@ provenance, proposed issue updates, and a consolidated report.
   requires an exact-source rebuild.
 - [x] 2026-11-27: Added deterministic PNG fixtures, Linux startup/PNG probes,
   a reusable observation harness, and a dedicated-branch Actions workflow.
-  Harness/config checks and Java compilation passed; runtime results are
-  pending the Actions run.
+  Harness/config checks and Java compilation passed; at that checkpoint,
+  runtime results were pending the Actions run.
 - [x] 2026-11-27: Two hosted builds exposed bootstrap issues: frozen source
   `6b915` lacks a depot-tools ref file, and an empty zlib release override
   masked the pinned `deps.yml` entry. Commits `3394d9b` and `dc76666` pin the
@@ -102,6 +102,14 @@ provenance, proposed issue updates, and a consolidated report.
   ARM64 cases. Linux passed 15 with seven 7.2.2 loader blocks; macOS passed 15
   with no 7.2.2 runtime available. The exact customer database was not
   supplied. The complete matrix and synthetic-fixture limits are recorded.
+- [x] 2026-11-27: I11 statically validated PR #538/#539 release workflow
+  inputs, versioned notes, package inventory, and publication guards. The
+  package workflow's SDK, Linux, and macOS checks passed. No release workflow
+  was dispatched; I11 is PARTIAL. Audited the PR #567 historical JavaSE,
+  macOS, and Android claims; no durable run/artifact IDs were recoverable, so
+  those claims are excluded as verified historical evidence.
+- [x] 2026-11-27: Consolidated the final report and closed the campaign with
+  I10 INCOMPLETE, I11 PARTIAL, and all unrun Android follow-ups recorded.
 - [x] Milestone 0: provenance, legacy-port review, historical evidence import,
   harness/workflow contract, and CI/emulator capability checks are complete.
 - [x] Milestone 1: Linux realpath startup (I01-B) and PNG decode (I02) runtime
@@ -121,13 +129,17 @@ provenance, proposed issue updates, and a consolidated report.
 - [x] Milestone 2: I03/I04/I05 results and limitations are recorded; repeated
   I03 permission requests remain explicitly NOT_RUN because the first denied
   transition already crashes and no candidate is available.
-- [ ] Milestone 3: verify and import the remaining durable PR #567 historical
-  JavaSE, macOS ARM64, and Android ARM64 ownership evidence. I07 is complete;
-  I06 Linux assertions passed conditionally under the test-only startup shim.
+- [x] Milestone 3: verified available PR #567 historical evidence. Windows
+  Win32/I386 is directly validated; no durable run/artifact IDs were
+  recoverable for the PR's JavaSE, macOS ARM64, and Android ARM64 claims. I07
+  is complete; I06 Linux assertions passed conditionally under the test-only
+  startup shim.
 - [x] Milestone 4: I08/I09 Android filesystem and SQLite permission recovery
   and I10 SQLite compatibility are recorded.
-- [ ] Milestone 5: restricted release workflow validation (I11), final matrix,
-  issue proposals, and consolidated report.
+- [x] Milestone 5: restricted release workflow validation (I11), final matrix,
+  issue proposals, and consolidated report. I11 is PARTIAL because the
+  release workflow was not dispatched and Win32/I386-specific release
+  packaging was not established.
 
 ## Current Architecture and Scope
 
@@ -319,13 +331,20 @@ create a PR.
 
 ## Outcomes & Retrospective
 
-Pending. Update only at milestone completion or when evidence materially
-changes the interpretation.
+The campaign preserved the distinction between static release-workflow
+inspection and an executed dry-run, leaving I11 PARTIAL. The correction for
+the distributed Windows architecture was resolved with existing Win32/I386
+hosted evidence, avoiding a duplicate run and keeping the AMD64 investigation
+out of scope. Linux and Android blockers remain separated by platform and
+execution stage.
 
 ## Revision Note
 
-2026-11-27: Initial campaign plan. Windows I386 ownership validation is an
-imported pass; Linux ownership is the remaining I06 runtime requirement.
+2026-11-27: At plan creation, Windows I386 ownership validation was an
+imported pass and Linux ownership was the remaining I06 runtime requirement.
 2026-11-27: Reverified the existing Windows Actions artifact against the
 priority architecture correction. Corrected Win32 startup and ownership both
-pass; the campaign continues with Linux I01-B/I02 result consolidation.
+pass; at that checkpoint, the campaign continued with Linux I01-B/I02 result
+consolidation.
+2026-11-27: Closed I11 with static workflow and package evidence, recorded the
+unexecuted release dry-run, and published the consolidated final report.

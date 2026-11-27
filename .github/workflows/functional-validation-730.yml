@@ -37,6 +37,7 @@ jobs:
         working-directory: product
         env:
           PREPARED_NATIVE_DEPENDENCIES_INDEX: ${{ runner.temp }}/tc730-native-dependencies.jsonl
+          TOTALCROSS_DEPOT_TOOLS_REF: 0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a
           SQLITE3_GITHUB_TOKEN: ${{ secrets.SQLITE3_GITHUB_TOKEN }}
           ZLIB_NG_GITHUB_TOKEN: ${{ secrets.ZLIB_NG_GITHUB_TOKEN }}
           MINIZIP_NG_GITHUB_TOKEN: ${{ secrets.MINIZIP_NG_GITHUB_TOKEN }}
@@ -139,6 +140,7 @@ jobs:
         env:
           BUNDLE_DIR: ${{ runner.temp }}/tc730-linux-bundle
           SOURCE_SHA: 6b915883dd202f6db891990f6c3af26fb645ecc7
+          DEPOT_TOOLS_REF: 0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a
           DEPENDENCY_INDEX: ${{ runner.temp }}/tc730-native-dependencies.jsonl
         run: |
           mkdir -p "$BUNDLE_DIR/TotalCross" "$BUNDLE_DIR/native"
@@ -161,12 +163,16 @@ jobs:
                       digest.update(block)
               return digest.hexdigest()
 
+          depot_revision = subprocess.check_output([
+              "git", "-C", "product/TotalCrossVM/deps/totalcross-depot-tools",
+              "rev-parse", "HEAD"], text=True).strip()
+          if depot_revision != os.environ["DEPOT_TOOLS_REF"]:
+              raise SystemExit("depot-tools revision differs from the pinned campaign ref")
+
           record = {
               "sourceSha": os.environ["SOURCE_SHA"],
               "buildImage": "totalcross/linux-amd64:v1.0.7",
-              "depotToolsRevision": subprocess.check_output([
-                  "git", "-C", "product/TotalCrossVM/deps/totalcross-depot-tools",
-                  "rev-parse", "HEAD"], text=True).strip(),
+              "depotToolsRevision": depot_revision,
               "sdkJarSha256": sha(root / "TotalCross/dist/totalcross-sdk.jar"),
               "linuxLibtcvmSha256": sha(root / "native/libtcvm.so"),
               "linuxLauncherSha256": sha(root / "native/Launcher"),

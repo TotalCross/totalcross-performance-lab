@@ -29,6 +29,7 @@ class HarnessContractTest(unittest.TestCase):
         self.assertIn("investigation/totalcross-7.3.0-functional-validation", source)
         self.assertNotIn("workflow_dispatch", source)
         self.assertIn("6b915883dd202f6db891990f6c3af26fb645ecc7", source)
+        self.assertIn("0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a", source)
         self.assertIn("totalcross/linux-amd64:v1.0.7", source)
         self.assertIn("runs-on: ubuntu-24.04", source)
         self.assertNotIn("windows-amd64", source)

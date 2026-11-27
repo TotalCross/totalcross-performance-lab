@@ -51,10 +51,11 @@ provenance, proposed issue updates, and a consolidated report.
   a reusable observation harness, and a dedicated-branch Actions workflow.
   Harness/config checks and Java compilation passed; runtime results are
   pending the Actions run.
-- [x] 2026-11-27: The first hosted build exposed that frozen source `6b915`
-  lacks a depot-tools ref file; its default-branch `deps.yml` had no zlib-ng
-  release for CMake. Pinned the documented depot-tools revision in commit
-  `3394d9b`; the first run stopped before runtime validation.
+- [x] 2026-11-27: Two hosted builds exposed bootstrap issues: frozen source
+  `6b915` lacks a depot-tools ref file, and an empty zlib release override
+  masked the pinned `deps.yml` entry. Commits `3394d9b` and `dc76666` pin the
+  dependency metadata and forward overrides only when nonempty; both attempts
+  stopped before runtime validation.
 - [x] Milestone 0: provenance, legacy-port review, historical evidence import,
   harness/workflow contract, and CI/emulator capability checks are complete.
 - [ ] Milestone 1: investigate Linux realpath startup (I01-B), then PNG decode

@@ -5,7 +5,7 @@
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 - Active milestone: 1 — Linux startup and PNG blockers
-- Last completed campaign commit: `3394d9b` (pin native dependency metadata)
+- Last completed campaign commit: `dc76666` (conditional override forwarding)
 - Previous evidence checkpoint: `42008b9`
 - Production source edits: none
 
@@ -63,8 +63,15 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   source `6b915` has no depot-tools ref file, so bootstrap followed the moving
   default branch, whose `deps.yml` lacked the zlib-ng release CMake requires.
   Commit `3394d9b` pins depot-tools to
-  `0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a`; the corrected Actions run is
-  pending. No runtime case ran in the first run.
+  `0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a`.
+- Second hosted run `45943884053` checked out that pinned revision and fetched
+  zlib-ng `2.1.6-r3`, but an empty `ZLIB_NG_RELEASE_TAG` override prevented
+  CMake from reading the pinned `deps.yml`. Commit `dc76666` now forwards
+  release/repository override variables only when nonempty. Neither run
+  reached Linux runtime validation.
+- The local I03 API 36 ARM64 exact/trace reproducer is running on the
+  hardware-accelerated emulator; temporary APKs and logs are under
+  `/tmp/tc730-android/build` until compact evidence is imported.
 
 ## Pending investigations
 
@@ -73,7 +80,7 @@ provenance, case reports, proposed issue updates, and final consolidation.
 
 ## Next concrete action
 
-Push the pinned-dependency correction to trigger
+Push the conditional-override correction to trigger
 `.github/workflows/functional-validation-730.yml` again. Review its result
 artifact, record the exact run and binary identities, then update I01-B/I02
 reports and the matrix. The archived 7.3.0 artifact is verified and unexpired

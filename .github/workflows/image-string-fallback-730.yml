@@ -196,6 +196,7 @@ jobs:
 
           python3 tools/linux_image_ownership_730.py prepare \
             --sdk-root "$baseline_home" --native-dir "$native_dir" --mode baseline \
+            --image-format jpeg \
             --source-commit "$baseline_source" --source-tree "$baseline_tree" \
             --runtime-source-commit "$baseline_source" --runtime-source-tree "$baseline_tree" \
             --runtime-source-subtree "$vm_tree" --runtime-native-bridges-sha256 "$bridge_hash" \
@@ -203,6 +204,7 @@ jobs:
             --out "$RESULT_DIR/I06/baseline" > "$RESULT_DIR/I06/baseline-prepare.log" 2>&1
           python3 tools/linux_image_ownership_730.py prepare \
             --sdk-root "$fixed_home" --native-dir "$native_dir" --mode fixed \
+            --image-format jpeg \
             --source-commit "$fixed_source" --source-tree "$fixed_tree" \
             --runtime-source-commit "$baseline_source" --runtime-source-tree "$baseline_tree" \
             --runtime-source-subtree "$vm_tree" --runtime-native-bridges-sha256 "$bridge_hash" \

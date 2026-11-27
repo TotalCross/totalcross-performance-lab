@@ -13,3 +13,8 @@ is tracked under I01-B. Runner and runtime output are recorded under
 condition. The corrected candidate must complete all seven stages, report zero
 mismatches, satisfy each ownership assertion, render the expected red pixel,
 and exit successfully.
+
+The Linux run selects the bundled `fixtures/red-8x8.jpg` control because the
+frozen Linux runtime rejects the PNG fixture during native drawing. The image
+format is recorded in each prepared/result record. Windows and imported
+historical ownership evidence retain the exact-red PNG control.

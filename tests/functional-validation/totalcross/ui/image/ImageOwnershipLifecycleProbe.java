@@ -18,6 +18,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
   private static boolean baselineObservation;
   private static int ownershipMismatches;
   private static String currentStage = "startup";
+  private static String IMAGE_FIXTURE_FORMAT = "png";
   private static final byte[] RED_PNG = {
       (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
       0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
@@ -34,6 +35,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
 
   @Override
   public void initUI() {
+    IMAGE_FIXTURE_FORMAT = imageFixtureFormat();
     baselineObservation = isBaselineObservation();
     markStage("stage-1-mainwindow-entered");
     Vm.debug("TC_IMAGE_OWNERSHIP_START cycles=" + SCREEN_CYCLES + " controlsPerCycle="
@@ -68,7 +70,8 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
       String status = baselineObservation ? "BASELINE_OBSERVED" : "PASS";
       String result = "TC_IMAGE_OWNERSHIP_JSON {\"status\":\"" + status + "\","
           + "\"diagnosticMode\":\"" + (baselineObservation ? "baseline" : "fixed")
-          + "\",\"screenCycles\":" + SCREEN_CYCLES + ",\"controlsPerCycle\":"
+          + "\",\"imageFixtureFormat\":\"" + IMAGE_FIXTURE_FORMAT + "\""
+          + ",\"screenCycles\":" + SCREEN_CYCLES + ",\"controlsPerCycle\":"
           + CONTROLS_PER_CYCLE + ",\"distinctImagesPerCycle\":" + CONTROLS_PER_CYCLE
           + ",\"ownershipMismatches\":" + ownershipMismatches
           + ",\"highestCompletedStage\":7,\"drawPixelRgb\":" + pixel
@@ -97,6 +100,16 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
   private static boolean isBaselineObservation() {
     Object mode = Settings.appProps == null ? null : Settings.appProps.get("diagnostic.mode");
     return "baseline".equals(mode);
+  }
+
+  private static String imageFixtureFormat() {
+    Object format = Settings.appProps == null ? null : Settings.appProps.get("diagnostic.imageFormat");
+    return "jpeg".equals(format) ? "jpeg" : "png";
+  }
+
+  private static Image newFixtureImage() throws Exception {
+    return "jpeg".equals(IMAGE_FIXTURE_FORMAT)
+        ? new Image(ImageOwnershipJpegFixture.RED_JPEG) : new Image(RED_PNG);
   }
 
   private static String fixedOwnershipMetrics() {
@@ -166,7 +179,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
   }
 
   private void runSingleControlScenario() throws Exception {
-    Image image = new Image(RED_PNG);
+    Image image = newFixtureImage();
     ImageControl control = new ImageControl(image);
     add(control);
     requireOwnership(ImageDrawingBridge.persistentOwnerCount(image) == 1,
@@ -183,7 +196,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
       ImagePipeline[] pipelines = new ImagePipeline[CONTROLS_PER_CYCLE];
       ImageControl[] controls = new ImageControl[CONTROLS_PER_CYCLE];
       for (int i = 0; i < CONTROLS_PER_CYCLE; i++) {
-        Image image = new Image(RED_PNG);
+        Image image = newFixtureImage();
         images[i] = image;
         pipelines[i] = image.pipelineForSmoke();
         controls[i] = new ImageControl(image);
@@ -216,9 +229,9 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
   }
 
   private void runDetachedSubtreeScenario() throws Exception {
-    Image original = new Image(RED_PNG);
-    Image replacement = new Image(RED_PNG);
-    Image addedImage = new Image(RED_PNG);
+    Image original = newFixtureImage();
+    Image replacement = newFixtureImage();
+    Image addedImage = newFixtureImage();
     ImagePipeline originalPipeline = original.pipelineForSmoke();
     ImagePipeline replacementPipeline = replacement.pipelineForSmoke();
     ImagePipeline addedPipeline = addedImage.pipelineForSmoke();
@@ -262,7 +275,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
   }
 
   private void runActiveReparentScenario() throws Exception {
-    Image image = new Image(RED_PNG);
+    Image image = newFixtureImage();
     ImagePipeline pipeline = image.pipelineForSmoke();
     ImageControl control = new ImageControl(image);
     Container first = new Container();
@@ -288,7 +301,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
   }
 
   private void runSharedRasterScenario() throws Exception {
-    Image image = new Image(RED_PNG);
+    Image image = newFixtureImage();
     ImagePipeline pipeline = image.pipelineForSmoke();
     Container screen = new Container();
     ImageControl first = new ImageControl(image);
@@ -321,7 +334,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
   }
 
   private void runPipelineReplacementScenario() throws Exception {
-    Image image = new Image(RED_PNG);
+    Image image = newFixtureImage();
     ImagePipeline previous = image.pipelineForSmoke();
     Container screen = new Container();
     screen.add(new ImageControl(image));
@@ -343,7 +356,7 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
   }
 
   private int runDrawingScenario() throws Exception {
-    Image image = new Image(RED_PNG);
+    Image image = newFixtureImage();
     Container screen = new Container();
     screen.add(new ImageControl(image));
     add(screen);
@@ -363,8 +376,11 @@ public final class ImageOwnershipLifecycleProbe extends MainWindow {
     File output = new File("image-ownership-render.png", File.CREATE_EMPTY);
     destination.createPng(output);
     output.close();
-    require((pixel & 0xFFFFFF) == Color.RED,
-        "native repeated drawing must preserve the red pixel; got 0x"
+    int rgb = pixel & 0xFFFFFF;
+    boolean redPixel = "jpeg".equals(IMAGE_FIXTURE_FORMAT)
+        ? ((rgb >> 16) & 0xFF) >= 240 && ((rgb >> 8) & 0xFF) <= 10 && (rgb & 0xFF) <= 10
+        : rgb == Color.RED;
+    require(redPixel, "native repeated drawing must preserve the red pixel; got 0x"
         + Integer.toHexString(pixel));
     remove(screen);
     requireOwnership(ImageDrawingBridge.persistentOwnerCount(image) == 0,

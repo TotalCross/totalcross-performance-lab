@@ -92,12 +92,29 @@ def prepare(args: argparse.Namespace) -> dict:
         raise ProbeError("ownership probe source is missing: " + str(SOURCE))
     classes = out / "classes"
     classes.mkdir()
+    properties = []
     if args.mode == "baseline":
-        (classes / "tcapp.prop").write_text("diagnostic.mode=baseline\n", encoding="utf-8")
+        properties.append("diagnostic.mode=baseline")
+    if args.image_format != "png":
+        properties.append("diagnostic.imageFormat=" + args.image_format)
+    if properties:
+        (classes / "tcapp.prop").write_text("\n".join(properties) + "\n", encoding="utf-8")
     classpath = os.pathsep.join((str(sdk_jar), str(home / "dist/libs/*")))
     env = os.environ.copy()
     env["TOTALCROSS3_HOME"] = str(home)
-    logged([javac, "--release", "8", "-cp", classpath, "-d", str(classes), str(SOURCE)],
+    jpeg_fixture = ROOT / "investigations/7.3.0-functional/cases/image-ownership/fixtures/red-8x8.jpg"
+    jpeg_bytes = jpeg_fixture.read_bytes()
+    byte_values = ", ".join("(byte) 0x%02X" % value for value in jpeg_bytes)
+    jpeg_source = (
+        "package totalcross.ui.image;\n"
+        "final class ImageOwnershipJpegFixture {\n"
+        "  static final byte[] RED_JPEG = {" + byte_values + "};\n"
+        "}\n"
+    )
+    fixture_source = out / "ImageOwnershipJpegFixture.java"
+    fixture_source.write_text(jpeg_source, encoding="utf-8")
+    logged([javac, "--release", "8", "-cp", classpath, "-d", str(classes),
+            str(SOURCE), str(fixture_source)],
            ROOT, env, out / "compile.log")
     app_jar = out / (ENTRY_CLASS.rsplit(".", 1)[-1] + ".jar")
     logged([jar, "cf", str(app_jar), "-C", str(classes), "."], ROOT, env,
@@ -121,6 +138,8 @@ def prepare(args: argparse.Namespace) -> dict:
         "runtimeNativeBridgesSha256": args.runtime_native_bridges_sha256,
         "runtimeSourceSubtreeMatchesCandidate": args.runtime_subtree_matches_candidate,
         "probeSourceCommit": args.probe_source_commit,
+        "imageFixtureFormat": args.image_format,
+        "imageFixtureSha256": sha256(jpeg_fixture) if args.image_format == "jpeg" else None,
         "sdkJarSha256": sha256(sdk_jar),
         "launcherSha256": sha256(launcher),
         "libtcvmSha256": sha256(library),
@@ -133,18 +152,26 @@ def prepare(args: argparse.Namespace) -> dict:
     return record
 
 
-def validate_assertions(assertions: dict, mode: str) -> None:
+def validate_assertions(assertions: dict, mode: str, image_format: str) -> None:
     common = {
         "screenCycles": 2,
         "controlsPerCycle": 1510,
         "distinctImagesPerCycle": 1510,
         "highestCompletedStage": 7,
-        "drawPixelRgb": 16711680,
         "png": "image-ownership-render.png",
     }
     for key, expected in common.items():
         if assertions.get(key) != expected:
             raise ProbeError("ownership result did not satisfy %s=%r" % (key, expected))
+    if assertions.get("imageFixtureFormat") != image_format:
+        raise ProbeError("ownership result used a different image fixture format")
+    pixel = assertions.get("drawPixelRgb")
+    if image_format == "jpeg":
+        if (not isinstance(pixel, int) or ((pixel >> 16) & 0xFF) < 240
+                or ((pixel >> 8) & 0xFF) > 10 or (pixel & 0xFF) > 10):
+            raise ProbeError("JPEG ownership draw did not preserve the red pixel")
+    elif pixel != 16711680:
+        raise ProbeError("PNG ownership draw did not preserve exact red pixel")
     if mode == "baseline":
         if assertions.get("status") != "BASELINE_OBSERVED" \
                 or assertions.get("diagnosticMode") != "baseline":
@@ -210,13 +237,15 @@ def run(args: argparse.Namespace) -> dict:
         assertions = json.loads(result_line)
     except json.JSONDecodeError as error:
         raise ProbeError("ownership result marker is invalid JSON") from error
-    validate_assertions(assertions, args.mode)
+    image_format = prepared.get("imageFixtureFormat", "png")
+    validate_assertions(assertions, args.mode, image_format)
     png = install / assertions["png"]
     if not png.is_file() or png.stat().st_size == 0:
         raise ProbeError("ownership render PNG is missing or empty")
     record = {
         "status": "BASELINE_OBSERVED" if args.mode == "baseline" else "PASS",
         "mode": args.mode,
+        "imageFixtureFormat": image_format,
         "exitCode": exit_code,
         "durationMilliseconds": elapsed,
         "assertions": assertions,
@@ -244,6 +273,7 @@ def main() -> int:
     prepare_parser.add_argument("--runtime-native-bridges-sha256", required=True)
     prepare_parser.add_argument("--runtime-subtree-matches-candidate", action="store_true")
     prepare_parser.add_argument("--probe-source-commit", required=True)
+    prepare_parser.add_argument("--image-format", choices=("png", "jpeg"), default="png")
     prepare_parser.add_argument("--out", type=Path, required=True)
     run_parser = subparsers.add_parser("run")
     run_parser.add_argument("--mode", choices=("baseline", "fixed"), required=True)

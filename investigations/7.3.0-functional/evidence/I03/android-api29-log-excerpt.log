@@ -1,0 +1,11 @@
+11-27 04:03:57.823  8863  8888 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd
+11-27 04:04:00.300  8748  8748 V GrantPermissionsActivity: Logged buttons presented and clicked permissionGroupName=android.permission-group.STORAGE uid=10148 package=totalcross.appzmtw presentedButtons=9 clickedButton=8
+11-27 04:04:00.304  8748  8748 V GrantPermissionsActivity: Permission grant result requestId=-2291399921657373852 callingUid=10148 callingPackage=totalcross.appzmtw permission=android.permission.READ_EXTERNAL_STORAGE isImplicit=false result=6
+11-27 04:04:00.349  8863  8888 I TotalCross: TC_CLIENT_MAIN FAIL totalcross.io.IOException: Error Code: 13 - Permission denied
+11-27 04:04:04.884  9115  9140 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd
+11-27 04:04:07.449  9001  9001 V GrantPermissionsActivity: Logged buttons presented and clicked permissionGroupName=android.permission-group.STORAGE uid=10149 package=totalcross.appzmtw presentedButtons=9 clickedButton=1
+11-27 04:04:07.478  9001  9001 V GrantPermissionsActivity: Permission grant result requestId=-2468594499723898450 callingUid=10149 callingPackage=totalcross.appzmtw permission=android.permission.READ_EXTERNAL_STORAGE isImplicit=false result=4
+11-27 04:04:07.495  9115  9140 I TotalCross: TC_CLIENT_MAIN FAIL totalcross.io.IOException: Error Code: 13 - Permission denied
+11-27 04:04:11.967  9380  9405 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd
+11-27 04:04:11.971  9380  9405 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd
+11-27 04:04:11.973  9380  9405 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd

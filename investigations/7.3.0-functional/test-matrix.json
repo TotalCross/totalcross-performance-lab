@@ -112,6 +112,238 @@
       "results": [
         {
           "platform": "android-arm64-emulator",
+          "runtimeArchitecture": "arm64-v8a",
+          "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+          "sourceArtifactWorkflowRunId": 40878222908,
+          "artifactId": 12899147776,
+          "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+          "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+          "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+          "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+          "androidLibtcvmBuildId": "961a27eeb19136ff86d2db5cb08bae194e967b9a",
+          "evidenceOrigin": "CAMPAIGN",
+          "campaignExecution": "EXECUTED",
+          "scopeStatus": "IN_SCOPE",
+          "apiLevel": 29,
+          "androidVersion": "10",
+          "avd": "Codex_TC730_API29_ARM64",
+          "fingerprint": "google/sdk_gphone64_arm64/emulator64_arm64:10/QSR1.211112.011/13135432:userdebug/dev-keys",
+          "executionEnvironment": "local ARM64 emulator; Android Emulator 36.3.10; GPU renderer Apple M1 Pro",
+          "startupStatus": "PASS",
+          "testExecutionStatus": "FAIL: Android 10 interactive write-permission recovery did not complete the file operation",
+          "assertionStatus": "FAIL for in-place file recovery; denied and pregranted controls behaved as recorded",
+          "status": "NOT_REPRODUCED",
+          "defectClassification": "NOT_REPRODUCED_ON_API_29",
+          "nativeCrashCount": 0,
+          "apkSha256": {
+            "exact": "da105b9a32214745c0a339918961fdfb407cc34556c1cd4f8fb41b262d408c3f",
+            "trace": "a923a2484ef094d2466c01818b7701939ba4189d4743f7b53b01f49dbc0b84ea"
+          },
+          "scenarioResults": {
+            "denied": {
+              "exact": "process remained alive",
+              "trace": "Error Code 13 - Permission denied; process remained alive"
+            },
+            "grant-in-place": {
+              "exact": "process remained alive",
+              "trace": "Allow selected, WRITE_EXTERNAL_STORAGE remained granted=false, Error Code 13; process remained alive"
+            },
+            "pregranted": {
+              "exact": "process remained alive",
+              "trace": "directory created and deleted; process remained alive"
+            }
+          },
+          "filesystemRecoveryStatus": "FAIL",
+          "storagePermissionAfterAllow": "WRITE_EXTERNAL_STORAGE granted=false; permission prompt result concerned READ_EXTERNAL_STORAGE",
+          "rootCause": "Native lifecycle crash not reproduced; permission recovery cause not established.",
+          "evidenceFiles": [
+            "reports/I03-android-egl-lifecycle.md",
+            "evidence/I03/android-api29-run.json",
+            "evidence/I03/android-api29-log-excerpt.log",
+            "evidence/I03/android-api29-permission-prompt.png"
+          ],
+          "limitations": [
+            "Official package only; corrected candidate not tested.",
+            "Permission behavior is an I08 finding.",
+            "Other lifecycle scenarios and physical devices were not tested."
+          ],
+          "runnerHostArchitecture": "arm64 (Apple Silicon local host)",
+          "caseIds": [
+            "I03-API29-DENIED",
+            "I03-API29-GRANT_IN_PLACE",
+            "I03-API29-PREGRANTED"
+          ],
+          "workaroundsUsed": [
+            "API 29: accessibility-tree button selection for the runtime permission dialog"
+          ],
+          "conditionalValidation": false,
+          "runnerExitCode": 1,
+          "applicationProcessExitStatus": "still running at end of each phase"
+        },
+        {
+          "platform": "android-arm64-emulator",
+          "runtimeArchitecture": "arm64-v8a",
+          "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+          "sourceArtifactWorkflowRunId": 40878222908,
+          "artifactId": 12899147776,
+          "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+          "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+          "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+          "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+          "androidLibtcvmBuildId": "961a27eeb19136ff86d2db5cb08bae194e967b9a",
+          "evidenceOrigin": "CAMPAIGN",
+          "campaignExecution": "EXECUTED",
+          "scopeStatus": "IN_SCOPE",
+          "apiLevel": 30,
+          "androidVersion": "11",
+          "avd": "Codex_TC730_API30_ARM64",
+          "fingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+          "executionEnvironment": "local ARM64 emulator; Android Emulator 36.3.10; GPU renderer Apple M1 Pro",
+          "startupStatus": "PASS",
+          "testExecutionStatus": "FAIL: native process crashed during denied/grant-in-place transitions",
+          "assertionStatus": "FAIL: inPlaceRemainsSameProcess",
+          "status": "FAIL",
+          "defectClassification": "REPRODUCED_NATIVE_CRASH",
+          "nativeCrashCount": 4,
+          "runnerExitCode": 1,
+          "apkSha256": {
+            "exact": "da105b9a32214745c0a339918961fdfb407cc34556c1cd4f8fb41b262d408c3f",
+            "trace": "a923a2484ef094d2466c01818b7701939ba4189d4743f7b53b01f49dbc0b84ea"
+          },
+          "crashSignature": "SIGSEGV / SEGV_MAPERR on TC Event Thread",
+          "faultAddresses": {
+            "denied": "0x30",
+            "grant-in-place": "0x0"
+          },
+          "tombstoneFiles": [
+            "tombstone_06",
+            "tombstone_07",
+            "tombstone_08",
+            "tombstone_09"
+          ],
+          "commonStack": "GL2Encoder::s_glDrawRangeElements / FillRectOp::onExecute / GrDirectContext::~GrDirectContext / SkGpuDevice::~SkGpuDevice / initSkia / initGLES / Java_totalcross_Launcher4A_nativeSurfaceChanged",
+          "scenarioResults": {
+            "denied": {
+              "exact": "SIGSEGV",
+              "trace": "permission IOException followed by SIGSEGV"
+            },
+            "grant-in-place": {
+              "exact": "SIGSEGV",
+              "trace": "directory create/delete succeeded, then SIGSEGV"
+            },
+            "pregranted": {
+              "exact": "process remained alive",
+              "trace": "directory create/delete succeeded; process remained alive"
+            }
+          },
+          "rootCause": "OPEN",
+          "evidenceFiles": [
+            "reports/I03-android-egl-lifecycle.md",
+            "evidence/I03/android-api30-run.json",
+            "evidence/I03/android-api30-log-excerpt.log",
+            "evidence/I03/android-api30-native-stack-excerpts.log",
+            "evidence/I03/android-api30-permission-prompt.png"
+          ],
+          "limitations": [
+            "Corrected candidate not tested.",
+            "Settings return without change, repeated requests, background/foreground, and rotation were not tested.",
+            "No physical-device conclusion."
+          ],
+          "runnerHostArchitecture": "arm64 (Apple Silicon local host)",
+          "caseIds": [
+            "I03-API30-DENIED",
+            "I03-API30-GRANT_IN_PLACE",
+            "I03-API30-PREGRANTED"
+          ],
+          "workaroundsUsed": [
+            "Manifest launcher activity via am start -W because monkey exited 251 after launch"
+          ],
+          "conditionalValidation": false,
+          "applicationProcessExitStatus": "process crashed in denied and grant-in-place phases; pregranted process remained alive"
+        },
+        {
+          "platform": "android-arm64-emulator",
+          "runtimeArchitecture": "arm64-v8a",
+          "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+          "sourceArtifactWorkflowRunId": 40878222908,
+          "artifactId": 12899147776,
+          "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+          "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+          "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+          "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+          "androidLibtcvmBuildId": "961a27eeb19136ff86d2db5cb08bae194e967b9a",
+          "evidenceOrigin": "CAMPAIGN",
+          "campaignExecution": "EXECUTED",
+          "scopeStatus": "IN_SCOPE",
+          "apiLevel": 35,
+          "androidVersion": "15",
+          "avd": "Codex_TC730_API35_ARM64",
+          "fingerprint": "google/sdk_gphone64_arm64/emu64a:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+          "executionEnvironment": "local ARM64 emulator; Android Emulator 36.3.10; GPU renderer Apple M1 Pro",
+          "startupStatus": "PASS",
+          "testExecutionStatus": "FAIL: native process crashed during denied/grant-in-place transitions",
+          "assertionStatus": "FAIL: inPlaceRemainsSameProcess",
+          "status": "FAIL",
+          "defectClassification": "REPRODUCED_NATIVE_CRASH",
+          "nativeCrashCount": 4,
+          "runnerExitCode": 1,
+          "apkSha256": {
+            "exact": "da105b9a32214745c0a339918961fdfb407cc34556c1cd4f8fb41b262d408c3f",
+            "trace": "a923a2484ef094d2466c01818b7701939ba4189d4743f7b53b01f49dbc0b84ea"
+          },
+          "crashSignature": "SIGSEGV / SEGV_MAPERR on TC Event Thread",
+          "faultAddresses": {
+            "denied": "0x30",
+            "grant-in-place": "0x0"
+          },
+          "tombstoneFiles": [
+            "tombstone_02",
+            "tombstone_03",
+            "tombstone_04",
+            "tombstone_05"
+          ],
+          "commonStack": "GL2Encoder::s_glDrawRangeElements / FillRectOp::onExecute / GrDirectContext::~GrDirectContext / SkGpuDevice::~SkGpuDevice / initSkia / initGLES / Java_totalcross_Launcher4A_nativeSurfaceChanged",
+          "scenarioResults": {
+            "denied": {
+              "exact": "SIGSEGV",
+              "trace": "permission IOException followed by SIGSEGV"
+            },
+            "grant-in-place": {
+              "exact": "SIGSEGV",
+              "trace": "directory create/delete succeeded, then SIGSEGV"
+            },
+            "pregranted": {
+              "exact": "process remained alive",
+              "trace": "directory create/delete succeeded; process remained alive"
+            }
+          },
+          "rootCause": "OPEN",
+          "evidenceFiles": [
+            "reports/I03-android-egl-lifecycle.md",
+            "evidence/I03/android-api35-run.json",
+            "evidence/I03/android-api35-log-excerpt.log",
+            "evidence/I03/android-api35-native-stack-excerpts.log",
+            "evidence/I03/android-api35-permission-prompt.png"
+          ],
+          "limitations": [
+            "Corrected candidate not tested.",
+            "Settings return without change, repeated requests, background/foreground, and rotation were not tested.",
+            "No physical-device conclusion."
+          ],
+          "runnerHostArchitecture": "arm64 (Apple Silicon local host)",
+          "caseIds": [
+            "I03-API35-DENIED",
+            "I03-API35-GRANT_IN_PLACE",
+            "I03-API35-PREGRANTED"
+          ],
+          "workaroundsUsed": [
+            "Manifest launcher activity via am start -W because monkey exited 251 after launch"
+          ],
+          "conditionalValidation": false,
+          "applicationProcessExitStatus": "process crashed in denied and grant-in-place phases; pregranted process remained alive"
+        },
+        {
+          "platform": "android-arm64-emulator",
           "apiLevel": 36,
           "androidVersion": "16",
           "runtimeArchitecture": "arm64-v8a",
@@ -153,20 +385,40 @@
           "runnerFailureCheck": "inPlaceRemainsSameProcess (false because the native process crashed)",
           "initialAttempt": "INCONCLUSIVE: emulator System UI ANR dialog blocked the permission screen; retry after selecting Wait produced the recorded TotalCross crashes.",
           "evidenceFiles": [
-            "reports/I03-android-api36.md",
+            "reports/I03-android-egl-lifecycle.md",
             "evidence/I03/android-api36-run.json",
             "evidence/I03/native-crash-excerpts.log",
             "evidence/I03/first-attempt-systemui-anr.png"
           ],
           "limitations": [
-            "API 29, 30, and 35 not tested.",
             "Corrected candidate not tested.",
             "Repeated requests, background/foreground, and rotation scenarios not tested.",
             "The trigger and root cause are not isolated; no physical-device conclusion."
-          ]
+          ],
+          "runnerHostArchitecture": "arm64 (Apple Silicon local host)",
+          "executionEnvironment": "local hardware-accelerated Android ARM64 emulator",
+          "startupStatus": "PASS",
+          "testExecutionStatus": "FAIL",
+          "assertionStatus": "FAIL: in-place process did not remain alive",
+          "defectClassification": "REPRODUCED_NATIVE_CRASH",
+          "caseIds": [
+            "I03-API36-DENIED",
+            "I03-API36-GRANT_IN_PLACE",
+            "I03-API36-PREGRANTED"
+          ],
+          "workaroundsUsed": [
+            "Manifest launcher activity via am start -W because monkey exited 251 after launch"
+          ],
+          "conditionalValidation": false,
+          "applicationProcessExitStatus": "process crashed in denied and grant-in-place phases; pregranted process remained alive"
         }
       ],
-      "coverageStatus": "PARTIAL"
+      "coverageStatus": "PARTIAL",
+      "coverageLimitations": [
+        "Only denied, grant-in-flow, and pregranted customer scenarios were tested.",
+        "Corrected candidate and API 24/31 were not tested.",
+        "Settings-return-unchanged, repeated requests, background/foreground, and rotation remain NOT_RUN."
+      ]
     },
     {
       "investigationId": "I04",

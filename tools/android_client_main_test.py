@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run customer's Main.java + TestPermission.java example on Android 15.
+"""Run customer's Main.java + TestPermission.java on an Android ARM64 AVD.
 
 Phases preserve the original UI initialization, '/sdcard/asd' File.createDir
 then File.delete. Build both unmodified Java and the same code with four debug
@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import time
+import xml.etree.ElementTree as ET
 import zipfile
 
 
@@ -65,34 +66,117 @@ def appop(package, value):
     return status
 
 
+def prepare_storage_permissions(package, api_level):
+    """Pregrant WRITE_EXTERNAL_STORAGE as the neutral API 30 baseline."""
+    if api_level != 30:
+        return []
+    command(["adb", "shell", "pm", "grant", "--user", "0", package,
+             "android.permission.WRITE_EXTERNAL_STORAGE"])
+    command(["adb", "shell", "appops", "set", package,
+             "WRITE_EXTERNAL_STORAGE", "allow"])
+    package_dump = command(["adb", "shell", "dumpsys", "package", package])
+    permission_line = next((line.strip() for line in package_dump.splitlines()
+                            if "android.permission.WRITE_EXTERNAL_STORAGE:" in line
+                            and "granted=" in line), "")
+    if "granted=true" not in permission_line:
+        raise RuntimeError("Could not pregrant WRITE_EXTERNAL_STORAGE: " + permission_line)
+    return [{"permission": "android.permission.WRITE_EXTERNAL_STORAGE",
+             "granted": True, "reason": "neutral baseline; MANAGE_EXTERNAL_STORAGE remains phase-controlled"}]
+
+
+def set_storage_access(package, value, api_level):
+    if api_level >= 30:
+        return appop(package, value)
+    permission = "android.permission.WRITE_EXTERNAL_STORAGE"
+    action = "grant" if value == "allow" else "revoke"
+    command(["adb", "shell", "pm", action, "--user", "0", package, permission])
+    state = storage_access_state(package, api_level)
+    expected = "granted=true" if value == "allow" else "granted=false"
+    if expected not in state:
+        raise RuntimeError("Could not set legacy storage access to " + value + ": " + state)
+    return state
+
+
+def storage_access_state(package, api_level):
+    if api_level >= 30:
+        return command(["adb", "shell", "appops", "get", package,
+                        "MANAGE_EXTERNAL_STORAGE"], check=False)
+    package_dump = command(["adb", "shell", "dumpsys", "package", package])
+    permission_line = next((line.strip() for line in package_dump.splitlines()
+                            if "android.permission.WRITE_EXTERNAL_STORAGE:" in line
+                            and "granted=" in line), "")
+    return permission_line or "WRITE_EXTERNAL_STORAGE state unavailable"
+
+
 def focused():
     output = command(["adb", "shell", "dumpsys", "window"], timeout=25, check=False)
     return [l.strip() for l in output.splitlines()
             if "mCurrentFocus" in l or "mFocusedApp" in l]
 
 
+def click_permission_dialog_button(label):
+    command(["adb", "shell", "uiautomator", "dump", "/sdcard/window.xml"],
+            timeout=25)
+    hierarchy = command(["adb", "shell", "cat", "/sdcard/window.xml"], timeout=20)
+    root = ET.fromstring(hierarchy)
+    for node in root.iter("node"):
+        if node.attrib.get("text") != label or node.attrib.get("clickable") != "true":
+            continue
+        bounds = re.fullmatch(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]",
+                              node.attrib.get("bounds", ""))
+        if bounds:
+            left, top, right, bottom = (int(value) for value in bounds.groups())
+            x, y = (left + right) // 2, (top + bottom) // 2
+            command(["adb", "shell", "input", "tap", str(x), str(y)])
+            return {"label": label, "bounds": node.attrib["bounds"],
+                    "tap": [x, y]}
+    raise RuntimeError("Could not find clickable Android permission button " + label)
+
+
 def pid(package):
     return command(["adb", "shell", "pidof", package], check=False).strip()
 
 
-def run_phase(out, package, variant, phase, seconds):
+def run_phase(out, apk, package, launcher_activity, variant, phase, api_level, seconds):
     prefix = variant + "-" + phase
     permission = "allow" if phase == "granted-before-launch" else "ignore"
     command(["adb", "shell", "am", "force-stop", package], check=False)
     # Make sure the prior phase's Settings activity is not still on top.
     command(["adb", "shell", "am", "force-stop", "com.android.settings"], check=False)
-    before_appop = appop(package, permission)
+    command(["adb", "shell", "am", "force-stop", "com.google.android.permissioncontroller"],
+            check=False)
+    command(["adb", "shell", "am", "force-stop", "com.google.android.packageinstaller"],
+            check=False)
+    # Reinstall between phases so each starts with fresh app data and Android's
+    # user-set/user-fixed runtime permission flags.
+    command(["adb", "uninstall", package], check=False)
+    command(["adb", "install", "--abi", "arm64-v8a", apk], timeout=120)
+    baseline_permissions = prepare_storage_permissions(package, api_level)
+    before_access = set_storage_access(package, permission, api_level)
     command(["adb", "logcat", "-c"], check=False)
     started = time.monotonic()
-    launch = command(["adb", "shell", "monkey", "-p", package, "-c",
-                      "android.intent.category.LAUNCHER", "1"], timeout=35)
+    launch_mechanism = "monkey"
+    try:
+        launch = command(["adb", "shell", "monkey", "-p", package, "-c",
+                          "android.intent.category.LAUNCHER", "1"], timeout=35)
+        if "Events injected: 1" not in launch:
+            raise RuntimeError("monkey did not report one injected event: " + launch)
+    except RuntimeError as failure:
+        launch_mechanism = "am-start-fallback"
+        launch = ("monkey launch failed; retrying with explicit launcher activity\n"
+                  + str(failure) + "\n"
+                  + command(["adb", "shell", "am", "start", "-W", "-n",
+                             launcher_activity], timeout=35))
     save(out, prefix + "-launch.txt", launch)
-    if "Events injected: 1" not in launch:
+    if ("Events injected: 1" not in launch
+            and "Status: ok" not in launch):
         raise RuntimeError(prefix + ": failed to start customer app: " + launch)
     original_pid = ""
     event_logs = []
-    prompt_seen = False
+    permission_prompt_seen = False
+    settings_prompt_seen = False
     grant_applied = False
+    permission_dialog_action = None
     back_count = 0
     focus_observations = []
     next_screenshot = started + 2
@@ -110,15 +194,33 @@ def run_phase(out, package, variant, phase, seconds):
         save(out, prefix + "-logcat.txt", log)
         event_logs = [line.strip() for line in log.splitlines()
                       if "TC_CLIENT_MAIN " in line]
-        if any("com.android.settings" in l for l in focus):
-            prompt_seen = True
+        permission_prompt = any(
+            token in line for line in focus
+            for token in ("com.android.settings",
+                          "com.google.android.permissioncontroller",
+                          "com.android.permissioncontroller",
+                          "com.google.android.packageinstaller",
+                          "com.android.packageinstaller"))
+        if permission_prompt:
+            permission_prompt_seen = True
+            settings_prompt_seen |= any("com.android.settings" in line for line in focus)
             if back_count == 0 or time.monotonic()-started > 8 and back_count < 2:
-                screenshot(out, prefix + "-settings.png")
-                if phase == "grant-in-place" and not grant_applied:
-                    appop(package, "allow")
-                    grant_applied = True
-                command(["adb", "shell", "input", "keyevent", "KEYCODE_BACK"],
-                        timeout=20, check=False)
+                screenshot(out, prefix + "-permission-prompt.png")
+                is_runtime_dialog = api_level == 29 and any(
+                    "com.google.android.permissioncontroller" in line
+                    or "com.android.permissioncontroller" in line
+                    or "com.android.packageinstaller" in line
+                    for line in focus)
+                if is_runtime_dialog:
+                    action = "Allow" if phase == "grant-in-place" else "Deny"
+                    permission_dialog_action = click_permission_dialog_button(action)
+                    grant_applied = action == "Allow"
+                else:
+                    if phase == "grant-in-place" and not grant_applied:
+                        set_storage_access(package, "allow", api_level)
+                        grant_applied = True
+                    command(["adb", "shell", "input", "keyevent", "KEYCODE_BACK"],
+                            timeout=20, check=False)
                 back_count += 1
         finished = (any("TC_CLIENT_MAIN DELETED" in l for l in event_logs)
                     or any("TC_CLIENT_MAIN FAIL" in l for l in event_logs))
@@ -128,7 +230,7 @@ def run_phase(out, package, variant, phase, seconds):
         if variant == "exact":
             if permission == "allow" and time.monotonic()-started > 5:
                 break
-            if prompt_seen and back_count and time.monotonic()-started > 7:
+            if permission_prompt_seen and back_count and time.monotonic()-started > 7:
                 break
         if time.monotonic() >= next_screenshot:
             screenshot(out, prefix + "-mid.png")
@@ -142,22 +244,28 @@ def run_phase(out, package, variant, phase, seconds):
     save(out, prefix + "-focus.json", json.dumps(focus_observations, indent=2))
     result = {
         "variant": variant, "phase": phase, "elapsedSeconds": round(time.monotonic()-started, 2),
+        "launchMechanism": launch_mechanism,
+        "baselineStoragePermissions": baseline_permissions,
         "package": package, "originalPid": original_pid, "finalPid": final_pid,
         "sameProcess": bool(original_pid and original_pid == final_pid),
-        "settingsPromptSeen": prompt_seen, "grantAppliedWhileSettingsOpen": grant_applied,
-        "settingsBackCount": back_count,
+        "permissionPromptSeen": permission_prompt_seen,
+        "settingsPromptSeen": settings_prompt_seen,
+        "grantAppliedWhilePromptOpen": grant_applied,
+        "permissionDialogAction": permission_dialog_action,
+        "permissionActionCount": back_count,
         "nativeAccessAllowedInitially": permission == "allow",
         "fileDirCreated": any("TC_CLIENT_MAIN CREATED" in l for l in event_logs),
         "fileDirDeleted": any("TC_CLIENT_MAIN DELETED" in l for l in event_logs),
         "fileDirFailed": any("TC_CLIENT_MAIN FAIL" in l for l in event_logs),
         "debugEvents": event_logs,
         "lastFocus": focus_observations[-1] if focus_observations else {},
-        "appopAfter": command(["adb", "shell", "appops", "get", package, "MANAGE_EXTERNAL_STORAGE"], check=False),
+        "storageAccessAfter": storage_access_state(package, api_level),
+        "storageAccessBefore": before_access,
         "storageDirAfter": command(["adb", "shell", "ls", "-ld", "/sdcard/asd"], check=False),
     }
     save(out, prefix + "-summary.json", json.dumps(result, indent=2))
     print(variant, phase, "PID", original_pid, "->", final_pid,
-          "prompt", prompt_seen, "grant", grant_applied,
+          "prompt", permission_prompt_seen, "grant", grant_applied,
           "created", result["fileDirCreated"],
           "deleted", result["fileDirDeleted"],
           "failed", result["fileDirFailed"], flush=True)
@@ -177,6 +285,7 @@ def main():
         command(["adb", "wait-for-device"])
         all_results["deviceSdk"] = command(
             ["adb", "shell", "getprop", "ro.build.version.sdk"]).strip()
+        api_level = int(all_results["deviceSdk"])
         for variant in ("exact", "trace"):
             apks = sorted((out / variant / "deployed").rglob("*.apk"))
             if len(apks) != 1:
@@ -185,16 +294,21 @@ def main():
             package, badging, permissions = get_package(apk)
             save(out, variant + "-apk-badging.txt", badging)
             save(out, variant + "-apk-permissions.txt", permissions)
+            launcher_match = re.search(r"^launchable-activity: name='([^']+)'", badging, re.M)
+            if not launcher_match:
+                raise RuntimeError(variant + " has no launcher activity")
+            launcher_activity = package + "/" + launcher_match.group(1)
             if "android.permission.MANAGE_EXTERNAL_STORAGE" not in permissions:
                 raise RuntimeError(variant + " does not declare MANAGE_EXTERNAL_STORAGE")
-            command(["adb", "install", "--abi", "arm64-v8a", "-r", apk], timeout=120)
             all_results["variants"][variant] = {"apk": str(apk.relative_to(out)),
                                                   "package": package}
             phases = ("denied", "grant-in-place", "granted-before-launch") if variant == "trace" else (
                 "denied", "grant-in-place", "granted-before-launch")
             for phase in phases:
-                run_result = run_phase(out, package, variant, phase, args.timeout
-                                       if variant == "trace" else min(args.timeout, 32))
+                run_result = run_phase(out, apk, package, launcher_activity,
+                                       variant, phase, api_level,
+                                       args.timeout if variant == "trace"
+                                       else min(args.timeout, 32))
                 all_results["phases"].append(run_result)
         by = {(r["variant"], r["phase"]): r for r in all_results["phases"]}
         exact_denied = by[("exact", "denied")]
@@ -204,10 +318,10 @@ def main():
         trace_granted = by[("trace", "granted-before-launch")]
         checks = {
             "unmodifiedOriginalLaunched": bool(exact_denied["originalPid"] and exact_in_place["originalPid"]),
-            "deniedShowsPermissionSettings": trace_denied["settingsPromptSeen"],
+            "deniedShowsPermissionPrompt": trace_denied["permissionPromptSeen"],
             "deniedReportedException": trace_denied["fileDirFailed"],
-            "inPlaceGrantOpensSettings": trace_resume["settingsPromptSeen"],
-            "inPlaceGrantApplied": trace_resume["grantAppliedWhileSettingsOpen"],
+            "inPlaceGrantOpensPermissionPrompt": trace_resume["permissionPromptSeen"],
+            "inPlaceGrantApplied": trace_resume["grantAppliedWhilePromptOpen"],
             "inPlaceRemainsSameProcess": trace_resume["sameProcess"],
             "inPlaceCreatedAndDeleted": trace_resume["fileDirCreated"] and trace_resume["fileDirDeleted"],
             "preGrantedCreatedAndDeleted": trace_granted["fileDirCreated"] and trace_granted["fileDirDeleted"],

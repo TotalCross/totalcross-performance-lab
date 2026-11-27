@@ -43,7 +43,7 @@ provenance, proposed issue updates, and a consolidated report.
   CI package by published artifact digests and extracted binary hashes;
   checked TotalCross 4.6.0 source for I04/I05 and kept both in scope.
 - [x] 2026-11-27: Confirmed local ARM64 Android emulator acceleration and API
-  34/36/37 system images; Android Actions runtime execution is excluded.
+  29/30/35/36 system images; Android Actions runtime execution is excluded.
 - [x] 2026-11-27: Compared the historical Linux build source with frozen
   master and confirmed the native VM tree changed; current-master evidence
   requires an exact-source rebuild.
@@ -56,22 +56,28 @@ provenance, proposed issue updates, and a consolidated report.
   masked the pinned `deps.yml` entry. Commits `3394d9b` and `dc76666` pin the
   dependency metadata and forward overrides only when nonempty; both attempts
   stopped before runtime validation.
-- [x] 2026-11-27: Executed the official 7.3.0 Android reproducer on the
-  hardware-accelerated API 36 ARM64 AVD. After clearing an emulator System UI
-  ANR from the first attempt, the exact and trace builds reproduced four native
-  SIGSEGVs in the Skia/GLES surface-change path across denied and grant-in-place
-  flows; the pregranted control created and deleted the directory. Imported
-  compact logcat/tombstone evidence and left the root cause open.
+- [x] 2026-11-27: Executed the official 7.3.0 customer reproducer on local
+  hardware-accelerated API 29/30/35/36 ARM64 AVDs. APIs 30/35/36 each produced
+  four Skia/GLES SIGSEGV tombstones across denied and grant-in-place flows;
+  pregranted controls stayed alive. API 29 produced no native crash, but an
+  interactive Allow left WRITE_EXTERNAL_STORAGE denied while the explicit
+  pregrant passed. The harness now resets each phase by reinstalling the app
+  and uses the accessibility tree for API 29's runtime permission dialog. The
+  consolidated I03 report and compact evidence are recorded; root cause stays
+  open.
 - [x] 2026-11-27: The third hosted Linux build passed CMake configuration and
   began native compilation, then failed because the Docker bind mount could
   not read Actions' external Git metadata and no `build-provenance.json` was
   present. The workflow now writes provenance from the exact frozen commit and
   tree before invoking the canonical container; the identity script accepted
-  this manifest in a no-Git fixture. A hosted retry is pending.
+  this manifest in a no-Git fixture. Hosted run `45949849457` subsequently
+  completed build and runtime jobs; the Linux result artifact is pending report
+  and matrix consolidation.
 - [x] Milestone 0: provenance, legacy-port review, historical evidence import,
   harness/workflow contract, and CI/emulator capability checks are complete.
-- [ ] Milestone 1: investigate Linux realpath startup (I01-B), then PNG decode
-  (I02), preserving independent findings.
+- [ ] Milestone 1: Linux realpath startup (I01-B) and PNG decode (I02) runtime
+  execution is complete; consolidate the hosted result artifact into the
+  reports and matrix while preserving independent findings.
 - [ ] Milestone 2: investigate Android EGL lifecycle (I03), then I04/I05,
   which remain in scope after the verified 4.6.0 source check.
 - [ ] Milestone 3: run Linux ownership validation (I06) and remaining

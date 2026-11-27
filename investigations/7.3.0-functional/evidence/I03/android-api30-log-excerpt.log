@@ -1,0 +1,16 @@
+11-27 04:07:08.057  4554  4580 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x30 in tid 4580 (TC Event Thread), pid 4554 (alcross.appzmtw)
+11-27 04:07:08.363   288   288 E tombstoned: Tombstone written to: /data/tombstones/tombstone_06
+11-27 04:07:16.238  4894  4919 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 4919 (TC Event Thread), pid 4894 (alcross.appzmtw)
+11-27 04:07:16.452   288   288 E tombstoned: Tombstone written to: /data/tombstones/tombstone_07
+11-27 04:07:31.454  5485  5510 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd
+11-27 04:07:32.759  5485  5510 I TotalCross: TC_CLIENT_MAIN FAIL totalcross.io.IOException: Error Code: 1 - Operation not permitted
+11-27 04:07:32.861  5485  5510 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x30 in tid 5510 (TC Event Thread), pid 5485 (alcross.appzmtw)
+11-27 04:07:33.070   288   288 E tombstoned: Tombstone written to: /data/tombstones/tombstone_08
+11-27 04:07:37.429  5954  5979 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd
+11-27 04:07:38.818  5954  5979 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd
+11-27 04:07:38.822  5954  5979 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd
+11-27 04:07:38.907  5954  5979 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 5979 (TC Event Thread), pid 5954 (alcross.appzmtw)
+11-27 04:07:39.126   288   288 E tombstoned: Tombstone written to: /data/tombstones/tombstone_09
+11-27 04:07:43.463  6291  6317 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd
+11-27 04:07:43.473  6291  6317 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd
+11-27 04:07:43.476  6291  6317 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd

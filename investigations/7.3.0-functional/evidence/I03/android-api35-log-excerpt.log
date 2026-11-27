@@ -1,0 +1,16 @@
+11-27 04:10:09.291  3156  3176 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x30 in tid 3176 (TC Event Thread), pid 3156 (alcross.appzmtw)
+11-27 04:10:09.743   217   217 E tombstoned: Tombstone written to: tombstone_02
+11-27 04:10:19.095  3469  3484 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 3484 (TC Event Thread), pid 3469 (alcross.appzmtw)
+11-27 04:10:19.264   217   217 E tombstoned: Tombstone written to: tombstone_03
+11-27 04:10:34.120  3984  4013 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd
+11-27 04:10:35.492  3984  4013 I TotalCross: TC_CLIENT_MAIN FAIL totalcross.io.IOException: Error Code: 13 - Permission denied
+11-27 04:10:35.573  3984  4013 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x30 in tid 4013 (TC Event Thread), pid 3984 (alcross.appzmtw)
+11-27 04:10:35.908   217   217 E tombstoned: Tombstone written to: tombstone_04
+11-27 04:10:40.295  4273  4291 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd
+11-27 04:10:41.693  4273  4291 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd
+11-27 04:10:41.700  4273  4291 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd
+11-27 04:10:41.763  4273  4291 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 4291 (TC Event Thread), pid 4273 (alcross.appzmtw)
+11-27 04:10:41.936   217   217 E tombstoned: Tombstone written to: tombstone_05
+11-27 04:10:46.511  4514  4535 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd
+11-27 04:10:46.525  4514  4535 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd
+11-27 04:10:46.529  4514  4535 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd

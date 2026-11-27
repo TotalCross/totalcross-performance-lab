@@ -159,7 +159,7 @@
       "campaignImplication": "Rebuild the exact frozen master source; the historical 61034 Linux VM cannot be reused as current-master evidence."
     },
     {
-      "name": "I03 Android API 36 customer Main crash reproduction",
+      "name": "I03 Android API 29/30/35/36 customer Main lifecycle matrix",
       "repository": "TotalCross/totalcross",
       "sourceSha": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
       "workflowRunId": 40878222908,
@@ -173,9 +173,62 @@
       "androidLibtcvmBuildId": "961a27eeb19136ff86d2db5cb08bae194e967b9a",
       "exactApkSha256": "44d425592047c867156c803750a1101f5010434711ed2ad0ef7cad14decbfe23",
       "traceApkSha256": "f8440c08f7a325161aaa0b1ad7f7bd377baf990f4202dbf4a492c9000553aec8",
-      "status": "CAMPAIGN_FAIL_REPRODUCED_FOUR_SIGSEGV_TOMBSTONES",
-      "evidencePath": "investigations/7.3.0-functional/evidence/I03/android-api36-run.json",
-      "rawTombstonesRetainedOutsideGit": true
+      "status": "API29_NO_NATIVE_CRASH; API30/35/36_EACH_FOUR_SIGSEGV_TOMBSTONES",
+      "evidencePath": "investigations/7.3.0-functional/reports/I03-android-egl-lifecycle.md",
+      "rawTombstonesRetainedOutsideGit": true,
+      "apiLevels": [
+        29,
+        30,
+        35,
+        36
+      ],
+      "perApi": [
+        {
+          "apiLevel": 29,
+          "androidVersion": "10",
+          "avd": "Codex_TC730_API29_ARM64",
+          "fingerprint": "google/sdk_gphone64_arm64/emulator64_arm64:10/QSR1.211112.011/13135432:userdebug/dev-keys",
+          "gpuRenderer": "Android Emulator OpenGL ES Translator (Apple M1 Pro)",
+          "exactApkSha256": "da105b9a32214745c0a339918961fdfb407cc34556c1cd4f8fb41b262d408c3f",
+          "traceApkSha256": "a923a2484ef094d2466c01818b7701939ba4189d4743f7b53b01f49dbc0b84ea",
+          "nativeCrashCount": 0,
+          "filesystemPermissionRecovery": "interactive Allow left WRITE_EXTERNAL_STORAGE denied; pregrant control passed",
+          "evidencePath": "investigations/7.3.0-functional/evidence/I03/android-api29-run.json"
+        },
+        {
+          "apiLevel": 30,
+          "androidVersion": "11",
+          "avd": "Codex_TC730_API30_ARM64",
+          "fingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+          "gpuRenderer": "Android Emulator OpenGL ES Translator (Apple M1 Pro)",
+          "exactApkSha256": "da105b9a32214745c0a339918961fdfb407cc34556c1cd4f8fb41b262d408c3f",
+          "traceApkSha256": "a923a2484ef094d2466c01818b7701939ba4189d4743f7b53b01f49dbc0b84ea",
+          "nativeCrashCount": 4,
+          "evidencePath": "investigations/7.3.0-functional/evidence/I03/android-api30-run.json"
+        },
+        {
+          "apiLevel": 35,
+          "androidVersion": "15",
+          "avd": "Codex_TC730_API35_ARM64",
+          "fingerprint": "google/sdk_gphone64_arm64/emu64a:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+          "gpuRenderer": "Android Emulator OpenGL ES Translator (Apple M1 Pro)",
+          "exactApkSha256": "da105b9a32214745c0a339918961fdfb407cc34556c1cd4f8fb41b262d408c3f",
+          "traceApkSha256": "a923a2484ef094d2466c01818b7701939ba4189d4743f7b53b01f49dbc0b84ea",
+          "nativeCrashCount": 4,
+          "evidencePath": "investigations/7.3.0-functional/evidence/I03/android-api35-run.json"
+        },
+        {
+          "apiLevel": 36,
+          "androidVersion": "16",
+          "avd": "Codex_ImageOwnership_API36_ARM64",
+          "fingerprint": "google/sdk_gphone64_arm64/emu64a:16/BE2A.250530.026.F3/13894323:userdebug/dev-keys",
+          "gpuRenderer": "Android Emulator OpenGL ES Translator (Apple M1 Pro)",
+          "exactApkSha256": "44d425592047c867156c803750a1101f5010434711ed2ad0ef7cad14decbfe23",
+          "traceApkSha256": "f8440c08f7a325161aaa0b1ad7f7bd377baf990f4202dbf4a492c9000553aec8",
+          "nativeCrashCount": 4,
+          "evidencePath": "investigations/7.3.0-functional/evidence/I03/android-api36-run.json"
+        }
+      ]
     }
   ],
   "officialReleases": {

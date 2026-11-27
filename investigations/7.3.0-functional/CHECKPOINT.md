@@ -45,8 +45,9 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
 - Verified the 7.2.2 release package and its SDK/Linux VM hashes, the 7.3.0 CI
   package and its SDK/Linux VM hashes, and the 4.6.0 source boundary for I04
   and I05. Both Android cases remain in scope.
-- Confirmed local ARM64 AVD acceleration and API 34/36/37 images; API 29/30/35
-  images are not currently installed.
+- Confirmed local ARM64 AVD acceleration. API 29/30/35/36 Google APIs images are
+  installed and were exercised on the M1 Pro GPU renderer. API 24/31 were not
+  provisioned.
 - Compared the earlier 61034 Linux build with frozen master and found native
   file, SQLite, image, and Android permission changes. Do not reuse its VM for
   current-master evidence; the focused runner must build exact commit 6b915.
@@ -69,13 +70,15 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   CMake from reading the pinned `deps.yml`. Commit `dc76666` now forwards
   release/repository override variables only when nonempty. Neither run
   reached Linux runtime validation.
-- I03 ran on the hardware-accelerated API 36 ARM64 AVD using the archived
-  official 7.3.0 package. After dismissing a System UI ANR from the first
-  attempt, the retry captured four app SIGSEGV tombstones across denied and
-  grant-in-place permission flows. Exact and trace pregranted controls stayed
-  alive; the trace control created and deleted `/sdcard/asd`. Compact evidence
-  and the screenshot are committed under `evidence/I03/`; raw tombstones,
-  APKs, and phase logs remain under `/tmp/tc730-android/build-retry/`.
+- I03 now covers the original denied, grant-in-place, and pregranted customer
+  flows on API 29, 30, 35, and 36 with the official 7.3.0 package. API 30/35/36
+  each produced four Skia/GLES SIGSEGV tombstones; pregranted controls stayed
+  alive. API 29 produced no native crash, but interactive Allow left
+  `WRITE_EXTERNAL_STORAGE` denied and the directory operation failed; the
+  explicit pregrant passed. Source ordering supports a diagnostic hypothesis,
+  not a confirmed root cause. The consolidated report, machine results,
+  sanitized stacks/logs, and prompt screenshots are in `reports/` and
+  `evidence/I03/`; the current I03 changes are pending commit.
 - Hosted run `45944696531` passed SDK packaging, pinned dependency fetch, native
   bridge generation, and CMake configuration, then failed when the canonical
   Docker build could not access Actions' external Git metadata and the frozen
@@ -86,17 +89,18 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
 
 ## Pending investigations
 
-I01-B, I02, remaining I03 APIs/scenarios, I04/I05, I06 Linux, I07, I08, I09,
-I10, I11, remaining provenance, case reports, proposed issue updates, and final
-consolidation.
+I01-B/I02 report and matrix consolidation from the completed Linux Actions
+artifact; additional I03 lifecycle scenarios and corrected-candidate validation;
+I04/I05, I06 Linux, I07, I08, I09, I10, I11; remaining provenance; proposed
+issue updates; and final consolidation.
 
 ## Next concrete action
 
-Review the Actions run triggered by the frozen-source provenance fix. Confirm
-the native build passes the provenance step and inspect the Linux result
-artifact before updating I01-B/I02. The I03 finding applies to the archived
-official 7.3.0 package on API 36 only; corrected-candidate and other API
-results remain pending.
+Commit the I03 API 29/30/35 evidence and harness improvements. Then inspect the
+result artifact from hosted Actions run `45949849457`, update the I01-B/I02
+reports and matrix, and commit those Linux findings before moving to I04/I05.
+The Linux workflow and result artifact are at
+`https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457`.
 
 ## Constraints and blockers
 

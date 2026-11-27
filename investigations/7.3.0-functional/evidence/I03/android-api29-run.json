@@ -1,0 +1,224 @@
+{
+  "investigationId": "I03",
+  "execution": "campaign local ARM64 emulator run",
+  "source": {
+    "repository": "TotalCross/totalcross",
+    "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+    "workflowRunId": 40878222908,
+    "artifactId": 12899147776,
+    "artifactName": "TotalCross-7.3.0",
+    "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+    "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+    "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+    "artifactZipSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5"
+  },
+  "application": {
+    "package": "totalcross.appzmtw",
+    "targetSdk": 36,
+    "exactApkSha256": "da105b9a32214745c0a339918961fdfb407cc34556c1cd4f8fb41b262d408c3f",
+    "traceApkSha256": "a923a2484ef094d2466c01818b7701939ba4189d4743f7b53b01f49dbc0b84ea",
+    "mainJavaSha256": "c7d9d985ffe95342bd0365ad5eff783096a4c41529b16216a08a149709fc7625",
+    "testPermissionJavaSha256": "d273d694cebe10998754055949359b83420bedf57fbb50176d18e2ba811be345",
+    "embeddedLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+    "embeddedLibtcvmBuildId": "961a27eeb19136ff86d2db5cb08bae194e967b9a"
+  },
+  "environment": {
+    "avd": "Codex_TC730_API29_ARM64",
+    "androidApi": 29,
+    "androidVersion": "10",
+    "runtimeArchitecture": "arm64-v8a",
+    "fingerprint": "google/sdk_gphone64_arm64/emulator64_arm64:10/QSR1.211112.011/13135432:userdebug/dev-keys",
+    "gpuRenderer": "Android Emulator OpenGL ES Translator (Apple M1 Pro)",
+    "emulatorVersion": "36.3.10 (build 14472402)",
+    "permissionsResetBetweenPhases": "uninstall/reinstall; WRITE_EXTERNAL_STORAGE set per phase",
+    "runtimePermissionInteraction": "uiautomator hierarchy plus actual Allow/Deny button tap"
+  },
+  "harness": {
+    "buildCommand": "python3 tools/android_client_main_build.py --package <official-artifact.zip> --out <results>",
+    "runCommand": "python3 tools/android_client_main_test.py --out <results> --timeout 40",
+    "overall": "FAIL",
+    "checks": {
+      "unmodifiedOriginalLaunched": true,
+      "deniedShowsPermissionPrompt": true,
+      "deniedReportedException": true,
+      "inPlaceGrantOpensPermissionPrompt": true,
+      "inPlaceGrantApplied": true,
+      "inPlaceRemainsSameProcess": true,
+      "inPlaceCreatedAndDeleted": false,
+      "preGrantedCreatedAndDeleted": true,
+      "noUnexpectedTraceFailures": false
+    },
+    "phases": [
+      {
+        "variant": "exact",
+        "phase": "denied",
+        "elapsedSeconds": 7.87,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "8070",
+        "finalPid": "8070",
+        "sameProcess": true,
+        "permissionPromptSeen": true,
+        "settingsPromptSeen": false,
+        "grantAppliedWhilePromptOpen": false,
+        "permissionDialogAction": {
+          "label": "Deny",
+          "bounds": "[70,1100][1010,1247]",
+          "tap": [
+            540,
+            1173
+          ]
+        },
+        "nativeAccessAllowedInitially": false,
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": false,
+        "storageAccessBefore": "android.permission.WRITE_EXTERNAL_STORAGE: granted=false, flags=[ RESTRICTION_INSTALLER_EXEMPT]",
+        "storageAccessAfter": "android.permission.WRITE_EXTERNAL_STORAGE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]",
+        "debugEvents": []
+      },
+      {
+        "variant": "exact",
+        "phase": "grant-in-place",
+        "elapsedSeconds": 7.93,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "8349",
+        "finalPid": "8349",
+        "sameProcess": true,
+        "permissionPromptSeen": true,
+        "settingsPromptSeen": false,
+        "grantAppliedWhilePromptOpen": true,
+        "permissionDialogAction": {
+          "label": "Allow",
+          "bounds": "[70,950][1010,1097]",
+          "tap": [
+            540,
+            1023
+          ]
+        },
+        "nativeAccessAllowedInitially": false,
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": false,
+        "storageAccessBefore": "android.permission.WRITE_EXTERNAL_STORAGE: granted=false, flags=[ RESTRICTION_INSTALLER_EXEMPT]",
+        "storageAccessAfter": "android.permission.WRITE_EXTERNAL_STORAGE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]",
+        "debugEvents": []
+      },
+      {
+        "variant": "exact",
+        "phase": "granted-before-launch",
+        "elapsedSeconds": 6.29,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "8631",
+        "finalPid": "8631",
+        "sameProcess": true,
+        "permissionPromptSeen": false,
+        "settingsPromptSeen": false,
+        "grantAppliedWhilePromptOpen": false,
+        "permissionDialogAction": null,
+        "nativeAccessAllowedInitially": true,
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": false,
+        "storageAccessBefore": "android.permission.WRITE_EXTERNAL_STORAGE: granted=true, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]",
+        "storageAccessAfter": "android.permission.WRITE_EXTERNAL_STORAGE: granted=true, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]",
+        "debugEvents": []
+      },
+      {
+        "variant": "trace",
+        "phase": "denied",
+        "elapsedSeconds": 5.78,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "8863",
+        "finalPid": "8863",
+        "sameProcess": true,
+        "permissionPromptSeen": true,
+        "settingsPromptSeen": false,
+        "grantAppliedWhilePromptOpen": false,
+        "permissionDialogAction": {
+          "label": "Deny",
+          "bounds": "[70,1100][1010,1247]",
+          "tap": [
+            540,
+            1173
+          ]
+        },
+        "nativeAccessAllowedInitially": false,
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": true,
+        "storageAccessBefore": "android.permission.WRITE_EXTERNAL_STORAGE: granted=false, flags=[ RESTRICTION_INSTALLER_EXEMPT]",
+        "storageAccessAfter": "android.permission.WRITE_EXTERNAL_STORAGE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]",
+        "debugEvents": [
+          "11-27 04:03:57.823  8863  8888 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+          "11-27 04:04:00.349  8863  8888 I TotalCross: TC_CLIENT_MAIN FAIL totalcross.io.IOException: Error Code: 13 - Permission denied"
+        ]
+      },
+      {
+        "variant": "trace",
+        "phase": "grant-in-place",
+        "elapsedSeconds": 5.79,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "9115",
+        "finalPid": "9115",
+        "sameProcess": true,
+        "permissionPromptSeen": true,
+        "settingsPromptSeen": false,
+        "grantAppliedWhilePromptOpen": true,
+        "permissionDialogAction": {
+          "label": "Allow",
+          "bounds": "[70,950][1010,1097]",
+          "tap": [
+            540,
+            1023
+          ]
+        },
+        "nativeAccessAllowedInitially": false,
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": true,
+        "storageAccessBefore": "android.permission.WRITE_EXTERNAL_STORAGE: granted=false, flags=[ RESTRICTION_INSTALLER_EXEMPT]",
+        "storageAccessAfter": "android.permission.WRITE_EXTERNAL_STORAGE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]",
+        "debugEvents": [
+          "11-27 04:04:04.884  9115  9140 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+          "11-27 04:04:07.495  9115  9140 I TotalCross: TC_CLIENT_MAIN FAIL totalcross.io.IOException: Error Code: 13 - Permission denied"
+        ]
+      },
+      {
+        "variant": "trace",
+        "phase": "granted-before-launch",
+        "elapsedSeconds": 2.81,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "9380",
+        "finalPid": "9380",
+        "sameProcess": true,
+        "permissionPromptSeen": false,
+        "settingsPromptSeen": false,
+        "grantAppliedWhilePromptOpen": false,
+        "permissionDialogAction": null,
+        "nativeAccessAllowedInitially": true,
+        "fileDirCreated": true,
+        "fileDirDeleted": true,
+        "fileDirFailed": false,
+        "storageAccessBefore": "android.permission.WRITE_EXTERNAL_STORAGE: granted=true, flags=[ RESTRICTION_INSTALLER_EXEMPT]",
+        "storageAccessAfter": "android.permission.WRITE_EXTERNAL_STORAGE: granted=true, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]",
+        "debugEvents": [
+          "11-27 04:04:11.967  9380  9405 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+          "11-27 04:04:11.971  9380  9405 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd",
+          "11-27 04:04:11.973  9380  9405 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd"
+        ]
+      }
+    ],
+    "exitCode": 1,
+    "applicationProcessStatus": "remained alive through all phases"
+  },
+  "classification": {
+    "I03NativeCrash": "NOT_REPRODUCED on API 29 in denied, grant-in-place and pregranted scenarios",
+    "processLoss": false,
+    "nativeCrashCount": 0,
+    "tombstoneDirectory": "empty after run; checked on emulator",
+    "I08PermissionRecovery": "FAIL for interactive grant; WRITE_EXTERNAL_STORAGE remained granted=false and File.createDir reported Error Code 13; pregranted WRITE_EXTERNAL_STORAGE control created and deleted /sdcard/asd",
+    "limitation": "The API 29 grant dialog result concerned READ_EXTERNAL_STORAGE; this run did not validate the corrected candidate.",
+    "harnessExitCode": 1,
+    "applicationProcessExitStatus": "still running at phase end in all phases"
+  }
+}

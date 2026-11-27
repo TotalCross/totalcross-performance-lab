@@ -1,0 +1,213 @@
+{
+  "investigationId": "I03",
+  "execution": "campaign local ARM64 emulator run",
+  "source": {
+    "repository": "TotalCross/totalcross",
+    "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+    "workflowRunId": 40878222908,
+    "artifactId": 12899147776,
+    "artifactName": "TotalCross-7.3.0",
+    "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+    "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+    "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475"
+  },
+  "application": {
+    "package": "totalcross.appzmtw",
+    "targetSdk": 36,
+    "exactApkSha256": "da105b9a32214745c0a339918961fdfb407cc34556c1cd4f8fb41b262d408c3f",
+    "traceApkSha256": "a923a2484ef094d2466c01818b7701939ba4189d4743f7b53b01f49dbc0b84ea",
+    "mainJavaSha256": "c7d9d985ffe95342bd0365ad5eff783096a4c41529b16216a08a149709fc7625",
+    "testPermissionJavaSha256": "d273d694cebe10998754055949359b83420bedf57fbb50176d18e2ba811be345",
+    "embeddedLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+    "embeddedLibtcvmBuildId": "961a27eeb19136ff86d2db5cb08bae194e967b9a"
+  },
+  "environment": {
+    "avd": "Codex_TC730_API35_ARM64",
+    "androidApi": 35,
+    "androidVersion": "15",
+    "runtimeArchitecture": "arm64-v8a",
+    "fingerprint": "google/sdk_gphone64_arm64/emu64a:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+    "gpuRenderer": "Android Emulator OpenGL ES Translator (Apple M1 Pro)",
+    "emulatorVersion": "36.3.10 (build 14472402)",
+    "permissionBaseline": "MANAGE_EXTERNAL_STORAGE app-op varied per phase; WRITE_EXTERNAL_STORAGE was not used as an API 35 baseline",
+    "phasesStartWithFreshInstall": true
+  },
+  "harness": {
+    "buildCommand": "python3 tools/android_client_main_build.py --package <official-artifact.zip> --out <results>",
+    "runCommand": "python3 tools/android_client_main_test.py --out <results> --timeout 45",
+    "overall": "FAIL",
+    "checks": {
+      "unmodifiedOriginalLaunched": true,
+      "deniedShowsPermissionPrompt": true,
+      "deniedReportedException": true,
+      "inPlaceGrantOpensPermissionPrompt": true,
+      "inPlaceGrantApplied": true,
+      "inPlaceRemainsSameProcess": false,
+      "inPlaceCreatedAndDeleted": true,
+      "preGrantedCreatedAndDeleted": true,
+      "noUnexpectedTraceFailures": true
+    },
+    "phases": [
+      {
+        "variant": "exact",
+        "phase": "denied",
+        "elapsedSeconds": 8.51,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "3156",
+        "finalPid": "",
+        "sameProcess": false,
+        "permissionPromptSeen": true,
+        "settingsPromptSeen": true,
+        "grantAppliedWhilePromptOpen": false,
+        "nativeAccessAllowedInitially": false,
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": false,
+        "storageAccessBefore": "MANAGE_EXTERNAL_STORAGE: ignore\n",
+        "storageAccessAfter": "MANAGE_EXTERNAL_STORAGE: ignore; rejectTime=+6s677ms ago\n",
+        "debugEvents": []
+      },
+      {
+        "variant": "exact",
+        "phase": "grant-in-place",
+        "elapsedSeconds": 8.77,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "3469",
+        "finalPid": "",
+        "sameProcess": false,
+        "permissionPromptSeen": true,
+        "settingsPromptSeen": true,
+        "grantAppliedWhilePromptOpen": true,
+        "nativeAccessAllowedInitially": false,
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": false,
+        "storageAccessBefore": "MANAGE_EXTERNAL_STORAGE: ignore\n",
+        "storageAccessAfter": "MANAGE_EXTERNAL_STORAGE: allow; time=+6s487ms ago; rejectTime=+7s787ms ago\n",
+        "debugEvents": []
+      },
+      {
+        "variant": "exact",
+        "phase": "granted-before-launch",
+        "elapsedSeconds": 5.39,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "3765",
+        "finalPid": "3765",
+        "sameProcess": true,
+        "permissionPromptSeen": false,
+        "settingsPromptSeen": false,
+        "grantAppliedWhilePromptOpen": false,
+        "nativeAccessAllowedInitially": true,
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": false,
+        "storageAccessBefore": "MANAGE_EXTERNAL_STORAGE: allow\n",
+        "storageAccessAfter": "MANAGE_EXTERNAL_STORAGE: allow; time=+4s722ms ago\n",
+        "debugEvents": []
+      },
+      {
+        "variant": "trace",
+        "phase": "denied",
+        "elapsedSeconds": 4.93,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "3984",
+        "finalPid": "",
+        "sameProcess": false,
+        "permissionPromptSeen": true,
+        "settingsPromptSeen": true,
+        "grantAppliedWhilePromptOpen": false,
+        "nativeAccessAllowedInitially": false,
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": true,
+        "storageAccessBefore": "MANAGE_EXTERNAL_STORAGE: ignore\n",
+        "storageAccessAfter": "MANAGE_EXTERNAL_STORAGE: ignore; rejectTime=+4s319ms ago\n",
+        "debugEvents": [
+          "11-27 04:10:34.120  3984  4013 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+          "11-27 04:10:35.492  3984  4013 I TotalCross: TC_CLIENT_MAIN FAIL totalcross.io.IOException: Error Code: 13 - Permission denied"
+        ]
+      },
+      {
+        "variant": "trace",
+        "phase": "grant-in-place",
+        "elapsedSeconds": 4.86,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "4273",
+        "finalPid": "",
+        "sameProcess": false,
+        "permissionPromptSeen": true,
+        "settingsPromptSeen": true,
+        "grantAppliedWhilePromptOpen": true,
+        "nativeAccessAllowedInitially": false,
+        "fileDirCreated": true,
+        "fileDirDeleted": true,
+        "fileDirFailed": false,
+        "storageAccessBefore": "MANAGE_EXTERNAL_STORAGE: ignore\n",
+        "storageAccessAfter": "MANAGE_EXTERNAL_STORAGE: allow; time=+2s926ms ago; rejectTime=+4s312ms ago\n",
+        "debugEvents": [
+          "11-27 04:10:40.295  4273  4291 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+          "11-27 04:10:41.693  4273  4291 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd",
+          "11-27 04:10:41.700  4273  4291 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd"
+        ]
+      },
+      {
+        "variant": "trace",
+        "phase": "granted-before-launch",
+        "elapsedSeconds": 2.9,
+        "launchMechanism": "am-start-fallback",
+        "originalPid": "4514",
+        "finalPid": "4514",
+        "sameProcess": true,
+        "permissionPromptSeen": false,
+        "settingsPromptSeen": false,
+        "grantAppliedWhilePromptOpen": false,
+        "nativeAccessAllowedInitially": true,
+        "fileDirCreated": true,
+        "fileDirDeleted": true,
+        "fileDirFailed": false,
+        "storageAccessBefore": "MANAGE_EXTERNAL_STORAGE: allow\n",
+        "storageAccessAfter": "MANAGE_EXTERNAL_STORAGE: allow; time=+2s280ms ago\n",
+        "debugEvents": [
+          "11-27 04:10:46.511  4514  4535 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+          "11-27 04:10:46.525  4514  4535 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd",
+          "11-27 04:10:46.529  4514  4535 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd"
+        ]
+      }
+    ],
+    "exitCode": 1,
+    "applicationProcessStatus": "exited by SIGSEGV in four denied/grant-in-place phases; pregranted process remained alive"
+  },
+  "classification": {
+    "I03NativeCrash": "FAIL; four reproducible native crashes in denied and grant-in-place phases",
+    "processLoss": true,
+    "nativeCrashCount": 4,
+    "signals": "SIGSEGV / SEGV_MAPERR on TC Event Thread",
+    "faultAddresses": {
+      "denied": "0x30",
+      "grant-in-place": "0x0"
+    },
+    "tombstoneFiles": [
+      "tombstone_02",
+      "tombstone_03",
+      "tombstone_04",
+      "tombstone_05"
+    ],
+    "commonFrames": [
+      "GL2Encoder::s_glDrawRangeElements",
+      "FillRectOp::onExecute",
+      "GrDirectContext::~GrDirectContext",
+      "SkGpuDevice::~SkGpuDevice",
+      "initSkia",
+      "initGLES",
+      "Java_totalcross_Launcher4A_nativeSurfaceChanged"
+    ],
+    "pregrantedControl": "exact and trace processes remained alive; trace created and deleted /sdcard/asd",
+    "rootCause": "OPEN",
+    "limitations": [
+      "corrected candidate not tested",
+      "settings return without change, repeated requests, background/foreground, and rotation not tested",
+      "emulator only; no physical-device inference"
+    ],
+    "harnessExitCode": 1
+  }
+}

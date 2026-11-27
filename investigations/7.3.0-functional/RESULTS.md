@@ -1,34 +1,39 @@
 # Campaign Results
 
-The campaign has executed a partial Android API 36 runtime investigation
-(I03), which reproduced a native crash in the official 7.3.0 package. Linux
-runtime cases remain unexecuted because the frozen-master build has not yet
-completed. The authoritative case and platform statuses are in
-`test-matrix.json`.
+The campaign remains in progress. Linux runtime execution has completed in
+hosted Actions run 45949849457, but the I01-B and I02 reports and result matrix
+still need consolidation from the result artifact. I03 priority API runs are
+now recorded for Android API 29, 30, 35, and 36.
 
 ## Imported historical evidence
 
 - **Windows Win32/I386 ownership:** PASS in TotalCross Actions run
   [45907759163](https://github.com/TotalCross/totalcross/actions/runs/45907759163).
-  Historical A, historical B, and corrected source `94af2b8b653cad509994b5ccf3dbb60ac28ef920`
-  started on one Windows runner. The corrected I386 runtime passed the existing
-  ownership smoke. This was verified during the priority correction and is not
-  a campaign execution.
+  Historical A, historical B, and corrected source
+  `94af2b8b653cad509994b5ccf3dbb60ac28ef920` started on one Windows runner.
+  The corrected I386 runtime passed the existing ownership smoke. This result
+  was verified during the priority correction and is imported historical
+  evidence, not a new campaign execution.
 - **Windows AMD64 startup:** PREEXISTING / OUT_OF_SCOPE. No campaign execution.
-- JavaSE, macOS ARM64, and Android ARM64 PR #567 claims: import pending source,
-  artifact, assertion, and provenance review.
+- JavaSE, macOS ARM64, and Android ARM64 PR #567 claims: imported evidence
+  verification remains pending.
 
 ## Campaign execution
 
-- **I03, Android API 36 ARM64 AVD:** FAIL. The exact customer APK and a
-  diagnostic build each crashed during denied and grant-in-place permission
-  flows with SIGSEGVs in the native Skia/GLES surface-change path. The
-  pregranted trace control created and deleted the test directory without a
-  crash. Four tombstones were captured. This confirms the reported failure for
-  the official 7.3.0 package on this API 36 emulator; it does not establish the
-  root cause or corrected-candidate behavior. See
-  `reports/I03-android-api36.md` and `evidence/I03/`.
+- **I03, Android API 30, 35, and 36 ARM64 AVDs:** FAIL. The exact customer APK
+  and trace build together produced four SIGSEGVs per API across denied and
+  grant-in-place permission flows. Pregranted controls remained alive; the
+  trace grant-in-place case created and deleted `/sdcard/asd` before crashing.
+  The stack is in the Skia/GLES surface-change path; root cause remains open.
+- **I03, Android API 29 ARM64 AVD:** Native crash NOT_REPRODUCED in the tested
+  denied, grant-in-place, and pregranted flows. The interactive Allow action
+  left `WRITE_EXTERNAL_STORAGE` denied and the directory operation failed;
+  the explicitly pregranted control succeeded. The permission result is
+  tracked separately under I08.
+- **I01-B/I02, Linux x86_64:** hosted run 45949849457 completed both jobs and
+  uploaded the campaign result artifact. Findings and reports are pending
+  result-artifact consolidation.
 
-No production source was changed. The remaining I03 APIs and lifecycle
-scenarios, frozen-master Linux runtime matrix, and other campaign cases remain
-pending.
+No production source was changed. I03's corrected candidate, remaining
+permission lifecycle scenarios, Linux report consolidation, I04/I05, I06/I07,
+I08/I09/I10, I11, provenance completion, and final report remain pending.

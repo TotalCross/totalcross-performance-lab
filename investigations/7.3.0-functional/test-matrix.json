@@ -84,14 +84,89 @@
     {
       "investigationId": "I03",
       "title": "Android Skia/EGL lifecycle crash",
-      "requiredPlatforms": ["android-arm64-emulator"],
-      "priorityApiLevels": [29, 30, 35, 36],
-      "conditionalApiLevels": [24, 31],
-      "requiredScenarios": ["pregranted", "grant-in-flow", "deny", "settings-return-unchanged", "repeated-requests", "background-foreground", "rotation-transition"],
-      "status": "NOT_RUN",
+      "requiredPlatforms": [
+        "android-arm64-emulator"
+      ],
+      "priorityApiLevels": [
+        29,
+        30,
+        35,
+        36
+      ],
+      "conditionalApiLevels": [
+        24,
+        31
+      ],
+      "requiredScenarios": [
+        "pregranted",
+        "grant-in-flow",
+        "deny",
+        "settings-return-unchanged",
+        "repeated-requests",
+        "background-foreground",
+        "rotation-transition"
+      ],
+      "status": "FAIL",
       "scopeStatus": "IN_SCOPE",
-      "evidenceOrigin": "CAMPAIGN_PENDING",
-      "results": []
+      "evidenceOrigin": "CAMPAIGN",
+      "results": [
+        {
+          "platform": "android-arm64-emulator",
+          "apiLevel": 36,
+          "androidVersion": "16",
+          "runtimeArchitecture": "arm64-v8a",
+          "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+          "status": "FAIL",
+          "scopeStatus": "IN_SCOPE",
+          "evidenceOrigin": "CAMPAIGN",
+          "campaignExecution": "EXECUTED",
+          "sourceArtifactWorkflowRunId": 40878222908,
+          "artifactId": 12899147776,
+          "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+          "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+          "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+          "apkSha256": {
+            "exact": "44d425592047c867156c803750a1101f5010434711ed2ad0ef7cad14decbfe23",
+            "trace": "f8440c08f7a325161aaa0b1ad7f7bd377baf990f4202dbf4a492c9000553aec8"
+          },
+          "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+          "androidLibtcvmBuildId": "961a27eeb19136ff86d2db5cb08bae194e967b9a",
+          "scenarioResults": {
+            "denied": {
+              "exact": "SIGSEGV",
+              "trace": "permission IOException followed by SIGSEGV"
+            },
+            "grant-in-place": {
+              "exact": "SIGSEGV",
+              "trace": "directory create/delete succeeded, then SIGSEGV"
+            },
+            "pregranted": {
+              "exact": "process remained alive",
+              "trace": "directory create/delete succeeded; process remained alive"
+            }
+          },
+          "nativeCrashCount": 4,
+          "crashSignature": "SIGSEGV / SEGV_MAPERR in TC Event Thread",
+          "commonStack": "FillRectOp::onExecute / GrDirectContext::~GrDirectContext / SkGpuDevice::~SkGpuDevice / initSkia / initGLES / Java_totalcross_Launcher4A_nativeSurfaceChanged",
+          "rootCause": "OPEN",
+          "runnerExitCode": 1,
+          "runnerFailureCheck": "inPlaceRemainsSameProcess (false because the native process crashed)",
+          "initialAttempt": "INCONCLUSIVE: emulator System UI ANR dialog blocked the permission screen; retry after selecting Wait produced the recorded TotalCross crashes.",
+          "evidenceFiles": [
+            "reports/I03-android-api36.md",
+            "evidence/I03/android-api36-run.json",
+            "evidence/I03/native-crash-excerpts.log",
+            "evidence/I03/first-attempt-systemui-anr.png"
+          ],
+          "limitations": [
+            "API 29, 30, and 35 not tested.",
+            "Corrected candidate not tested.",
+            "Repeated requests, background/foreground, and rotation scenarios not tested.",
+            "The trigger and root cause are not isolated; no physical-device conclusion."
+          ]
+        }
+      ],
+      "coverageStatus": "PARTIAL"
     },
     {
       "investigationId": "I04",

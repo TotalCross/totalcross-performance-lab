@@ -56,6 +56,18 @@ provenance, proposed issue updates, and a consolidated report.
   masked the pinned `deps.yml` entry. Commits `3394d9b` and `dc76666` pin the
   dependency metadata and forward overrides only when nonempty; both attempts
   stopped before runtime validation.
+- [x] 2026-11-27: Executed the official 7.3.0 Android reproducer on the
+  hardware-accelerated API 36 ARM64 AVD. After clearing an emulator System UI
+  ANR from the first attempt, the exact and trace builds reproduced four native
+  SIGSEGVs in the Skia/GLES surface-change path across denied and grant-in-place
+  flows; the pregranted control created and deleted the directory. Imported
+  compact logcat/tombstone evidence and left the root cause open.
+- [x] 2026-11-27: The third hosted Linux build passed CMake configuration and
+  began native compilation, then failed because the Docker bind mount could
+  not read Actions' external Git metadata and no `build-provenance.json` was
+  present. The workflow now writes provenance from the exact frozen commit and
+  tree before invoking the canonical container; the identity script accepted
+  this manifest in a no-Git fixture. A hosted retry is pending.
 - [x] Milestone 0: provenance, legacy-port review, historical evidence import,
   harness/workflow contract, and CI/emulator capability checks are complete.
 - [ ] Milestone 1: investigate Linux realpath startup (I01-B), then PNG decode

@@ -1,8 +1,10 @@
 # Campaign Results
 
-No runtime investigation has been executed by this campaign yet. Initial
-statuses are in `test-matrix.json` and remain `NOT_RUN` unless the matrix
-identifies a verified imported historical result.
+The campaign has executed a partial Android API 36 runtime investigation
+(I03), which reproduced a native crash in the official 7.3.0 package. Linux
+runtime cases remain unexecuted because the frozen-master build has not yet
+completed. The authoritative case and platform statuses are in
+`test-matrix.json`.
 
 ## Imported historical evidence
 
@@ -16,4 +18,17 @@ identifies a verified imported historical result.
 - JavaSE, macOS ARM64, and Android ARM64 PR #567 claims: import pending source,
   artifact, assertion, and provenance review.
 
-No defect root cause or campaign regression is established at this checkpoint.
+## Campaign execution
+
+- **I03, Android API 36 ARM64 AVD:** FAIL. The exact customer APK and a
+  diagnostic build each crashed during denied and grant-in-place permission
+  flows with SIGSEGVs in the native Skia/GLES surface-change path. The
+  pregranted trace control created and deleted the test directory without a
+  crash. Four tombstones were captured. This confirms the reported failure for
+  the official 7.3.0 package on this API 36 emulator; it does not establish the
+  root cause or corrected-candidate behavior. See
+  `reports/I03-android-api36.md` and `evidence/I03/`.
+
+No production source was changed. The remaining I03 APIs and lifecycle
+scenarios, frozen-master Linux runtime matrix, and other campaign cases remain
+pending.

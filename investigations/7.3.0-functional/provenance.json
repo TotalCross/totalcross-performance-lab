@@ -145,8 +145,37 @@
       "fromSha": "61034a7562e7fa43df076dcc38bcd48128605395",
       "toSha": "6b915883dd202f6db891990f6c3af26fb645ecc7",
       "nativeSourceTreeChanged": true,
-      "changedNativePaths": ["TotalCrossVM/android/app/src/main/java/totalcross/android/AndroidPermissionManager.java", "TotalCrossVM/src/event/darwin/event.m", "TotalCrossVM/src/nm/db/NativeDB.c", "TotalCrossVM/src/nm/io/File.h", "TotalCrossVM/src/nm/io/posix/File_c.h", "TotalCrossVM/src/nm/ui/GraphicsPrimitives_c.h", "TotalCrossVM/src/nm/ui/backend/graphics/gles/gfx_Graphics_c.h", "TotalCrossVM/src/nm/ui/image_Image.c", "TotalCrossVM/src/tests/sqlite/test_android_permission_recovery.py"],
+      "changedNativePaths": [
+        "TotalCrossVM/android/app/src/main/java/totalcross/android/AndroidPermissionManager.java",
+        "TotalCrossVM/src/event/darwin/event.m",
+        "TotalCrossVM/src/nm/db/NativeDB.c",
+        "TotalCrossVM/src/nm/io/File.h",
+        "TotalCrossVM/src/nm/io/posix/File_c.h",
+        "TotalCrossVM/src/nm/ui/GraphicsPrimitives_c.h",
+        "TotalCrossVM/src/nm/ui/backend/graphics/gles/gfx_Graphics_c.h",
+        "TotalCrossVM/src/nm/ui/image_Image.c",
+        "TotalCrossVM/src/tests/sqlite/test_android_permission_recovery.py"
+      ],
       "campaignImplication": "Rebuild the exact frozen master source; the historical 61034 Linux VM cannot be reused as current-master evidence."
+    },
+    {
+      "name": "I03 Android API 36 customer Main crash reproduction",
+      "repository": "TotalCross/totalcross",
+      "sourceSha": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+      "workflowRunId": 40878222908,
+      "artifactId": 12899147776,
+      "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+      "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+      "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+      "apiLevel": 36,
+      "runtimeArchitecture": "arm64-v8a",
+      "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+      "androidLibtcvmBuildId": "961a27eeb19136ff86d2db5cb08bae194e967b9a",
+      "exactApkSha256": "44d425592047c867156c803750a1101f5010434711ed2ad0ef7cad14decbfe23",
+      "traceApkSha256": "f8440c08f7a325161aaa0b1ad7f7bd377baf990f4202dbf4a492c9000553aec8",
+      "status": "CAMPAIGN_FAIL_REPRODUCED_FOUR_SIGSEGV_TOMBSTONES",
+      "evidencePath": "investigations/7.3.0-functional/evidence/I03/android-api36-run.json",
+      "rawTombstonesRetainedOutsideGit": true
     }
   ],
   "officialReleases": {

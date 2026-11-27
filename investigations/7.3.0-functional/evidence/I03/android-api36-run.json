@@ -1,0 +1,321 @@
+{
+  "androidNativeLibrary": {
+    "apkEntry": "lib/arm64-v8a/libtcvm.so",
+    "buildId": "961a27eeb19136ff86d2db5cb08bae194e967b9a",
+    "sha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad"
+  },
+  "apks": {
+    "exact": {
+      "bytes": 23123250,
+      "instrumented": false,
+      "sha256": "44d425592047c867156c803750a1101f5010434711ed2ad0ef7cad14decbfe23"
+    },
+    "trace": {
+      "bytes": 23123250,
+      "instrumented": true,
+      "sha256": "f8440c08f7a325161aaa0b1ad7f7bd377baf990f4202dbf4a492c9000553aec8"
+    }
+  },
+  "capturedAt": "2026-11-27",
+  "customerInputs": {
+    "Main.java": "c7d9d985ffe95342bd0365ad5eff783096a4c41529b16216a08a149709fc7625",
+    "TestPermission.java": "d273d694cebe10998754055949359b83420bedf57fbb50176d18e2ba811be345"
+  },
+  "device": {
+    "abi": "arm64-v8a",
+    "androidVersion": "16",
+    "apiLevel": 36,
+    "avd": "Codex_ImageOwnership_API36_ARM64",
+    "emulatorAcceleration": "Hypervisor.Framework OS X Version 27.2",
+    "fingerprint": "google/sdk_gphone64_arm64/emu64a:16/BE2A.250530.026.F3/13894323:userdebug/dev-keys",
+    "gpuMode": "host",
+    "model": "sdk_gphone64_arm64",
+    "renderer": "Apple M1 Pro"
+  },
+  "initialAttempt": {
+    "reason": "Android System UI displayed an Application Not Responding dialog over the All files access Settings screen; the user-level Wait action cleared the dialog before retry.",
+    "screenshot": "first-attempt-systemui-anr.png",
+    "screenshotSha256": "2d45c8f990e97b81819d4206cd7a7c71b6a9e05bbe190916dc3488a057e6486c",
+    "status": "INCONCLUSIVE"
+  },
+  "investigationId": "I03",
+  "limitations": [
+    "Only API 36 was executed.",
+    "Repeated requests, background/foreground transitions, rotation, Android API 29/30/35, and a corrected candidate were not tested.",
+    "The crash is localized to the libtcvm Skia/GLES surface-change path; the triggering lifecycle condition and root cause are not yet isolated.",
+    "The initial attempt was blocked by an emulator System UI ANR; the recorded native crashes come from the subsequent retry after clearing that dialog."
+  ],
+  "retry": {
+    "checks": {
+      "deniedReportedException": true,
+      "deniedShowsPermissionSettings": true,
+      "inPlaceCreatedAndDeleted": true,
+      "inPlaceGrantApplied": true,
+      "inPlaceGrantOpensSettings": true,
+      "inPlaceRemainsSameProcess": false,
+      "noUnexpectedTraceFailures": true,
+      "preGrantedCreatedAndDeleted": true,
+      "unmodifiedOriginalLaunched": true
+    },
+    "command": "ANDROID_HOME=/Users/flsobral/Library/Android/sdk ANDROID_SDK_ROOT=/Users/flsobral/Library/Android/sdk python3 tools/android_client_main_test.py --out /tmp/tc730-android/build-retry --timeout 50",
+    "error": "Required controls failed: inPlaceRemainsSameProcess",
+    "exitCode": 1,
+    "nativeCrashCount": 4,
+    "nativeCrashes": [
+      {
+        "phase": "exact-denied",
+        "selectedFrames": [
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #00 pc 0000000000084584  /vendor/lib64/libGLESv2_enc.so (GL2Encoder::s_glDrawRangeElements(void*, unsigned int, unsigned int, unsigned int, int, unsigned int, void const*)+600) (BuildId: a4a48ab22f0f1fd953da9d29b71c4cfc)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #01 pc 000000000070e6c4  base.apk!libtcvm.so (offset 0x47f000) ((anonymous namespace)::FillRectOp::onExecute(GrOpFlushState*, SkRect const&)+436) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #06 pc 000000000069de84  base.apk!libtcvm.so (offset 0x47f000) (GrDirectContext::~GrDirectContext()+136) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #07 pc 000000000069dff0  base.apk!libtcvm.so (offset 0x47f000) (GrDirectContext::~GrDirectContext()+16) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #08 pc 0000000000765570  base.apk!libtcvm.so (offset 0x47f000) (SkGpuDevice::~SkGpuDevice()+108) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #13 pc 00000000002df08c  base.apk!libtcvm.so (offset 0x47f000) (initSkia+132) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #14 pc 00000000002c4d3c  base.apk!libtcvm.so (offset 0x47f000) (initGLES+508) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #15 pc 00000000002c4a38  base.apk!libtcvm.so (offset 0x47f000) (Java_totalcross_Launcher4A_nativeSurfaceChanged+712) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #22 pc 0000000000224798  /data/app/~~ySGuahVggHn2aUg2W8VbIQ==/totalcross.appzmtw-Lt9u9Qw7GWW5iQ2439HNew==/oat/arm64/base.vdex (totalcross.TCEventThread.pumpEvents+12)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #24 pc 0000000000223a38  /data/app/~~ySGuahVggHn2aUg2W8VbIQ==/totalcross.appzmtw-Lt9u9Qw7GWW5iQ2439HNew==/oat/arm64/base.vdex (totalcross.Launcher4A.pumpEvents+24)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #28 pc 00000000002d7ca4  base.apk!libtcvm.so (offset 0x47f000) (pumpEvent+240) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #29 pc 00000000002d7e1c  base.apk!libtcvm.so (offset 0x47f000) (mainEventLoop+268) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:23:56.020  7309  7309 F DEBUG   :       #30 pc 0000000000299dac  base.apk!libtcvm.so (offset 0x47f000) (startProgram+608) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)"
+        ],
+        "signalLine": "11-27 02:23:55.744  7212  7232 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x30 in tid 7232 (TC Event Thread), pid 7212 (alcross.appzmtw)",
+        "tombstone": "tombstone_00",
+        "tombstoneSha256": "0e62b535bf3e8fe59e39baaeaaa87ad7733bef6492b95bc3f164acd61580cdc5"
+      },
+      {
+        "phase": "exact-grant-in-place",
+        "selectedFrames": [
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #00 pc 000000000008fa30  /vendor/lib64/libGLESv2_enc.so (GL2Encoder::calcIndexRange(void const*, unsigned int, int, int*, int*)+516) (BuildId: a4a48ab22f0f1fd953da9d29b71c4cfc)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #01 pc 0000000000084660  /vendor/lib64/libGLESv2_enc.so (GL2Encoder::s_glDrawRangeElements(void*, unsigned int, unsigned int, unsigned int, int, unsigned int, void const*)+820) (BuildId: a4a48ab22f0f1fd953da9d29b71c4cfc)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #02 pc 000000000070e6c4  base.apk!libtcvm.so (offset 0x47f000) ((anonymous namespace)::FillRectOp::onExecute(GrOpFlushState*, SkRect const&)+436) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #07 pc 000000000069de84  base.apk!libtcvm.so (offset 0x47f000) (GrDirectContext::~GrDirectContext()+136) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #08 pc 000000000069dff0  base.apk!libtcvm.so (offset 0x47f000) (GrDirectContext::~GrDirectContext()+16) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #09 pc 0000000000765570  base.apk!libtcvm.so (offset 0x47f000) (SkGpuDevice::~SkGpuDevice()+108) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #14 pc 00000000002df08c  base.apk!libtcvm.so (offset 0x47f000) (initSkia+132) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #15 pc 00000000002c4d3c  base.apk!libtcvm.so (offset 0x47f000) (initGLES+508) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #16 pc 00000000002c4a38  base.apk!libtcvm.so (offset 0x47f000) (Java_totalcross_Launcher4A_nativeSurfaceChanged+712) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #23 pc 0000000000224798  /data/app/~~ySGuahVggHn2aUg2W8VbIQ==/totalcross.appzmtw-Lt9u9Qw7GWW5iQ2439HNew==/oat/arm64/base.vdex (totalcross.TCEventThread.pumpEvents+12)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #25 pc 0000000000223a38  /data/app/~~ySGuahVggHn2aUg2W8VbIQ==/totalcross.appzmtw-Lt9u9Qw7GWW5iQ2439HNew==/oat/arm64/base.vdex (totalcross.Launcher4A.pumpEvents+24)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #29 pc 00000000002d7ca4  base.apk!libtcvm.so (offset 0x47f000) (pumpEvent+240) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #30 pc 00000000002d7e1c  base.apk!libtcvm.so (offset 0x47f000) (mainEventLoop+268) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:04.763  7503  7503 F DEBUG   :       #31 pc 0000000000299dac  base.apk!libtcvm.so (offset 0x47f000) (startProgram+608) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)"
+        ],
+        "signalLine": "11-27 02:24:04.592  7399  7419 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 7419 (TC Event Thread), pid 7399 (alcross.appzmtw)",
+        "tombstone": "tombstone_01",
+        "tombstoneSha256": "3e09d271a192c86e772ed26f39cbb945342407c6f7289ab486acf7382267474a"
+      },
+      {
+        "phase": "trace-denied",
+        "selectedFrames": [
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #00 pc 0000000000084584  /vendor/lib64/libGLESv2_enc.so (GL2Encoder::s_glDrawRangeElements(void*, unsigned int, unsigned int, unsigned int, int, unsigned int, void const*)+600) (BuildId: a4a48ab22f0f1fd953da9d29b71c4cfc)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #01 pc 000000000070e6c4  base.apk!libtcvm.so (offset 0x47f000) ((anonymous namespace)::FillRectOp::onExecute(GrOpFlushState*, SkRect const&)+436) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #06 pc 000000000069de84  base.apk!libtcvm.so (offset 0x47f000) (GrDirectContext::~GrDirectContext()+136) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #07 pc 000000000069dff0  base.apk!libtcvm.so (offset 0x47f000) (GrDirectContext::~GrDirectContext()+16) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #08 pc 0000000000765570  base.apk!libtcvm.so (offset 0x47f000) (SkGpuDevice::~SkGpuDevice()+108) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #13 pc 00000000002df08c  base.apk!libtcvm.so (offset 0x47f000) (initSkia+132) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #14 pc 00000000002c4d3c  base.apk!libtcvm.so (offset 0x47f000) (initGLES+508) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #15 pc 00000000002c4a38  base.apk!libtcvm.so (offset 0x47f000) (Java_totalcross_Launcher4A_nativeSurfaceChanged+712) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #22 pc 0000000000224798  /data/app/~~Bmktn1mCtnZv2kfwThjz8g==/totalcross.appzmtw-89US7nWvmn1iQ-dliQIhJA==/oat/arm64/base.vdex (totalcross.TCEventThread.pumpEvents+12)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #24 pc 0000000000223a38  /data/app/~~Bmktn1mCtnZv2kfwThjz8g==/totalcross.appzmtw-89US7nWvmn1iQ-dliQIhJA==/oat/arm64/base.vdex (totalcross.Launcher4A.pumpEvents+24)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #28 pc 00000000002d7ca4  base.apk!libtcvm.so (offset 0x47f000) (pumpEvent+240) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #29 pc 00000000002d7e1c  base.apk!libtcvm.so (offset 0x47f000) (mainEventLoop+268) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:20.648  7848  7848 F DEBUG   :       #30 pc 0000000000299dac  base.apk!libtcvm.so (offset 0x47f000) (startProgram+608) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)"
+        ],
+        "signalLine": "11-27 02:24:20.476  7756  7776 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x30 in tid 7776 (TC Event Thread), pid 7756 (alcross.appzmtw)",
+        "tombstone": "tombstone_02",
+        "tombstoneSha256": "9f50e92773a2a1dbbe0fa4028c8584074285f72b7f7e7ec96d558c03374cca5f"
+      },
+      {
+        "phase": "trace-grant-in-place",
+        "selectedFrames": [
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #00 pc 000000000008fa30  /vendor/lib64/libGLESv2_enc.so (GL2Encoder::calcIndexRange(void const*, unsigned int, int, int*, int*)+516) (BuildId: a4a48ab22f0f1fd953da9d29b71c4cfc)",
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #01 pc 0000000000084660  /vendor/lib64/libGLESv2_enc.so (GL2Encoder::s_glDrawRangeElements(void*, unsigned int, unsigned int, unsigned int, int, unsigned int, void const*)+820) (BuildId: a4a48ab22f0f1fd953da9d29b71c4cfc)",
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #02 pc 000000000070e6c4  base.apk!libtcvm.so (offset 0x47f000) ((anonymous namespace)::FillRectOp::onExecute(GrOpFlushState*, SkRect const&)+436) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #07 pc 000000000069de84  base.apk!libtcvm.so (offset 0x47f000) (GrDirectContext::~GrDirectContext()+136) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #08 pc 000000000069dff0  base.apk!libtcvm.so (offset 0x47f000) (GrDirectContext::~GrDirectContext()+16) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #09 pc 0000000000765570  base.apk!libtcvm.so (offset 0x47f000) (SkGpuDevice::~SkGpuDevice()+108) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #14 pc 00000000002df08c  base.apk!libtcvm.so (offset 0x47f000) (initSkia+132) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #15 pc 00000000002c4d3c  base.apk!libtcvm.so (offset 0x47f000) (initGLES+508) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #16 pc 00000000002c4a38  base.apk!libtcvm.so (offset 0x47f000) (Java_totalcross_Launcher4A_nativeSurfaceChanged+712) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #23 pc 0000000000224798  /data/app/~~Bmktn1mCtnZv2kfwThjz8g==/totalcross.appzmtw-89US7nWvmn1iQ-dliQIhJA==/oat/arm64/base.vdex (totalcross.TCEventThread.pumpEvents+12)",
+          "11-27 02:24:26.008  8005  8005 F DEBUG   :       #25 pc 0000000000223a38  /data/app/~~Bmktn1mCtnZv2kfwThjz8g==/totalcross.appzmtw-89US7nWvmn1iQ-dliQIhJA==/oat/arm64/base.vdex (totalcross.Launcher4A.pumpEvents+24)",
+          "11-27 02:24:26.009  8005  8005 F DEBUG   :       #29 pc 00000000002d7ca4  base.apk!libtcvm.so (offset 0x47f000) (pumpEvent+240) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:26.009  8005  8005 F DEBUG   :       #30 pc 00000000002d7e1c  base.apk!libtcvm.so (offset 0x47f000) (mainEventLoop+268) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)",
+          "11-27 02:24:26.009  8005  8005 F DEBUG   :       #31 pc 0000000000299dac  base.apk!libtcvm.so (offset 0x47f000) (startProgram+608) (BuildId: 961a27eeb19136ff86d2db5cb08bae194e967b9a)"
+        ],
+        "signalLine": "11-27 02:24:25.801  7915  7933 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 7933 (TC Event Thread), pid 7915 (alcross.appzmtw)",
+        "tombstone": "tombstone_03",
+        "tombstoneSha256": "96dc69aebbfa3757503b5abb25ad7749699f7b919b4ca7007812424f36acc4cf"
+      }
+    ],
+    "overall": "FAIL",
+    "phases": [
+      {
+        "appopAfter": "MANAGE_EXTERNAL_STORAGE: ignore; time=+10m27s110ms ago; rejectTime=+7s909ms ago\n",
+        "debugEvents": [],
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": false,
+        "finalPid": "",
+        "grantAppliedWhileSettingsOpen": false,
+        "lastFocus": {
+          "focus": [
+            "mCurrentFocus=Window{6a58177 u0 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity}",
+            "mFocusedApp=ActivityRecord{217694022 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t2}"
+          ],
+          "seconds": 7.78
+        },
+        "nativeAccessAllowedInitially": false,
+        "originalPid": "7212",
+        "phase": "denied",
+        "sameProcess": false,
+        "settingsBackCount": 1,
+        "settingsPromptSeen": true,
+        "storageDirAfter": "ls: /sdcard/asd: No such file or directory\n",
+        "variant": "exact"
+      },
+      {
+        "appopAfter": "MANAGE_EXTERNAL_STORAGE: allow; time=+6s217ms ago; rejectTime=+16s308ms ago\n",
+        "debugEvents": [],
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": false,
+        "finalPid": "",
+        "grantAppliedWhileSettingsOpen": true,
+        "lastFocus": {
+          "focus": [
+            "mCurrentFocus=Window{6a58177 u0 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity}",
+            "mFocusedApp=ActivityRecord{217694022 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t2}"
+          ],
+          "seconds": 7.14
+        },
+        "nativeAccessAllowedInitially": false,
+        "originalPid": "7399",
+        "phase": "grant-in-place",
+        "sameProcess": false,
+        "settingsBackCount": 1,
+        "settingsPromptSeen": true,
+        "storageDirAfter": "ls: /sdcard/asd: No such file or directory\n",
+        "variant": "exact"
+      },
+      {
+        "appopAfter": "MANAGE_EXTERNAL_STORAGE: allow; time=+12s788ms ago; rejectTime=+22s879ms ago\n",
+        "debugEvents": [],
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": false,
+        "finalPid": "7596",
+        "grantAppliedWhileSettingsOpen": false,
+        "lastFocus": {
+          "focus": [
+            "mCurrentFocus=Window{287b7c5 u0 totalcross.appzmtw/totalcross.appzmtw.Loader}",
+            "mFocusedApp=ActivityRecord{213488138 u0 totalcross.appzmtw/.Loader t16}"
+          ],
+          "seconds": 5.94
+        },
+        "nativeAccessAllowedInitially": true,
+        "originalPid": "7596",
+        "phase": "granted-before-launch",
+        "sameProcess": true,
+        "settingsBackCount": 0,
+        "settingsPromptSeen": false,
+        "storageDirAfter": "ls: /sdcard/asd: No such file or directory\n",
+        "variant": "exact"
+      },
+      {
+        "appopAfter": "MANAGE_EXTERNAL_STORAGE: ignore; time=+18s925ms ago; rejectTime=+4s263ms ago\n",
+        "debugEvents": [
+          "11-27 02:24:19.172  7756  7776 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+          "11-27 02:24:20.385  7756  7776 I TotalCross: TC_CLIENT_MAIN FAIL totalcross.io.IOException: Error Code: 13 - Permission denied"
+        ],
+        "fileDirCreated": false,
+        "fileDirDeleted": false,
+        "fileDirFailed": true,
+        "finalPid": "",
+        "grantAppliedWhileSettingsOpen": false,
+        "lastFocus": {
+          "focus": [
+            "mCurrentFocus=Window{6a58177 u0 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity}",
+            "mFocusedApp=ActivityRecord{217694022 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t2}"
+          ],
+          "seconds": 3.02
+        },
+        "nativeAccessAllowedInitially": false,
+        "originalPid": "7756",
+        "phase": "denied",
+        "sameProcess": false,
+        "settingsBackCount": 1,
+        "settingsPromptSeen": true,
+        "storageDirAfter": "ls: /sdcard/asd: No such file or directory\n",
+        "variant": "trace"
+      },
+      {
+        "appopAfter": "MANAGE_EXTERNAL_STORAGE: allow; time=+3s23ms ago; rejectTime=+9s546ms ago\n",
+        "debugEvents": [
+          "11-27 02:24:24.338  7915  7933 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+          "11-27 02:24:25.710  7915  7933 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd",
+          "11-27 02:24:25.725  7915  7933 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd"
+        ],
+        "fileDirCreated": true,
+        "fileDirDeleted": true,
+        "fileDirFailed": false,
+        "finalPid": "",
+        "grantAppliedWhileSettingsOpen": true,
+        "lastFocus": {
+          "focus": [
+            "mCurrentFocus=Window{6a58177 u0 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity}",
+            "mFocusedApp=ActivityRecord{217694022 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t2}"
+          ],
+          "seconds": 2.94
+        },
+        "nativeAccessAllowedInitially": false,
+        "originalPid": "7915",
+        "phase": "grant-in-place",
+        "sameProcess": false,
+        "settingsBackCount": 1,
+        "settingsPromptSeen": true,
+        "storageDirAfter": "ls: /sdcard/asd: No such file or directory\n",
+        "variant": "trace"
+      },
+      {
+        "appopAfter": "MANAGE_EXTERNAL_STORAGE: allow; time=+6s47ms ago; rejectTime=+12s570ms ago\n",
+        "debugEvents": [
+          "11-27 02:24:29.627  8070  8089 I TotalCross: TC_CLIENT_MAIN BEGIN /sdcard/asd",
+          "11-27 02:24:29.637  8070  8089 I TotalCross: TC_CLIENT_MAIN CREATED /sdcard/asd",
+          "11-27 02:24:29.641  8070  8089 I TotalCross: TC_CLIENT_MAIN DELETED /sdcard/asd"
+        ],
+        "fileDirCreated": true,
+        "fileDirDeleted": true,
+        "fileDirFailed": false,
+        "finalPid": "8070",
+        "grantAppliedWhileSettingsOpen": false,
+        "lastFocus": {
+          "focus": [
+            "mCurrentFocus=Window{7b937ec u0 totalcross.appzmtw/totalcross.appzmtw.Loader}",
+            "mFocusedApp=ActivityRecord{248319589 u0 totalcross.appzmtw/.Loader t19}"
+          ],
+          "seconds": 1.39
+        },
+        "nativeAccessAllowedInitially": true,
+        "originalPid": "8070",
+        "phase": "granted-before-launch",
+        "sameProcess": true,
+        "settingsBackCount": 0,
+        "settingsPromptSeen": false,
+        "storageDirAfter": "ls: /sdcard/asd: No such file or directory\n",
+        "variant": "trace"
+      }
+    ]
+  },
+  "schemaVersion": 1,
+  "source": {
+    "artifactId": 12899147776,
+    "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+    "commit": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+    "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+    "repository": "TotalCross/totalcross",
+    "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+    "workflowRunId": 40878222908
+  }
+}

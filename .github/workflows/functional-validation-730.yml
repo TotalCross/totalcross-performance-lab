@@ -111,6 +111,22 @@ jobs:
           SDL2_GITHUB_REPO: ${{ secrets.SDL2_GITHUB_REPO }}
         run: |
           mkdir -p build
+          source_commit="$(git rev-parse HEAD)"
+          source_tree="$(git rev-parse 'HEAD^{tree}')"
+          python3 - "$source_commit" "$source_tree" > build-provenance.json <<'PY'
+          import json
+          import sys
+
+          print(json.dumps({
+              "schemaVersion": 1,
+              "repository": "TotalCross/totalcross",
+              "source": {
+                  "commit": sys.argv[1],
+                  "tree": sys.argv[2],
+                  "dirty": False,
+              },
+          }, sort_keys=True))
+          PY
           docker_env_args=(
             -e SQLITE3_GITHUB_TOKEN -e ZLIB_NG_GITHUB_TOKEN
             -e MINIZIP_NG_GITHUB_TOKEN

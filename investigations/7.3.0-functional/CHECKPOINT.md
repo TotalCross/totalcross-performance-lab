@@ -5,7 +5,7 @@
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 - Active milestone: 1 — Linux startup and PNG blockers
-- Last completed campaign commit: `dc76666` (conditional override forwarding)
+- Previous campaign checkpoint: `1a602fa` (native build retry findings)
 - Previous evidence checkpoint: `42008b9`
 - Production source edits: none
 
@@ -69,22 +69,34 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   CMake from reading the pinned `deps.yml`. Commit `dc76666` now forwards
   release/repository override variables only when nonempty. Neither run
   reached Linux runtime validation.
-- The local I03 API 36 ARM64 exact/trace reproducer is running on the
-  hardware-accelerated emulator; temporary APKs and logs are under
-  `/tmp/tc730-android/build` until compact evidence is imported.
+- I03 ran on the hardware-accelerated API 36 ARM64 AVD using the archived
+  official 7.3.0 package. After dismissing a System UI ANR from the first
+  attempt, the retry captured four app SIGSEGV tombstones across denied and
+  grant-in-place permission flows. Exact and trace pregranted controls stayed
+  alive; the trace control created and deleted `/sdcard/asd`. Compact evidence
+  and the screenshot are committed under `evidence/I03/`; raw tombstones,
+  APKs, and phase logs remain under `/tmp/tc730-android/build-retry/`.
+- Hosted run `45944696531` passed SDK packaging, pinned dependency fetch, native
+  bridge generation, and CMake configuration, then failed when the canonical
+  Docker build could not access Actions' external Git metadata and the frozen
+  source archive lacked `build-provenance.json`. The workflow now writes a
+  manifest from the pinned commit/tree before entering Docker; the official
+  build-identity script accepted this no-Git manifest in a local fixture. The
+  hosted retry remains pending.
 
 ## Pending investigations
 
-I01-B, I02, I03, I04/I05, I06 Linux, I07, I08, I09, I10, I11, remaining
-provenance, case reports, proposed issue updates, and final consolidation.
+I01-B, I02, remaining I03 APIs/scenarios, I04/I05, I06 Linux, I07, I08, I09,
+I10, I11, remaining provenance, case reports, proposed issue updates, and final
+consolidation.
 
 ## Next concrete action
 
-Push the conditional-override correction to trigger
-`.github/workflows/functional-validation-730.yml` again. Review its result
-artifact, record the exact run and binary identities, then update I01-B/I02
-reports and the matrix. The archived 7.3.0 artifact is verified and unexpired
-as of 2026-11-27; current campaign runtime cases have not run yet.
+Review the Actions run triggered by the frozen-source provenance fix. Confirm
+the native build passes the provenance step and inspect the Linux result
+artifact before updating I01-B/I02. The I03 finding applies to the archived
+official 7.3.0 package on API 36 only; corrected-candidate and other API
+results remain pending.
 
 ## Constraints and blockers
 

@@ -93,6 +93,11 @@ provenance, proposed issue updates, and a consolidated report.
   three storage roots at every API. A foreign-file control confirmed API 29
   denial/grant recovery, API 30's READ-only prompt, and no legacy prompt on
   APIs 35/36. App-created shared files were kept distinct from foreign access.
+- [x] 2026-11-27: I09 completed on Android ARM64 APIs 29/30/35/36. Candidate
+  94af recovered a foreign SQLite open after API 29 authorization and returned
+  the expected denial after revocation. API 30 requested READ only; APIs 35/36
+  showed no legacy prompt. Private persistence, error controls, and app-owned
+  shared databases passed. Wrapper error-code limits are recorded.
 - [x] Milestone 0: provenance, legacy-port review, historical evidence import,
   harness/workflow contract, and CI/emulator capability checks are complete.
 - [x] Milestone 1: Linux realpath startup (I01-B) and PNG decode (I02) runtime
@@ -115,8 +120,8 @@ provenance, proposed issue updates, and a consolidated report.
 - [ ] Milestone 3: verify and import the remaining durable PR #567 historical
   JavaSE, macOS ARM64, and Android ARM64 ownership evidence. I07 is complete;
   I06 Linux assertions passed conditionally under the test-only startup shim.
-- [ ] Milestone 4: validate Android filesystem and SQLite permission recovery
-  (I08/I09), then SQLite compatibility (I10).
+- [ ] Milestone 4: I08/I09 Android filesystem and SQLite permission recovery
+  are complete; validate SQLite compatibility (I10).
 - [ ] Milestone 5: restricted release workflow validation (I11), final matrix,
   issue proposals, and consolidated report.
 

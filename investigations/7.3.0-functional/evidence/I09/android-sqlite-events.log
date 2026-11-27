@@ -1,0 +1,213 @@
+I09 Android SQLite runtime and permission event excerpts
+Source files are named before each excerpt; full raw captures remain under /private/tmp.
+Only r4 captures built from the recorded final probe source are included.
+
+[/private/tmp/tc730-i09-r4-candidate-94af-api30-shared-owned/runtime.log]
+11-27 10:18:43.116 13258 13289 I TotalCross: TC_I09 startup revision=candidate-94af mode=shared-owned appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:18:43.122 13258 13289 I TotalCross: TC_I09 case=shared-app-owned state=BEGIN path=/sdcard/Download/tc730-i09-owned-i09c.sqlite
+11-27 10:18:43.354 13258 13289 I TotalCross: TC_I09 case=shared-owned-before-close status=PASS details=integrity_check=ok
+11-27 10:18:43.392 13258 13289 I TotalCross: TC_I09 case=shared-owned-after-reopen status=PASS details=integrity_check=ok
+11-27 10:18:43.400 13258 13289 I TotalCross: TC_I09 case=shared-app-owned status=PASS details=created,reopened,integrity-ok;existed=true
+11-27 10:18:43.404 13258 13289 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"shared-owned","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-94af-api35-shared-denied/logcat.log]
+11-27 10:22:53.603  5352  5373 I TotalCross: TC_I09 startup revision=candidate-94af mode=shared-deny appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:22:53.635  5352  5373 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=deny path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:22:54.051  5352  5373 I TotalCross: TC_I09 case=shared-open status=EXPECTED_DENIAL details=reportedErrorCode=-1;sqlState=null;message=[-1] unknown error (unable to open database file);resultCodeInference=SQLITE_CANTOPEN(14)
+11-27 10:22:54.150  5352  5373 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"shared-deny","completed":1,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-94af-api35-shared-owned/runtime.log]
+11-27 10:19:42.882  5124  5158 I TotalCross: TC_I09 startup revision=candidate-94af mode=shared-owned appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:19:42.940  5124  5158 I TotalCross: TC_I09 case=shared-app-owned state=BEGIN path=/sdcard/Download/tc730-i09-owned-i09c.sqlite
+11-27 10:19:44.173  5124  5158 I TotalCross: TC_I09 case=shared-owned-before-close status=PASS details=integrity_check=ok
+11-27 10:19:44.222  5124  5158 I TotalCross: TC_I09 case=shared-owned-after-reopen status=PASS details=integrity_check=ok
+11-27 10:19:44.234  5124  5158 I TotalCross: TC_I09 case=shared-app-owned status=PASS details=created,reopened,integrity-ok;existed=false
+11-27 10:19:44.241  5124  5158 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"shared-owned","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-94af-api36-private/runtime-restart.log]
+11-27 10:12:28.826  7050  7068 I TotalCross: TC_I09 startup revision=candidate-94af mode=private appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:12:28.869  7050  7068 I TotalCross: TC_I09 case=private-create-open state=BEGIN existed=true
+11-27 10:12:29.181  7050  7068 I TotalCross: TC_I09 case=private-create-open status=PASS details=row=persisted-marker
+11-27 10:12:29.235  7050  7068 I TotalCross: TC_I09 case=private-before-close status=PASS details=integrity_check=ok
+11-27 10:12:29.295  7050  7068 I TotalCross: TC_I09 case=restart-persistence status=PASS details=row=persisted-marker
+11-27 10:12:29.316  7050  7068 I TotalCross: TC_I09 case=private-after-reopen status=PASS details=integrity_check=ok
+11-27 10:12:29.325  7050  7068 I TotalCross: TC_I09 sqliteVersion=3.32.3
+11-27 10:12:29.332  7050  7068 I TotalCross: TC_I09 case=restart-persistence status=PASS details=closed,reopened,row-and-integrity-verified
+11-27 10:12:29.339  7050  7068 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"private","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-94af-api36-private/runtime-seed.log]
+11-27 10:12:18.731  6973  7024 I TotalCross: TC_I09 startup revision=candidate-94af mode=private appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:12:18.768  6973  7024 I TotalCross: TC_I09 case=private-create-open state=BEGIN existed=false
+11-27 10:12:18.910  6973  7024 I TotalCross: TC_I09 case=private-create-open status=PASS details=row=persisted-marker
+11-27 10:12:18.921  6973  7024 I TotalCross: TC_I09 case=private-before-close status=PASS details=integrity_check=ok
+11-27 10:12:18.931  6973  7024 I TotalCross: TC_I09 case=close-reopen status=PASS details=row=persisted-marker
+11-27 10:12:18.935  6973  7024 I TotalCross: TC_I09 case=private-after-reopen status=PASS details=integrity_check=ok
+11-27 10:12:18.942  6973  7024 I TotalCross: TC_I09 sqliteVersion=3.32.3
+11-27 10:12:18.947  6973  7024 I TotalCross: TC_I09 case=readonly state=BEGIN
+11-27 10:12:18.954  6973  7024 I TotalCross: TC_I09 case=readonly-read status=PASS details=row=persisted-marker
+11-27 10:12:18.964  6973  7024 I TotalCross: TC_I09 case=readonly-write status=PASS details=reportedErrorCode=0;message=attempt to write a readonly database;resultCodeInference=SQLITE_READONLY(8)
+11-27 10:12:18.976  6973  7024 I TotalCross: TC_I09 case=invalid-sql state=BEGIN
+11-27 10:12:18.981  6973  7024 I TotalCross: TC_I09 case=invalid-sql status=PASS details=reportedErrorCode=-1;message=[-1] unknown error (no such table: table_that_does_not_exist);resultCodeInference=SQLITE_ERROR(1)
+11-27 10:12:18.988  6973  7024 I TotalCross: TC_I09 case=corrupt-database state=BEGIN
+11-27 10:12:19.003  6973  7024 I TotalCross: TC_I09 case=corrupt-database status=PASS details=reportedErrorCode=-1;message=[-1] unknown error (file is not a database);resultCodeInference=SQLITE_NOTADB(26)
+11-27 10:12:19.013  6973  7024 I TotalCross: TC_I09 case=private-create-open status=PASS details=closed,reopened,row-and-integrity-verified
+11-27 10:12:19.022  6973  7024 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"private","completed":6,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-94af-api36-shared-denied/logcat.log]
+11-27 10:23:26.636   680   680 W Looper  : Slow dispatch took 274ms main app=system_server main=true group=FOREGROUND h=android.os.Handler c=ServiceConnector@291(Intent { act=android.permission.PermissionControllerService xflg=0x4 cmp=com.google.android.permissioncontroller/com.android.permissioncontroller.permission.service.PermissionControllerServiceImpl }, user: 0)[Unbinding...] m=0
+11-27 10:23:27.479  7521  7540 I TotalCross: TC_I09 startup revision=candidate-94af mode=shared-deny appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:23:27.498  7521  7540 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=deny path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:23:27.619  7521  7540 I TotalCross: TC_I09 case=shared-open status=EXPECTED_DENIAL details=reportedErrorCode=-1;sqlState=null;message=[-1] unknown error (unable to open database file);resultCodeInference=SQLITE_CANTOPEN(14)
+11-27 10:23:27.628  7521  7540 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"shared-deny","completed":1,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-94af-api36-shared-owned/runtime.log]
+11-27 10:20:20.137  7286  7322 I TotalCross: TC_I09 startup revision=candidate-94af mode=shared-owned appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:20:20.232  7286  7322 I TotalCross: TC_I09 case=shared-app-owned state=BEGIN path=/sdcard/Download/tc730-i09-owned-i09c.sqlite
+11-27 10:20:21.792  7286  7322 I TotalCross: TC_I09 case=shared-owned-before-close status=PASS details=integrity_check=ok
+11-27 10:20:21.937  7286  7322 I TotalCross: TC_I09 case=shared-owned-after-reopen status=PASS details=integrity_check=ok
+11-27 10:20:21.950  7286  7322 I TotalCross: TC_I09 case=shared-app-owned status=PASS details=created,reopened,integrity-ok;existed=false
+11-27 10:20:21.976  7286  7322 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"shared-owned","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-api29-shared-allow/logcat.log]
+11-27 10:16:44.847  7678  7707 I TotalCross: TC_I09 startup revision=candidate-94af mode=shared-allow appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:16:44.858  7678  7707 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=allow path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:16:44.882   378  3236 I ActivityTaskManager: START u0 {act=android.content.pm.action.REQUEST_PERMISSIONS pkg=com.google.android.permissioncontroller cmp=com.google.android.permissioncontroller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity (has extras)} from uid 10144
+11-27 10:16:45.260   378   405 I ActivityTaskManager: Displayed com.google.android.permissioncontroller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity: +343ms
+11-27 10:17:07.825  2516  2516 V GrantPermissionsActivity: Logged buttons presented and clicked permissionGroupName=android.permission-group.STORAGE uid=10144 package=totalcross.appi09c presentedButtons=25 clickedButton=1
+11-27 10:17:08.344  2516  2516 V GrantPermissionsActivity: Permission grant result requestId=-723185581466122424 callingUid=10144 callingPackage=totalcross.appi09c permission=android.permission.READ_EXTERNAL_STORAGE isImplicit=false result=4
+11-27 10:17:08.344  2516  2516 V GrantPermissionsActivity: Permission grant result requestId=-723185581466122424 callingUid=10144 callingPackage=totalcross.appi09c permission=android.permission.WRITE_EXTERNAL_STORAGE isImplicit=false result=4
+11-27 10:17:08.731  7678  7707 I TotalCross: TC_I09 case=shared-host-fixture status=PASS details=row=host-seeded-i09
+11-27 10:17:08.793  7678  7707 I TotalCross: TC_I09 case=shared-before-close status=PASS details=integrity_check=ok
+11-27 10:17:08.803  7678  7707 I TotalCross: TC_I09 case=shared-after-reopen status=PASS details=integrity_check=ok
+11-27 10:17:08.816  7678  7707 I TotalCross: TC_I09 case=shared-open status=PASS details=host-row,recovery-write,reopen,integrity-ok
+11-27 10:17:08.820  7678  7707 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"shared-allow","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-api29-shared-denied/logcat.log]
+11-27 10:15:54.629  7548  7572 I TotalCross: TC_I09 startup revision=candidate-94af mode=shared-deny appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:15:54.647  7548  7572 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=deny path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:15:54.685   378   711 I ActivityTaskManager: START u0 {act=android.content.pm.action.REQUEST_PERMISSIONS pkg=com.google.android.permissioncontroller cmp=com.google.android.permissioncontroller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity (has extras)} from uid 10144
+11-27 10:15:55.026   378   405 I ActivityTaskManager: Displayed com.google.android.permissioncontroller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity: +330ms
+11-27 10:16:19.053  2516  2516 V GrantPermissionsActivity: Logged buttons presented and clicked permissionGroupName=android.permission-group.STORAGE uid=10144 package=totalcross.appi09c presentedButtons=25 clickedButton=8
+11-27 10:16:19.094  2516  2516 V GrantPermissionsActivity: Permission grant result requestId=-727517136390330649 callingUid=10144 callingPackage=totalcross.appi09c permission=android.permission.READ_EXTERNAL_STORAGE isImplicit=false result=6
+11-27 10:16:19.094  2516  2516 V GrantPermissionsActivity: Permission grant result requestId=-727517136390330649 callingUid=10144 callingPackage=totalcross.appi09c permission=android.permission.WRITE_EXTERNAL_STORAGE isImplicit=false result=6
+11-27 10:16:19.692  7548  7572 I TotalCross: TC_I09 case=shared-open status=EXPECTED_DENIAL details=reportedErrorCode=-1;sqlState=null;message=[-1] unknown error (unable to open database file);resultCodeInference=SQLITE_CANTOPEN(14)
+11-27 10:16:19.817  7548  7572 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"shared-deny","completed":1,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-api29-shared-redeny/logcat.log]
+11-27 10:17:50.216  7832  7857 I TotalCross: TC_I09 startup revision=candidate-94af mode=shared-deny appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:17:50.220  7832  7857 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=deny path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:17:50.241   378  2710 I ActivityTaskManager: START u0 {act=android.content.pm.action.REQUEST_PERMISSIONS pkg=com.google.android.permissioncontroller cmp=com.google.android.permissioncontroller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity (has extras)} from uid 10144
+11-27 10:17:50.837   378   405 I ActivityTaskManager: Displayed com.google.android.permissioncontroller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity: +567ms
+11-27 10:17:58.729  2516  2516 V GrantPermissionsActivity: Logged buttons presented and clicked permissionGroupName=android.permission-group.STORAGE uid=10144 package=totalcross.appi09c presentedButtons=9 clickedButton=8
+11-27 10:17:58.781  2516  2516 V GrantPermissionsActivity: Permission grant result requestId=-6347608070419762450 callingUid=10144 callingPackage=totalcross.appi09c permission=android.permission.READ_EXTERNAL_STORAGE isImplicit=false result=6
+11-27 10:17:58.781  2516  2516 V GrantPermissionsActivity: Permission grant result requestId=-6347608070419762450 callingUid=10144 callingPackage=totalcross.appi09c permission=android.permission.WRITE_EXTERNAL_STORAGE isImplicit=false result=6
+11-27 10:17:59.036  7832  7857 I TotalCross: TC_I09 case=shared-open status=EXPECTED_DENIAL details=reportedErrorCode=-1;sqlState=null;message=[-1] unknown error (unable to open database file);resultCodeInference=SQLITE_CANTOPEN(14)
+11-27 10:17:59.157  7832  7857 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"shared-deny","completed":1,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-api30-shared-denied/logcat.log]
+11-27 10:21:33.824  3352  3372 I PermissionControllerServiceImpl: Updating user sensitive for uid 10192
+11-27 10:21:40.658 13482 13507 I TotalCross: TC_I09 startup revision=candidate-94af mode=shared-deny appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:21:40.675 13482 13507 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=deny path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:21:41.039   500  4927 I ActivityTaskManager: START u0 {act=android.content.pm.action.REQUEST_PERMISSIONS pkg=com.google.android.permissioncontroller cmp=com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity (has extras)} from uid 10192
+11-27 10:21:41.598   500   525 D ArtManagerInternalImpl: /data/misc/iorapd/com.google.android.permissioncontroller/300900706/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity/compiled_traces/compiled_trace.pb doesn't exist
+11-27 10:21:41.612   500   525 I ActivityTaskManager: Displayed com.google.android.permissioncontroller/com.android.permissioncontroller.permission.ui.GrantPermissionsActivity: +539ms
+11-27 10:21:52.142  3352  3352 V GrantPermissionsActivity: Logged buttons presented and clicked permissionGroupName=android.permission-group.STORAGE uid=10192 package=totalcross.appi09c presentedButtons=9 clickedButton=8 sessionId=8381621870467807817
+11-27 10:21:52.553  3352  3352 V GrantPermissionsActivity: Permission grant result requestId=8381621870467807817 callingUid=10192 callingPackage=totalcross.appi09c permission=android.permission.READ_EXTERNAL_STORAGE isImplicit=false result=6
+11-27 10:21:52.927 13482 13507 I TotalCross: TC_I09 case=shared-open status=EXPECTED_DENIAL details=reportedErrorCode=-1;sqlState=null;message=[-1] unknown error (unable to open database file);resultCodeInference=SQLITE_CANTOPEN(14)
+11-27 10:21:53.025 13482 13507 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"shared-deny","completed":1,"failures":0}
+
+[/private/tmp/tc730-i09-r4-candidate-api30-shared-owned/logcat.log]
+11-27 10:14:09.620  3352  6379 I PermissionControllerServiceImpl: Updating user sensitive for uid 10192
+11-27 10:14:17.151 13005 13066 I TotalCross: TC_I09 startup revision=candidate-94af mode=shared-owned appPath=/data/user/0/totalcross.appi09c appId=I09C
+11-27 10:14:17.196 13005 13066 I TotalCross: TC_I09 case=shared-app-owned state=BEGIN path=/sdcard/Download/tc730-i09-owned-i09c.sqlite
+11-27 10:14:20.832 13005 13066 I TotalCross: TC_I09 case=shared-owned-before-close status=PASS details=integrity_check=ok
+11-27 10:14:20.946 13005 13066 I TotalCross: TC_I09 case=shared-owned-after-reopen status=PASS details=integrity_check=ok
+11-27 10:14:21.002 13005 13066 I TotalCross: TC_I09 case=shared-app-owned status=PASS details=created,reopened,integrity-ok;existed=false
+11-27 10:14:21.023 13005 13066 I TotalCross: TC_I09_RESULT {"revision":"candidate-94af","mode":"shared-owned","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-official-730-api30-shared-denied/logcat.log]
+11-27 10:22:25.684  3352  3372 I PermissionControllerServiceImpl: Updating user sensitive for uid 10193
+11-27 10:22:30.309 13646 13672 I TotalCross: TC_I09 startup revision=official-730 mode=shared-deny appPath=/data/user/0/totalcross.appi09o appId=I09O
+11-27 10:22:30.321 13646 13672 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=deny path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:22:30.428 13646 13672 I TotalCross: TC_I09 case=shared-open status=EXPECTED_DENIAL details=reportedErrorCode=-1;sqlState=null;message=[-1] unknown error (out of memory);resultCodeInference=unavailable-from-public-exception
+11-27 10:22:30.449 13646 13672 I TotalCross: TC_I09_RESULT {"revision":"official-730","mode":"shared-deny","completed":1,"failures":0}
+
+[/private/tmp/tc730-i09-r4-official-730-api30-shared-owned/runtime.log]
+11-27 10:19:10.435 13364 13390 I TotalCross: TC_I09 startup revision=official-730 mode=shared-owned appPath=/data/user/0/totalcross.appi09o appId=I09O
+11-27 10:19:10.470 13364 13390 I TotalCross: TC_I09 case=shared-app-owned state=BEGIN path=/sdcard/Download/tc730-i09-owned-i09o.sqlite
+11-27 10:19:11.336 13364 13390 I TotalCross: TC_I09 case=shared-owned-before-close status=PASS details=integrity_check=ok
+11-27 10:19:11.419 13364 13390 I TotalCross: TC_I09 case=shared-owned-after-reopen status=PASS details=integrity_check=ok
+11-27 10:19:11.428 13364 13390 I TotalCross: TC_I09 case=shared-app-owned status=PASS details=created,reopened,integrity-ok;existed=false
+11-27 10:19:11.431 13364 13390 I TotalCross: TC_I09_RESULT {"revision":"official-730","mode":"shared-owned","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-official-730-api35-shared-denied/logcat.log]
+11-27 10:23:14.868  5459  5478 I TotalCross: TC_I09 startup revision=official-730 mode=shared-deny appPath=/data/user/0/totalcross.appi09o appId=I09O
+11-27 10:23:14.918  5459  5478 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=deny path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:23:14.991  5459  5478 I TotalCross: TC_I09 case=shared-open status=EXPECTED_DENIAL details=reportedErrorCode=-1;sqlState=null;message=[-1] unknown error (out of memory);resultCodeInference=unavailable-from-public-exception
+11-27 10:23:14.998  5459  5478 I TotalCross: TC_I09_RESULT {"revision":"official-730","mode":"shared-deny","completed":1,"failures":0}
+
+[/private/tmp/tc730-i09-r4-official-730-api35-shared-owned/runtime.log]
+11-27 10:20:05.268  5245  5262 I TotalCross: TC_I09 startup revision=official-730 mode=shared-owned appPath=/data/user/0/totalcross.appi09o appId=I09O
+11-27 10:20:05.300  5245  5262 I TotalCross: TC_I09 case=shared-app-owned state=BEGIN path=/sdcard/Download/tc730-i09-owned-i09o.sqlite
+11-27 10:20:06.398  5245  5262 I TotalCross: TC_I09 case=shared-owned-before-close status=PASS details=integrity_check=ok
+11-27 10:20:06.511  5245  5262 I TotalCross: TC_I09 case=shared-owned-after-reopen status=PASS details=integrity_check=ok
+11-27 10:20:06.549  5245  5262 I TotalCross: TC_I09 case=shared-app-owned status=PASS details=created,reopened,integrity-ok;existed=false
+11-27 10:20:06.572  5245  5262 I TotalCross: TC_I09_RESULT {"revision":"official-730","mode":"shared-owned","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-official-730-api36-private/runtime-restart.log]
+11-27 10:13:03.175  7199  7217 I TotalCross: TC_I09 startup revision=official-730 mode=private appPath=/data/user/0/totalcross.appi09o appId=I09O
+11-27 10:13:03.191  7199  7217 I TotalCross: TC_I09 case=private-create-open state=BEGIN existed=true
+11-27 10:13:03.322  7199  7217 I TotalCross: TC_I09 case=private-create-open status=PASS details=row=persisted-marker
+11-27 10:13:03.393  7199  7217 I TotalCross: TC_I09 case=private-before-close status=PASS details=integrity_check=ok
+11-27 10:13:03.443  7199  7217 I TotalCross: TC_I09 case=restart-persistence status=PASS details=row=persisted-marker
+11-27 10:13:03.509  7199  7217 I TotalCross: TC_I09 case=private-after-reopen status=PASS details=integrity_check=ok
+11-27 10:13:03.545  7199  7217 I TotalCross: TC_I09 sqliteVersion=3.32.3
+11-27 10:13:03.592  7199  7217 I TotalCross: TC_I09 case=restart-persistence status=PASS details=closed,reopened,row-and-integrity-verified
+11-27 10:13:03.656  7199  7217 I TotalCross: TC_I09_RESULT {"revision":"official-730","mode":"private","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-official-730-api36-private/runtime-seed.log]
+11-27 10:12:54.448  7129  7173 I TotalCross: TC_I09 startup revision=official-730 mode=private appPath=/data/user/0/totalcross.appi09o appId=I09O
+11-27 10:12:54.467  7129  7173 I TotalCross: TC_I09 case=private-create-open state=BEGIN existed=false
+11-27 10:12:54.646  7129  7173 I TotalCross: TC_I09 case=private-create-open status=PASS details=row=persisted-marker
+11-27 10:12:54.671  7129  7173 I TotalCross: TC_I09 case=private-before-close status=PASS details=integrity_check=ok
+11-27 10:12:54.679  7129  7173 I TotalCross: TC_I09 case=close-reopen status=PASS details=row=persisted-marker
+11-27 10:12:54.687  7129  7173 I TotalCross: TC_I09 case=private-after-reopen status=PASS details=integrity_check=ok
+11-27 10:12:54.700  7129  7173 I TotalCross: TC_I09 sqliteVersion=3.32.3
+11-27 10:12:54.717  7129  7173 I TotalCross: TC_I09 case=readonly state=BEGIN
+11-27 10:12:54.736  7129  7173 I TotalCross: TC_I09 case=readonly-read status=PASS details=row=persisted-marker
+11-27 10:12:54.742  7129  7173 I TotalCross: TC_I09 case=readonly-write status=PASS details=reportedErrorCode=0;message=attempt to write a readonly database;resultCodeInference=SQLITE_READONLY(8)
+11-27 10:12:54.747  7129  7173 I TotalCross: TC_I09 case=invalid-sql state=BEGIN
+11-27 10:12:54.772  7129  7173 I TotalCross: TC_I09 case=invalid-sql status=PASS details=reportedErrorCode=-1;message=[-1] unknown error (no such table: table_that_does_not_exist);resultCodeInference=SQLITE_ERROR(1)
+11-27 10:12:54.784  7129  7173 I TotalCross: TC_I09 case=corrupt-database state=BEGIN
+11-27 10:12:54.883  7129  7173 I TotalCross: TC_I09 case=corrupt-database status=PASS details=reportedErrorCode=-1;message=[-1] unknown error (file is not a database);resultCodeInference=SQLITE_NOTADB(26)
+11-27 10:12:54.906  7129  7173 I TotalCross: TC_I09 case=private-create-open status=PASS details=closed,reopened,row-and-integrity-verified
+11-27 10:12:55.058  7129  7173 I TotalCross: TC_I09_RESULT {"revision":"official-730","mode":"private","completed":6,"failures":0}
+
+[/private/tmp/tc730-i09-r4-official-730-api36-shared-denied/logcat.log]
+11-27 10:23:47.278  7619  7639 I TotalCross: TC_I09 startup revision=official-730 mode=shared-deny appPath=/data/user/0/totalcross.appi09o appId=I09O
+11-27 10:23:47.296  7619  7639 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=deny path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:23:48.077  7619  7639 I TotalCross: TC_I09 case=shared-open status=EXPECTED_DENIAL details=reportedErrorCode=-1;sqlState=null;message=[-1] unknown error (out of memory);resultCodeInference=unavailable-from-public-exception
+11-27 10:23:48.090  7619  7639 I TotalCross: TC_I09_RESULT {"revision":"official-730","mode":"shared-deny","completed":1,"failures":0}
+
+[/private/tmp/tc730-i09-r4-official-730-api36-shared-owned/runtime.log]
+11-27 10:20:43.916  7392  7422 I TotalCross: TC_I09 startup revision=official-730 mode=shared-owned appPath=/data/user/0/totalcross.appi09o appId=I09O
+11-27 10:20:43.943  7392  7422 I TotalCross: TC_I09 case=shared-app-owned state=BEGIN path=/sdcard/Download/tc730-i09-owned-i09o.sqlite
+11-27 10:20:44.540  7392  7422 I TotalCross: TC_I09 case=shared-owned-before-close status=PASS details=integrity_check=ok
+11-27 10:20:44.571  7392  7422 I TotalCross: TC_I09 case=shared-owned-after-reopen status=PASS details=integrity_check=ok
+11-27 10:20:44.579  7392  7422 I TotalCross: TC_I09 case=shared-app-owned status=PASS details=created,reopened,integrity-ok;existed=false
+11-27 10:20:44.590  7392  7422 I TotalCross: TC_I09_RESULT {"revision":"official-730","mode":"shared-owned","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-official-api29-shared-allow/runtime.log]
+11-27 10:15:26.046  7442  7475 I TotalCross: TC_I09 startup revision=official-730 mode=shared-allow appPath=/data/user/0/totalcross.appi09o appId=I09O
+11-27 10:15:26.052  7442  7475 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=allow path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:15:26.186  7442  7475 I TotalCross: TC_I09 case=shared-host-fixture status=PASS details=row=host-seeded-i09
+11-27 10:15:26.210  7442  7475 I TotalCross: TC_I09 case=shared-before-close status=PASS details=integrity_check=ok
+11-27 10:15:26.214  7442  7475 I TotalCross: TC_I09 case=shared-after-reopen status=PASS details=integrity_check=ok
+11-27 10:15:26.217  7442  7475 I TotalCross: TC_I09 case=shared-open status=PASS details=host-row,recovery-write,reopen,integrity-ok
+11-27 10:15:26.220  7442  7475 I TotalCross: TC_I09_RESULT {"revision":"official-730","mode":"shared-allow","completed":3,"failures":0}
+
+[/private/tmp/tc730-i09-r4-official-api29-shared-denied/logcat.log]
+11-27 10:14:52.572  7351  7376 I TotalCross: TC_I09 startup revision=official-730 mode=shared-deny appPath=/data/user/0/totalcross.appi09o appId=I09O
+11-27 10:14:52.577  7351  7376 I TotalCross: TC_I09 case=shared-open state=BEGIN expected=deny path=/sdcard/Download/tc730-i09-foreign.sqlite
+11-27 10:14:52.586  7351  7376 I TotalCross: TC_I09 case=shared-open status=EXPECTED_DENIAL details=reportedErrorCode=-1;sqlState=null;message=[-1] unknown error (out of memory);resultCodeInference=unavailable-from-public-exception
+11-27 10:14:52.589  7351  7376 I TotalCross: TC_I09_RESULT {"revision":"official-730","mode":"shared-deny","completed":1,"failures":0}

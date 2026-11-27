@@ -7,7 +7,9 @@ and provenance record. I03 priority API runs are recorded for Android API 29,
 inconclusive on API 30. I05 recorded one destroyed-mutex abort during shutdown
 in ten clean file-I/O cycles; the native stack and mutex owner remain unknown.
 I08 completed its official/candidate filesystem matrix on Android API 29, 30,
-35, and 36, including a separate foreign-file permission control.
+35, and 36, including a separate foreign-file permission control. I09 completed
+the Android SQLite permission, persistence, and denial controls on the same
+API levels.
 
 ## Imported historical evidence
 
@@ -93,6 +95,14 @@ I08 completed its official/candidate filesystem matrix on Android API 29, 30,
   not treated as foreign-file authorization. See the
   [I08 report](reports/I08-android-storage.md) and
   [machine evidence](evidence/I08/android-storage-matrix.json).
+- **I09, Android API 29/30/35/36 ARM64:** PASS for the tested private SQLite
+  persistence, API 29 candidate foreign-file permission recovery, expected
+  denied-open behavior, and app-owned shared-database controls. API 30
+  requested READ only; APIs 35/36 showed no legacy prompt. The public wrapper
+  returned codes 0/-1, so primary SQLite codes are identified only as message
+  based inferences; extended codes are unavailable. See the
+  [I09 report](reports/I09-android-sqlite.md) and
+  [machine evidence](evidence/I09/android-sqlite-matrix.json).
 - **I01-B, Linux x86_64:** official 7.3.0 and frozen master failed before
   startup on all four tested path forms, including short paths. Official 7.2.2
   is inconclusive as a realpath control: three cases failed in dynamic loading;
@@ -102,5 +112,5 @@ I08 completed its official/candidate filesystem matrix on Android API 29, 30,
   rejected during construction. Other platforms remain untested.
 
 No production source was changed. I03 repeated requests and corrected-candidate
-validation remain explicitly unrun. I09/I10, I11, remaining provenance, and the
+validation remain explicitly unrun. I10, I11, remaining provenance, and the
 final report remain pending.

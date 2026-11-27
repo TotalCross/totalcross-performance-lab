@@ -3,7 +3,7 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
-- Last completed platform checkpoint: I08 passed on Android API 29/30/35/36
+- Last completed platform checkpoint: I09 passed on Android API 29/30/35/36
   ARM64 for official 7.3.0 and candidate 94af. I07 passed on Windows I386,
   Linux x86_64 conditionally, macOS ARM64, and Android API 36 ARM64. I06 passed
   on Windows I386 and completed its Linux ownership assertions conditionally.
@@ -165,6 +165,13 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   READ only, and APIs 35/36 denied foreign access without a legacy prompt. The
   manifest does not declare MANAGE_EXTERNAL_STORAGE. Results and compact logs
   are in `reports/I08-android-storage.md` and `evidence/I08/`.
+- I09 passed its defined Android SQLite cases on APIs 29/30/35/36. Candidate
+  94af recovered an API 29 foreign-database open after READ/WRITE authorization
+  and returned the expected denial after revocation. API 30 requested READ
+  only; APIs 35/36 denied foreign opens without a legacy prompt. Private
+  persistence, readonly/invalid/corrupt controls, integrity checks, and
+  app-owned shared databases passed. Wrapper error-code limits are recorded in
+  `reports/I09-android-sqlite.md` and `evidence/I09/`.
 - Built the candidate Android release AAB and ran I07 on the hardware-accelerated
   API 36 ARM64 emulator. All 16 reported cases passed, with zero failures,
   skips, or native crashes. The host GPU log identifies the Apple M1 Pro. The
@@ -178,18 +185,18 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
 ## Pending investigations
 
 PR #567 historical JavaSE/macOS/Android ownership evidence verification,
-I09, I10, I11, remaining provenance, proposed issue updates, and final
-consolidation. I03 repeated requests and corrected-candidate validation remain
-explicitly unrun because no candidate is available and the first denied
-transition already reproduces the crash.
+I10, I11, remaining provenance, proposed issue updates, and final consolidation.
+I03 repeated requests and corrected-candidate validation remain explicitly
+unrun because no candidate is available and the first denied transition
+already reproduces the crash.
 
 ## Next concrete action
 
-Begin I09 with the exact official and candidate Android ARM64 runtimes: cover
-private persistence, shared-path permission denial/grant/re-denial, SQLite
-error codes, read-only and corrupt controls, and `integrity_check`. I08 is
-complete; Linux I06 remains explicitly conditional on the test-only startup
-shim. Do not run Windows AMD64.
+Begin I10 with external SQLite, official 7.2.2, official 7.3.0, and corrected
+candidate plaintext fixtures. Cover transfer on permitted platforms, update
+persistence, WAL snapshots, and an invalid-format control. I08/I09 are complete;
+Linux I06 remains explicitly conditional on the test-only startup shim. Do not
+run Windows AMD64.
 
 ## Constraints and blockers
 

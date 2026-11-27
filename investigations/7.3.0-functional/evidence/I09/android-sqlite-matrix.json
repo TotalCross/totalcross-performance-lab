@@ -1,0 +1,467 @@
+{
+  "schemaVersion": 1,
+  "investigationId": "I09",
+  "title": "Android SQLite permission recovery",
+  "capturedAt": "2026-11-27",
+  "status": "PASS",
+  "scopeStatus": "IN_SCOPE",
+  "evidenceOrigin": "CAMPAIGN_LOCAL_ANDROID_ARM64_EMULATORS",
+  "source": {
+    "probePath": "investigations/7.3.0-functional/cases/android-sqlite/Main.java",
+    "probeSha256": "03895f5866170b6a5896f86ccae9cc0d790ef941d937fb8865b434ca1b300d2f",
+    "fixtureSqlPath": "investigations/7.3.0-functional/cases/android-sqlite/fixtures/host-seed.sql",
+    "fixtureSqlSha256": "f8278db0af6b5f2ce66d32be9e98a3115ba5f763953e2f71bf34a1bd1bb5b7bb",
+    "candidateRevision": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+    "officialRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d"
+  },
+  "environment": {
+    "host": "Apple M1 Pro ARM64",
+    "emulator": "Android Emulator 36.3.10, hardware accelerated host GPU",
+    "devices": [
+      {
+        "serial": "emulator-5580",
+        "apiLevel": 29,
+        "androidVersion": "10",
+        "abi": "arm64-v8a",
+        "graphics": "OpenGL ES 2.0"
+      },
+      {
+        "serial": "emulator-5554",
+        "apiLevel": 30,
+        "androidVersion": "11",
+        "abi": "arm64-v8a",
+        "graphics": "OpenGL ES 3.0"
+      },
+      {
+        "serial": "emulator-5582",
+        "apiLevel": 35,
+        "androidVersion": "15",
+        "abi": "arm64-v8a",
+        "graphics": "OpenGL ES 3.0"
+      },
+      {
+        "serial": "emulator-5556",
+        "apiLevel": 36,
+        "androidVersion": "16",
+        "abi": "arm64-v8a",
+        "graphics": "OpenGL ES 3.0"
+      }
+    ]
+  },
+  "application": {
+    "targetSdk": 36,
+    "minSdk": 24,
+    "explicitManifestPermissions": [
+      "android.permission.WRITE_EXTERNAL_STORAGE"
+    ],
+    "requestLegacyExternalStorage": true,
+    "readExternalStorage": "Package manager lists READ_EXTERNAL_STORAGE as restricted/implicit",
+    "manageExternalStorageDeclared": false,
+    "packageIds": {
+      "candidate": "totalcross.appi09c",
+      "official": "totalcross.appi09o"
+    }
+  },
+  "artifacts": {
+    "candidate-94af": {
+      "packageId": "totalcross.appi09c",
+      "sdkJarSha256": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d",
+      "arm64LibtcvmSha256": "57ec070728ce6362a4ed32c06e05122a4bbdc29d4468dc4630c94d33db029215",
+      "apkSha256": {
+        "private": "77db3292a6729fe00657add286c37a3666215c3bfcdf693db21e321ed37dfaeb",
+        "sharedAllow": "0184915e56308cf1d1fc6b9b671d4680f69a649932b57508a0a4efbc0ecc155c",
+        "sharedDeny": "f4d7ddaf9a2c60f7c401fb5d2770367fd2c2c9071acf5483b7e8035b20b0dd9b",
+        "sharedOwned": "50f983814e55cc3fcc0f2513c844bc8335623e4f0d899b8a05e3b102c63ca28a"
+      }
+    },
+    "official-730": {
+      "packageId": "totalcross.appi09o",
+      "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+      "arm64LibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+      "apkSha256": {
+        "private": "266d85083e98d396e77ca8266ee779fb4cc31e01f130ea498fd3c8d05f2ad5f6",
+        "sharedAllow": "2abd3302945cf57327feca8c09ef86e5b86f287b6e614790375eb32949b96050",
+        "sharedDeny": "4c34bb6c8c81d4df3b53b887bd4f8c4452be0362e4d2f19ab42bcc1645d8869b",
+        "sharedOwned": "4b6ee1df9e28732ca588168aaa099b78b4bac91c93253ab395a554e39940204f"
+      }
+    }
+  },
+  "sqlite": {
+    "embeddedRuntimeVersion": "3.32.3",
+    "hostSqliteCliVersion": "3.54.0",
+    "foreignFixturePath": "/sdcard/Download/tc730-i09-foreign.sqlite",
+    "foreignFixtureSha256": "5dbfebcca5f40951c322f014d336ac02866a93eaad237b8adf63a4396bd8bbf6",
+    "foreignFixtureIntegrityCheck": "ok",
+    "foreignFixtureRow": "host-seeded-i09",
+    "privateAndSharedIntegrityChecks": "ok"
+  },
+  "resultRuns": [
+    {
+      "platform": "android-arm64-api36",
+      "deviceSerial": "emulator-5556",
+      "revision": "candidate-94af",
+      "scenario": "private-persistence-and-error-controls",
+      "status": "PASS",
+      "details": "create/read, close/reopen, integrity_check, readonly read/write control, invalid SQL, corrupt database",
+      "permissionsAfterRun": "not required",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 6
+    },
+    {
+      "platform": "android-arm64-api36",
+      "deviceSerial": "emulator-5556",
+      "revision": "candidate-94af",
+      "scenario": "private-restart-persistence",
+      "status": "PASS",
+      "details": "second process reopened and verified persisted row and integrity_check",
+      "permissionsAfterRun": "not required",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 3
+    },
+    {
+      "platform": "android-arm64-api36",
+      "deviceSerial": "emulator-5556",
+      "revision": "official-730",
+      "scenario": "private-persistence-and-error-controls",
+      "status": "PASS",
+      "details": "create/read, close/reopen, integrity_check, readonly read/write control, invalid SQL, corrupt database",
+      "permissionsAfterRun": "not required",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 6
+    },
+    {
+      "platform": "android-arm64-api36",
+      "deviceSerial": "emulator-5556",
+      "revision": "official-730",
+      "scenario": "private-restart-persistence",
+      "status": "PASS",
+      "details": "second process reopened and verified persisted row and integrity_check",
+      "permissionsAfterRun": "not required",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 3
+    },
+    {
+      "platform": "android-arm64-api29",
+      "deviceSerial": "emulator-5580",
+      "revision": "candidate-94af",
+      "scenario": "foreign-open-initial-denial",
+      "status": "PASS",
+      "details": "PermissionController denied READ and WRITE (result=6); open failed as expected; reported SQLException code -1, message unable to open database file, inferred SQLITE_CANTOPEN(14)",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "READ+WRITE denied",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 1
+    },
+    {
+      "platform": "android-arm64-api29",
+      "deviceSerial": "emulator-5580",
+      "revision": "candidate-94af",
+      "scenario": "foreign-open-grant-recovery",
+      "status": "PASS",
+      "details": "READ and WRITE allowed (result=4); host fixture row read, recovery write succeeded, close/reopen and integrity_check passed",
+      "permissionsAfterRun": "granted during run",
+      "permissionPrompt": "READ+WRITE allowed",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 3
+    },
+    {
+      "platform": "android-arm64-api29",
+      "deviceSerial": "emulator-5580",
+      "revision": "candidate-94af",
+      "scenario": "foreign-open-revocation",
+      "status": "PASS",
+      "details": "READ and WRITE denied again (result=6); open failed as expected; reported code -1, unable to open database file, inferred SQLITE_CANTOPEN(14)",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "READ+WRITE denied",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 1
+    },
+    {
+      "platform": "android-arm64-api29",
+      "deviceSerial": "emulator-5580",
+      "revision": "official-730",
+      "scenario": "foreign-open-denial",
+      "status": "PASS",
+      "details": "No permission request; open failed with reported code -1 and ambiguous message unknown error (out of memory); native result code unavailable",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 1
+    },
+    {
+      "platform": "android-arm64-api29",
+      "deviceSerial": "emulator-5580",
+      "revision": "official-730",
+      "scenario": "foreign-open-pregranted",
+      "status": "PASS",
+      "details": "Pregranted READ and WRITE; host fixture row read, recovery write, close/reopen, integrity_check passed",
+      "permissionsAfterRun": "pregranted",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 3
+    },
+    {
+      "platform": "android-arm64-api30",
+      "deviceSerial": "emulator-5554",
+      "revision": "candidate-94af",
+      "scenario": "foreign-open-denial",
+      "status": "PASS",
+      "details": "Foreign open denied; READ_EXTERNAL_STORAGE request denied (result=6); no WRITE request; reported code -1 and unable to open database file, inferred SQLITE_CANTOPEN(14)",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "READ denied only",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 1
+    },
+    {
+      "platform": "android-arm64-api30",
+      "deviceSerial": "emulator-5554",
+      "revision": "official-730",
+      "scenario": "foreign-open-denial",
+      "status": "PASS",
+      "details": "Foreign open denied without permission prompt; reported code -1 and ambiguous message unknown error (out of memory); native result code unavailable",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 1
+    },
+    {
+      "platform": "android-arm64-api35",
+      "deviceSerial": "emulator-5582",
+      "revision": "candidate-94af",
+      "scenario": "foreign-open-denial",
+      "status": "PASS",
+      "details": "Foreign open denied without legacy permission prompt; reported code -1 and unable to open database file, inferred SQLITE_CANTOPEN(14)",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 1
+    },
+    {
+      "platform": "android-arm64-api35",
+      "deviceSerial": "emulator-5582",
+      "revision": "official-730",
+      "scenario": "foreign-open-denial",
+      "status": "PASS",
+      "details": "Foreign open denied without permission prompt; reported code -1 and ambiguous message unknown error (out of memory); native result code unavailable",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 1
+    },
+    {
+      "platform": "android-arm64-api36",
+      "deviceSerial": "emulator-5556",
+      "revision": "candidate-94af",
+      "scenario": "foreign-open-denial",
+      "status": "PASS",
+      "details": "Foreign open denied without legacy permission prompt; reported code -1 and unable to open database file, inferred SQLITE_CANTOPEN(14)",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 1
+    },
+    {
+      "platform": "android-arm64-api36",
+      "deviceSerial": "emulator-5556",
+      "revision": "official-730",
+      "scenario": "foreign-open-denial",
+      "status": "PASS",
+      "details": "Foreign open denied without permission prompt; reported code -1 and ambiguous message unknown error (out of memory); native result code unavailable",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 1
+    }
+  ],
+  "appOwnedSharedRuns": [
+    {
+      "platform": "android-arm64-api30",
+      "deviceSerial": "emulator-5554",
+      "revision": "candidate-94af",
+      "scenario": "app-owned-shared-database",
+      "status": "PASS",
+      "details": "Create/write, close/reopen, integrity_check in Download while READ and WRITE permissions were denied; no permission prompt",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 3
+    },
+    {
+      "platform": "android-arm64-api30",
+      "deviceSerial": "emulator-5554",
+      "revision": "official-730",
+      "scenario": "app-owned-shared-database",
+      "status": "PASS",
+      "details": "Create/write, close/reopen, integrity_check in Download while READ and WRITE permissions were denied; no permission prompt",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 3
+    },
+    {
+      "platform": "android-arm64-api35",
+      "deviceSerial": "emulator-5582",
+      "revision": "candidate-94af",
+      "scenario": "app-owned-shared-database",
+      "status": "PASS",
+      "details": "Create/write, close/reopen, integrity_check in Download while READ and WRITE permissions were denied; no permission prompt",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 3
+    },
+    {
+      "platform": "android-arm64-api35",
+      "deviceSerial": "emulator-5582",
+      "revision": "official-730",
+      "scenario": "app-owned-shared-database",
+      "status": "PASS",
+      "details": "Create/write, close/reopen, integrity_check in Download while READ and WRITE permissions were denied; no permission prompt",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 3
+    },
+    {
+      "platform": "android-arm64-api36",
+      "deviceSerial": "emulator-5556",
+      "revision": "candidate-94af",
+      "scenario": "app-owned-shared-database",
+      "status": "PASS",
+      "details": "Create/write, close/reopen, integrity_check in Download while READ and WRITE permissions were denied; no permission prompt",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 3
+    },
+    {
+      "platform": "android-arm64-api36",
+      "deviceSerial": "emulator-5556",
+      "revision": "official-730",
+      "scenario": "app-owned-shared-database",
+      "status": "PASS",
+      "details": "Create/write, close/reopen, integrity_check in Download while READ and WRITE permissions were denied; no permission prompt",
+      "permissionsAfterRun": "denied",
+      "permissionPrompt": "none",
+      "completionMarkerObserved": true,
+      "failures": 0,
+      "processExitCode": null,
+      "processAbsentAfterCompletion": true,
+      "completed": 3
+    }
+  ],
+  "permissionSnapshotPath": "investigations/7.3.0-functional/evidence/I09/permission-states.log",
+  "finalPermissionState": {
+    "api29Candidate": "READ=false, WRITE=false after re-denial",
+    "api29Official": "READ=true, WRITE=true after pregrant",
+    "api30Api35Api36BothRevisions": "READ=false, WRITE=false"
+  },
+  "errorCodeObservations": {
+    "api": "java.sql.SQLException.getErrorCode() and getSQLState(); SQLState was null where recorded",
+    "extendedCode": "Not exposed by the public TotalCross SQLite bridge; sqlite3_extended_errcode was not callable from the probe",
+    "readonly": {
+      "reportedErrorCode": 0,
+      "message": "attempt to write a readonly database",
+      "inferredPrimaryCode": "SQLITE_READONLY (8)"
+    },
+    "invalidSql": {
+      "reportedErrorCode": -1,
+      "message": "no such table: table_that_does_not_exist",
+      "inferredPrimaryCode": "SQLITE_ERROR (1)"
+    },
+    "corruptDatabase": {
+      "reportedErrorCode": -1,
+      "message": "file is not a database",
+      "inferredPrimaryCode": "SQLITE_NOTADB (26)"
+    },
+    "candidateDeniedOpen": {
+      "reportedErrorCode": -1,
+      "message": "unable to open database file",
+      "inferredPrimaryCode": "SQLITE_CANTOPEN (14)"
+    },
+    "officialDeniedOpen": {
+      "reportedErrorCode": -1,
+      "message": "unknown error (out of memory)",
+      "inferredPrimaryCode": null,
+      "note": "Ambiguous public exception; no SQLite native result code inferred"
+    }
+  },
+  "implementationObservation": "Candidate 94af Android NativeDB contains shared-storage path filtering and a one-time permission-recovery retry when SQLite open fails with an access-related VFS error and authorization changes. Official 7.3.0 calls sqlite3_open_v2 without this permission callback.",
+  "evidenceFiles": [
+    "investigations/7.3.0-functional/evidence/I09/android-sqlite-events.log",
+    "investigations/7.3.0-functional/evidence/I09/permission-states.log",
+    "investigations/7.3.0-functional/evidence/I09/api30-sqlite-permission-prompt.png"
+  ],
+  "resultSummary": "PASS for observed private SQLite persistence, authorized API 29 foreign-file recovery, expected denied-open behavior, and app-owned shared-database controls. API 30 requested READ only; APIs 35/36 showed no legacy prompt. These results do not imply broad foreign-file access on API 30+.",
+  "limitations": [
+    "Only Android ARM64 API 29/30/35/36 were run for I09.",
+    "Public SQLException codes are wrapper values (0 or -1); primary SQLite code mappings above are inferred from messages. Extended result codes were unavailable.",
+    "Official 7.3.0 denial reported the ambiguous message unknown error (out of memory); no native result code is inferred.",
+    "The local runner exposes no application process exit code. Completion markers were observed and every tested process was absent afterward.",
+    "This is permission-recovery and persistence evidence, not the I10 database-format compatibility matrix."
+  ]
+}

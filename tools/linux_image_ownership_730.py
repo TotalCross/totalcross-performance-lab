@@ -17,6 +17,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "tests/functional-validation/totalcross/ui/image/ImageOwnershipLifecycleProbe.java"
 APP_NAME = "ImageOwnershipSmoke"
+ENTRY_CLASS = "totalcross.ui.image.ImageOwnershipLifecycleProbe"
 ENTRY = "TC_IMAGE_OWNERSHIP_JSON "
 FAILURE = "TC_IMAGE_OWNERSHIP_FAIL "
 
@@ -98,7 +99,7 @@ def prepare(args: argparse.Namespace) -> dict:
     env["TOTALCROSS3_HOME"] = str(home)
     logged([javac, "--release", "8", "-cp", classpath, "-d", str(classes), str(SOURCE)],
            ROOT, env, out / "compile.log")
-    app_jar = out / (APP_NAME + ".jar")
+    app_jar = out / (ENTRY_CLASS.rsplit(".", 1)[-1] + ".jar")
     logged([jar, "cf", str(app_jar), "-C", str(classes), "."], ROOT, env,
            out / "jar.log")
     deployed = out / "deployed"

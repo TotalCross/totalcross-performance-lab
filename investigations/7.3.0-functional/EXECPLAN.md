@@ -71,14 +71,19 @@ provenance, proposed issue updates, and a consolidated report.
   present. The workflow now writes provenance from the exact frozen commit and
   tree before invoking the canonical container; the identity script accepted
   this manifest in a no-Git fixture. Hosted run `45949849457` subsequently
-  completed build and runtime jobs; the Linux result artifact is pending report
-  and matrix consolidation.
+  completed build and runtime jobs. The verified Linux result and build-bundle
+  artifacts are consolidated in the I01-B/I02 reports, matrix, and provenance;
+  the conditional PNG run passed eight of nine cases and the exact fortified
+  `realpath` check remains unresolved.
+- [x] 2026-11-27: Reused and reverified the Windows Win32/I386 priority run
+  `45907759163`; its same-runtime startup and ownership checks passed. No
+  AMD64 test or analysis was performed.
 - [x] Milestone 0: provenance, legacy-port review, historical evidence import,
   harness/workflow contract, and CI/emulator capability checks are complete.
-- [ ] Milestone 1: Linux realpath startup (I01-B) and PNG decode (I02) runtime
-  execution is complete; consolidate the hosted result artifact into the
-  reports and matrix while preserving independent findings.
-- [ ] Milestone 2: investigate Android EGL lifecycle (I03), then I04/I05,
+- [x] Milestone 1: Linux realpath startup (I01-B) and PNG decode (I02) runtime
+  findings are consolidated; the original failure and conditional shim result
+  remain separately reported.
+- [ ] Milestone 2: complete Android EGL lifecycle diagnostics (I03), then I04/I05,
   which remain in scope after the verified 4.6.0 source check.
 - [ ] Milestone 3: run Linux ownership validation (I06) and remaining
   `Image(String)` checks (I07), importing equivalent historical evidence.

@@ -1,0 +1,12 @@
+I02 frozen-master Linux, run 45949849457
+Unmodified startup: exit=134, startupMarker=False, pngCompletionMarker=False, cases=0
+Conditional test-only realpath shim: exit=0, pngCompletionMarker=True, result=8/9 expected cases
+TC_PNG case=png-file,construct=true,decode=true,width=36,height=36,pixelCount=1296,pixel0=0,expectedBehavior=decode,exception=none
+TC_PNG case=png-bytes,construct=true,decode=true,width=36,height=36,pixelCount=1296,pixel0=0,expectedBehavior=decode,exception=none
+TC_PNG case=tcz-png,construct=true,decode=true,width=2,height=2,pixelCount=4,pixel0=80ff0000,expectedBehavior=decode,exception=none
+TC_PNG case=alpha-png,construct=true,decode=true,width=2,height=2,pixelCount=4,pixel0=80ff0000,expectedBehavior=decode,exception=none
+TC_PNG case=indexed-png,construct=false,decode=false,width=-1,height=-1,pixelCount=-1,pixel0=none,expectedBehavior=decode,exception=totalcross.ui.image.ImageException:Invalid or unsupported encoded image
+TC_PNG case=jpeg-file,construct=true,decode=true,width=512,height=512,pixelCount=262144,pixel0=ff9e683a,expectedBehavior=decode,exception=none
+TC_PNG case=jpeg-bytes,construct=true,decode=true,width=512,height=512,pixelCount=262144,pixel0=ff9e683a,expectedBehavior=decode,exception=none
+TC_PNG case=invalid-file,construct=false,decode=false,width=-1,height=-1,pixelCount=-1,pixel0=none,expectedBehavior=reject,exception=totalcross.ui.image.ImageException:Invalid or unsupported encoded image
+TC_PNG case=invalid-bytes,construct=false,decode=false,width=-1,height=-1,pixelCount=-1,pixel0=none,expectedBehavior=reject,exception=totalcross.ui.image.ImageException:Invalid or unsupported encoded image

@@ -235,6 +235,24 @@
           "evidencePath": "investigations/7.3.0-functional/evidence/I03/android-api36-run.json"
         }
       ]
+    },
+    {
+      "name": "Frozen-master Linux startup and PNG campaign run",
+      "repository": "TotalCross/totalcross-performance-lab",
+      "workflowRunId": 45949849457,
+      "workflowUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457",
+      "workflowJobId": 140343721563,
+      "workflowCommit": "bfd2eee51be51e56b6c78ca4e27b6c927a4b8c1b",
+      "workflowConclusion": "success",
+      "resultsArtifactId": 15176521522,
+      "resultsArtifactSha256": "d46e614e164b96a0511a7eb4609825563cf1239301afba0b1337ce9395828488",
+      "buildBundleArtifactId": 15176556173,
+      "buildBundleSha256": "6506fa4d9b118cdd0552da3e80be6d6dbca8f4aacf367c5b3e8b8a5bc7efe57b",
+      "sourceSha": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+      "sourceTree": "44047160610b7efcb3d49768736af95bde19f85f",
+      "evidencePath": "investigations/7.3.0-functional/evidence/linux-actions-45949849457.json",
+      "evidenceOrigin": "CAMPAIGN",
+      "resultInterpretation": "Workflow completed successfully; Linux functional cases include failures. I01-B official 7.3.0/frozen-master failed; I02 passed 8/9 only with the conditional test shim."
     }
   ],
   "officialReleases": {

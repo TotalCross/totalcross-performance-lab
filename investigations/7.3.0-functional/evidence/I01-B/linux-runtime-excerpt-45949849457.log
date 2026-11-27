@@ -1,0 +1,5 @@
+I01-B, official 7.2.2 normal/short/symlink: exit 16; ./libtcvm.so: undefined symbol: glCompressedTexSubImage2D.
+I01-B, official 7.2.2 long path (1260): exit 134; *** buffer overflow detected ***; Aborted; GDB shows __stpcpy_chk -> main, destlen=512.
+I01-B, official 7.3.0 package (path lengths 60, 85, 91, 1260): exit 134 in each case; no startup marker; buffer overflow detected; GDB shows __realpath_chk -> startVM -> executeProgram -> main.
+I01-B, frozen master (path lengths 68, 93, 99, 1268): exit 134 in each case; no startup marker; same __realpath_chk stack.
+All cases were captured without timeout. The 7.2.2 loader failure and long-path launcher overflow are distinct from the 7.3.0/frozen-master VM startup abort.

@@ -1,9 +1,10 @@
 # Campaign Results
 
-The campaign remains in progress. Linux runtime execution has completed in
-hosted Actions run 45949849457, but the I01-B and I02 reports and result matrix
-still need consolidation from the result artifact. I03 priority API runs are
-now recorded for Android API 29, 30, 35, and 36.
+The campaign remains in progress. I01-B and I02 Linux runtime evidence from
+hosted Actions run 45949849457 is consolidated in the reports, result matrix,
+and provenance record. I03 priority API runs are recorded for Android API 29,
+30, 35, and 36; lifecycle diagnostics and corrected-candidate validation
+remain.
 
 ## Imported historical evidence
 
@@ -35,10 +36,14 @@ now recorded for Android API 29, 30, 35, and 36.
   tracked separately under I08.
 - **I06 Windows Win32/I386:** PASS for the Windows target; overall I06 remains
   pending its required Linux x86_64 validation.
-- **I01-B/I02, Linux x86_64:** hosted run 45949849457 completed both jobs and
-  uploaded the campaign result artifact. Findings and reports are pending
-  result-artifact consolidation.
+- **I01-B, Linux x86_64:** official 7.3.0 and frozen master failed before
+  startup on all four tested path forms, including short paths. Official 7.2.2
+  is inconclusive as a realpath control: three cases failed in dynamic loading;
+  its long path failed in the launcher. Root cause remains open.
+- **I02, Linux x86_64:** frozen master aborted before the unmodified probe.
+  With the test-only startup shim, 8/9 cases passed; a valid indexed PNG was
+  rejected during construction. Other platforms remain untested.
 
-No production source was changed. I03's corrected candidate, remaining
-permission lifecycle scenarios, Linux report consolidation, I04/I05, I06/I07,
-I08/I09/I10, I11, provenance completion, and final report remain pending.
+No production source was changed. I03's corrected candidate and remaining
+permission lifecycle scenarios, I04/I05, I06/I07, I08/I09/I10, I11, provenance
+completion, and final report remain pending.

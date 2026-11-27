@@ -1,0 +1,9 @@
+I01-B, TotalCross source 5464c21 and frozen master 6b915883: normal/short/long/symlink stack signature
+#8 __realpath_chk (buf, resolved, resolvedlen optimized out)
+#9 startVM () from ./libtcvm.so
+#10 executeProgram () from ./libtcvm.so
+#11 main ()
+
+I01-B, official 7.2.2 long-path only (1260-byte install path)
+#8 __stpcpy_chk(destlen=512)
+#9 main ()

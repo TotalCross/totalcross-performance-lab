@@ -6,7 +6,7 @@
 - Campaign branch tip before the Windows evidence update:
   `fccadcb5897b0c8aa0a0d8c033002e51bcdefef2`
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
-- Active milestone: 1 — Linux startup and PNG blockers
+- Active milestone: 2 — Android native failures
 - Previous campaign checkpoint: `1a602fa` (native build retry findings)
 - Previous evidence checkpoint: `42008b9`
 - Production source edits: none
@@ -96,23 +96,33 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   Docker build could not access Actions' external Git metadata and the frozen
   source archive lacked `build-provenance.json`. The workflow now writes a
   manifest from the pinned commit/tree before entering Docker; the official
-  build-identity script accepted this no-Git manifest in a local fixture. The
-  hosted retry remains pending.
+  build-identity script accepted this no-Git manifest in a local fixture.
+  Hosted run `45949849457` then completed the frozen-master build and runtime
+  jobs.
+- Hosted Linux run `45949849457` completed I01-B and I02 on the exact frozen
+  master build. Official 7.3.0 and frozen master abort on all four path forms;
+  the official 7.2.2 control is inconclusive because three paths fail during
+  dynamic loading and the long path fails in the launcher. The conditional
+  PNG run passed 8/9 cases; indexed PNG is rejected during construction. The
+  result and build-bundle artifact digests and payload hashes were verified;
+  reports, machine-readable results, provenance, and issue drafts are recorded.
+- The verified Windows Win32/I386 priority result remains PASS; AMD64 remains
+  outside campaign scope.
 
 ## Pending investigations
 
-I01-B/I02 report and matrix consolidation from the completed Linux Actions
-artifact; additional I03 lifecycle scenarios and corrected-candidate validation;
-I04/I05, I06 Linux, I07, I08, I09, I10, I11; remaining provenance; proposed
-issue updates; and final consolidation.
+Additional I03 lifecycle scenarios and corrected-candidate validation; I04/I05,
+I06 Linux, I07, I08, I09, I10, I11; remaining provenance; proposed issue
+updates; and final consolidation.
 
 ## Next concrete action
 
 Windows Win32/I386 priority validation is complete using verified run
-`45907759163`; do not repeat it while inputs remain unchanged. Inspect the
-result artifact from hosted Linux Actions run `45949849457`, update the I01-B/I02
-reports and matrix, and commit those Linux findings before moving to I04/I05.
-The Linux workflow and result artifact are at
+`45907759163`; do not repeat it while inputs remain unchanged. Linux I01-B/I02
+reports and matrix are consolidated from hosted run `45949849457`. Continue
+with the remaining I03 Android lifecycle diagnostics and corrected-candidate
+validation on the already provisioned hardware-accelerated ARM64 AVDs, then
+execute the in-scope I04/I05 scenarios. Linux evidence is at
 `https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457`.
 
 ## Constraints and blockers

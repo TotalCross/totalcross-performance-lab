@@ -1,47 +1,75 @@
-# I01-B — Linux realpath startup abort
+# I01-B — Linux `realpath` startup abort
 
-## Historical finding
+## Result
 
-The Linux x86_64 job in performance-lab PR #4's 7.3.0-package run failed
-before its SQLite probe. The process log records `*** buffer overflow
-detected ***`, `Aborted`, and exit 134. The GDB stack reaches glibc
-`__realpath_chk` from `startVM()` in `libtcvm.so`. The host was an Azure Linux
-runner with glibc 2.39. See the sanitized excerpts in `../evidence/I01-B/`.
+**FAIL on the official 7.3.0 package and frozen master; root cause remains
+open.** All four path forms aborted before the application startup marker on
+both revisions, including 60- and 68-byte short paths. Resolved path length
+alone does not explain the failure. The official 7.2.2 package could not serve
+as a valid control for three path forms because its `libtcvm.so` failed dynamic
+symbol loading; its separate 1,260-byte path run hit a launcher copy bound.
 
-The tested package artifact came from TotalCross source
-`5464c21e3107e3f1ce9c287b724829e2bb870c1d`; it is not a GitHub 7.3.0 release
-and is not frozen master. Run `41888918200`, job `126780740748`, artifact
-`13353195526` (`sqlite-plaintext-7.3.0-linux-x64`), artifact SHA-256
-`92c614f33549cf740a80b4c3d2ba94a57774ca3a1de7e80bb2ea2418f1843d3f`.
-The artifact is retained through 2026-12-04.
+The hosted workflow and artifact capture succeeded. These are functional test
+failures, not a green runtime result. All captured cases were bounded and none
+timed out.
 
-The upstream package artifact for that source revision is run `40878222908`,
-artifact `12899147776`, wrapper SHA-256
-`a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5`.
-Its nested TotalCross ZIP SHA-256 is
-`c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e`.
-The packaged SDK jar SHA-256 is
-`23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475`; the
-Linux `libtcvm.so` SHA-256 is
-`94e823963427a67decdb2aaeb99722e297e375a7d772b438ef85cae1449160fb`.
-This matches the VM hash recorded in the failing deployment artifact.
+## Path matrix
 
-This confirms the historical startup failure for that package/runtime pair;
-it does not establish the exact path-length trigger or current-master behavior.
-The code path uses `realpath(path, resolved)` from `startup_c.h`; Linux's
-`MAX_PATHNAME` is 1024. A test-only `__realpath_chk` shim was used in a
-separate PNG run and must remain classified as conditional evidence.
+| Revision | Normal | Short | Long | Symlink |
+| --- | --- | --- | --- | --- |
+| Official 7.2.2 | 85 bytes: blocked, exit 16 (`glCompressedTexSubImage2D` undefined) | 60 bytes: same loader failure, exit 16 | 1,260 bytes: exit 134 in `__stpcpy_chk`, destination capacity 512 | 91 bytes: same loader failure, exit 16 |
+| Official 7.3.0 | 85 bytes: `__realpath_chk`, exit 134 | 60 bytes: same stack, exit 134 | 1,260 bytes: same stack, exit 134 | 91 bytes: same stack, exit 134 |
+| Frozen master | 93 bytes: `__realpath_chk`, exit 134 | 68 bytes: same stack, exit 134 | 1,268 bytes: same stack, exit 134 | 99 bytes: same stack, exit 134 |
 
-## Required next run
+Every 7.3.0 and frozen-master case recorded `*** buffer overflow detected
+***`, `Aborted`, no application marker, and a GDB stack
+`__realpath_chk → startVM → executeProgram → main`. These findings match the
+previous report that the 7.3.0 package aborts before its SQLite probe, while
+now also demonstrating the same startup failure in frozen master.
 
-Run official 7.2.2, the archived 7.3.0 package, and frozen master
-`6b915883dd202f6db891990f6c3af26fb645ecc7` on hosted Linux x86_64. Exercise
-normal, short, long, and symlink paths without a shim first. Preserve shell,
-startup, and application markers separately and report the process exit code,
-not only a wrapper or GDB status. Capture runner image, glibc, compiler flags,
-and `_FORTIFY_SOURCE` configuration. Only then run the conditional shim case.
+## Source and failure boundary
 
-## Status
+At frozen master commit
+`6b915883dd202f6db891990f6c3af26fb645ecc7`,
+[`startup_c.h`](https://github.com/TotalCross/totalcross/blob/6b915883dd202f6db891990f6c3af26fb645ecc7/TotalCrossVM/src/init/posix/startup_c.h#L36-L50)
+defines `copyResolvedPath()`, allocates `char resolved[MAX_PATHNAME]`, then
+calls `realpath(path, resolved)`. [`xtypes.h`](https://github.com/TotalCross/totalcross/blob/6b915883dd202f6db891990f6c3af26fb645ecc7/TotalCrossVM/src/util/xtypes.h#L318-L325)
+sets Linux `MAX_PATHNAME` to 1,024 bytes. The observed glibc entry point is
+`__realpath_chk`, but GDB optimized its `resolvedlen` argument out. The
+result artifact does not preserve the compiled `_FORTIFY_SOURCE` value or
+complete compiler flags, so the exact fortified size check has not been
+confirmed as the root cause.
 
-Historical package result: **FAIL (startup)**. Frozen-master and release-pair
-campaign cases: **NOT RUN**. No production source was changed.
+The 7.2.2 long-path failure is separate: GDB shows
+`__stpcpy_chk(destlen=512) → main` for the 1,260-byte path, before a `startVM`
+frame. The other 7.2.2 cases never reached TotalCross startup because the host
+loader reported `./libtcvm.so: undefined symbol: glCompressedTexSubImage2D`.
+Neither result should be conflated with the 7.3.0/frozen-master `realpath`
+stack.
+
+## Build and artifact provenance
+
+The comparison ran in hosted Actions run
+[45949849457](https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457),
+on Ubuntu 24.04 with glibc 2.39. Frozen master was built from the exact commit
+above in `totalcross/linux-amd64:v1.0.7`, Release, with depot-tools pinned to
+`0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a`. The uploaded build bundle was
+downloaded before expiry; its ZIP digest and the `Launcher`/`libtcvm.so`
+hashes match the recorded build identity. The runtime is ELF64 x86-64.
+
+The archived 7.3.0 package is from source
+`5464c21e3107e3f1ce9c287b724829e2bb870c1d`; official 7.2.2 and 7.3.0 package,
+SDK, launcher, and VM identities are indexed with the path observations in
+[the Linux Actions evidence record](../evidence/linux-actions-45949849457.json).
+The same record contains the host, toolchain, dependency release tags, exact
+result-artifact digest, and compact stack excerpts. The pinned native build used
+libpng `1.6.48-r3` and zlib-ng `2.1.6-r3`.
+
+## Status and next diagnostic
+
+The startup abort is present in both the tested 7.3.0 package and frozen master;
+this run does not establish a new regression or prove a root cause. Next work
+should preserve the exact frozen source and runner configuration and capture
+the fortified call's resolved-buffer size and effective compile flags. No
+production source was changed. The Windows I386 correction remains a separate
+PASS; no AMD64 runtime test or analysis is part of this investigation.

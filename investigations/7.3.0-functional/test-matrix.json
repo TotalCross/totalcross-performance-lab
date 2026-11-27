@@ -17,12 +17,24 @@
     {
       "investigationId": "I01-B",
       "title": "Linux realpath startup abort",
-      "requiredPlatforms": ["linux-x86_64"],
-      "requiredRevisions": ["official-7.2.2", "official-7.3.0", "frozen-master"],
-      "scenarios": ["normal-path", "short-path", "long-path", "symlink", "realpath-shim-conditional"],
-      "status": "NOT_RUN",
+      "requiredPlatforms": [
+        "linux-x86_64"
+      ],
+      "requiredRevisions": [
+        "official-7.2.2",
+        "official-7.3.0",
+        "frozen-master"
+      ],
+      "scenarios": [
+        "normal-path",
+        "short-path",
+        "long-path",
+        "symlink",
+        "realpath-shim-conditional"
+      ],
+      "status": "FAIL",
       "scopeStatus": "IN_SCOPE",
-      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "evidenceOrigin": "CAMPAIGN",
       "results": [
         {
           "platform": "linux-x86_64",
@@ -42,18 +54,172 @@
           "failurePoint": "glibc __realpath_chk called from startVM before application/SQLite markers",
           "host": "Linux 7.0.0-1017-azure x86_64, glibc 2.39",
           "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/41888918200",
-          "limitations": ["Archived package run; not frozen master or 7.2.2.", "Normal/short/long/symlink path matrix not run."]
+          "limitations": [
+            "Archived package run; not frozen master or 7.2.2.",
+            "Normal/short/long/symlink path matrix not run."
+          ]
+        },
+        {
+          "platform": "linux-x86_64",
+          "evidenceOrigin": "CAMPAIGN",
+          "campaignExecution": "EXECUTED",
+          "workflowRunId": 45949849457,
+          "workflowJobId": 140343721563,
+          "resultsArtifactId": 15176521522,
+          "resultsArtifactSha256": "d46e614e164b96a0511a7eb4609825563cf1239301afba0b1337ce9395828488",
+          "evidencePath": "investigations/7.3.0-functional/evidence/linux-actions-45949849457.json",
+          "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457",
+          "revision": "official-7.2.2",
+          "sourceRevision": "7.2.2 release package",
+          "status": "INCONCLUSIVE",
+          "defectClassification": "CONTROL_BLOCKED_BEFORE_REALPATH",
+          "packageSha256": "ba72e64d08874321da9df52b2042e84bee10800723fa97749ce224988b0a0a06",
+          "sdkJarSha256": "5f6d5c7f6f08f8635aa648497320bf547b310c6a3c9073659421f1167ff0efe4",
+          "linuxLauncherSha256": "3f8b78f4864681b91cde95443b10a488846b696e62fee1766d071eb7fec3c723",
+          "linuxLibtcvmSha256": "3d8a081d6510e5c2a1e05e38c26b0467180f871af1c5ed0501739bf158341dde",
+          "scenarioSummary": {
+            "normal-path": "exit 16, loader undefined glCompressedTexSubImage2D",
+            "short-path": "exit 16, same loader failure",
+            "symlink": "exit 16, same loader failure",
+            "long-path": "exit 134, __stpcpy_chk in launcher before VM"
+          },
+          "timedOut": false
+        },
+        {
+          "platform": "linux-x86_64",
+          "evidenceOrigin": "CAMPAIGN",
+          "campaignExecution": "EXECUTED",
+          "workflowRunId": 45949849457,
+          "workflowJobId": 140343721563,
+          "resultsArtifactId": 15176521522,
+          "resultsArtifactSha256": "d46e614e164b96a0511a7eb4609825563cf1239301afba0b1337ce9395828488",
+          "evidencePath": "investigations/7.3.0-functional/evidence/linux-actions-45949849457.json",
+          "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457",
+          "revision": "official-7.3.0",
+          "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+          "status": "FAIL",
+          "defectClassification": "REPRODUCED_STARTUP_ABORT",
+          "packageSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+          "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+          "linuxLauncherSha256": "444d78555242d1bfd0401967a59430003f6eaa8e602eda53c733f59554794baa",
+          "linuxLibtcvmSha256": "94e823963427a67decdb2aaeb99722e297e375a7d772b438ef85cae1449160fb",
+          "scenarioSummary": {
+            "long-path": {
+              "pathBytes": 1260,
+              "exitCode": 134,
+              "failureStage": "launcher-before-VM",
+              "signature": "__stpcpy_chk called from main",
+              "startupMarker": false,
+              "timedOut": false
+            },
+            "normal-path": {
+              "pathBytes": 85,
+              "exitCode": 134,
+              "failureStage": "VM-startup",
+              "signature": "__realpath_chk -> startVM -> executeProgram -> main",
+              "startupMarker": false,
+              "timedOut": false
+            },
+            "short-path": {
+              "pathBytes": 60,
+              "exitCode": 134,
+              "failureStage": "VM-startup",
+              "signature": "__realpath_chk -> startVM -> executeProgram -> main",
+              "startupMarker": false,
+              "timedOut": false
+            },
+            "symlink": {
+              "pathBytes": 91,
+              "exitCode": 134,
+              "failureStage": "VM-startup",
+              "signature": "__realpath_chk -> startVM -> executeProgram -> main",
+              "startupMarker": false,
+              "timedOut": false
+            }
+          }
+        },
+        {
+          "platform": "linux-x86_64",
+          "evidenceOrigin": "CAMPAIGN",
+          "campaignExecution": "EXECUTED",
+          "workflowRunId": 45949849457,
+          "workflowJobId": 140343721563,
+          "resultsArtifactId": 15176521522,
+          "resultsArtifactSha256": "d46e614e164b96a0511a7eb4609825563cf1239301afba0b1337ce9395828488",
+          "evidencePath": "investigations/7.3.0-functional/evidence/linux-actions-45949849457.json",
+          "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457",
+          "revision": "frozen-master",
+          "sourceRevision": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+          "sourceTree": "44047160610b7efcb3d49768736af95bde19f85f",
+          "status": "FAIL",
+          "defectClassification": "REPRODUCED_STARTUP_ABORT",
+          "buildImage": "totalcross/linux-amd64:v1.0.7",
+          "buildBundleArtifactId": 15176556173,
+          "buildBundleSha256": "6506fa4d9b118cdd0552da3e80be6d6dbca8f4aacf367c5b3e8b8a5bc7efe57b",
+          "sdkJarSha256": "ad28e5c5770c95849a3ca41caa3c9175d9c82edf48921e05ba0bd2df4d224ab0",
+          "linuxLauncherSha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166",
+          "linuxLibtcvmSha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4",
+          "scenarioSummary": {
+            "long-path": {
+              "pathBytes": 1268,
+              "exitCode": 134,
+              "failureStage": "launcher-before-VM",
+              "signature": "__stpcpy_chk called from main",
+              "startupMarker": false,
+              "timedOut": false
+            },
+            "normal-path": {
+              "pathBytes": 93,
+              "exitCode": 134,
+              "failureStage": "VM-startup",
+              "signature": "__realpath_chk -> startVM -> executeProgram -> main",
+              "startupMarker": false,
+              "timedOut": false
+            },
+            "short-path": {
+              "pathBytes": 68,
+              "exitCode": 134,
+              "failureStage": "VM-startup",
+              "signature": "__realpath_chk -> startVM -> executeProgram -> main",
+              "startupMarker": false,
+              "timedOut": false
+            },
+            "symlink": {
+              "pathBytes": 99,
+              "exitCode": 134,
+              "failureStage": "VM-startup",
+              "signature": "__realpath_chk -> startVM -> executeProgram -> main",
+              "startupMarker": false,
+              "timedOut": false
+            }
+          },
+          "fortifySourceValue": "NOT_CAPTURED"
         }
-      ]
+      ],
+      "statusRationale": "Official 7.3.0 and exact frozen master abort before application startup for all four path forms. Official 7.2.2 is inconclusive as a realpath control: three cases fail in dynamic loading and its long path fails earlier in the launcher."
     },
     {
       "investigationId": "I02",
       "title": "Linux PNG decoding failure and controls",
-      "requiredPlatforms": ["windows-win32-i386", "linux-x86_64", "macos-arm64", "android-arm64-emulator"],
-      "requiredScenarios": ["image-file-png", "image-byte-array-png", "tcz-png", "alpha-png", "indexed-png", "jpeg-positive", "invalid-image-negative", "force-pixel-materialization"],
-      "status": "NOT_RUN",
+      "requiredPlatforms": [
+        "windows-win32-i386",
+        "linux-x86_64",
+        "macos-arm64",
+        "android-arm64-emulator"
+      ],
+      "requiredScenarios": [
+        "image-file-png",
+        "image-byte-array-png",
+        "tcz-png",
+        "alpha-png",
+        "indexed-png",
+        "jpeg-positive",
+        "invalid-image-negative",
+        "force-pixel-materialization"
+      ],
+      "status": "FAIL",
       "scopeStatus": "IN_SCOPE",
-      "evidenceOrigin": "CAMPAIGN_PENDING",
+      "evidenceOrigin": "CAMPAIGN",
       "results": [
         {
           "platform": "linux-x86_64",
@@ -77,9 +243,57 @@
             "jpeg-bytes": true
           },
           "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45740940460",
-          "limitations": ["Historical master 61034, not frozen master 6b915.", "The realpath compatibility shim was enabled.", "TCZ, alpha, indexed, invalid input, and pixel-value assertions were not covered."]
+          "limitations": [
+            "Historical master 61034, not frozen master 6b915.",
+            "The realpath compatibility shim was enabled.",
+            "TCZ, alpha, indexed, invalid input, and pixel-value assertions were not covered."
+          ]
+        },
+        {
+          "platform": "linux-x86_64",
+          "evidenceOrigin": "CAMPAIGN",
+          "campaignExecution": "EXECUTED",
+          "workflowRunId": 45949849457,
+          "workflowJobId": 140343721563,
+          "resultsArtifactId": 15176521522,
+          "resultsArtifactSha256": "d46e614e164b96a0511a7eb4609825563cf1239301afba0b1337ce9395828488",
+          "evidencePath": "investigations/7.3.0-functional/evidence/linux-actions-45949849457.json",
+          "evidenceUrl": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457",
+          "sourceRevision": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+          "sourceTree": "44047160610b7efcb3d49768736af95bde19f85f",
+          "status": "FAIL",
+          "defectClassification": "INDEXED_PNG_CONSTRUCTOR_REJECTION_WITH_CONDITIONAL_STARTUP_SHIM",
+          "buildImage": "totalcross/linux-amd64:v1.0.7",
+          "buildBundleArtifactId": 15176556173,
+          "buildBundleSha256": "6506fa4d9b118cdd0552da3e80be6d6dbca8f4aacf367c5b3e8b8a5bc7efe57b",
+          "sdkJarSha256": "ad28e5c5770c95849a3ca41caa3c9175d9c82edf48921e05ba0bd2df4d224ab0",
+          "linuxLauncherSha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166",
+          "linuxLibtcvmSha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4",
+          "testOnlyRealpathShim": true,
+          "unmodifiedAttempt": {
+            "exitCode": 134,
+            "failureSignature": "__realpath_chk -> startVM -> executeProgram -> main",
+            "casesExecuted": 0
+          },
+          "caseResults": {
+            "png-file": true,
+            "png-bytes": true,
+            "tcz-png": true,
+            "alpha-png": true,
+            "indexed-png": false,
+            "jpeg-file": true,
+            "jpeg-bytes": true,
+            "invalid-file": true,
+            "invalid-bytes": true
+          },
+          "passedCases": 8,
+          "totalCases": 9,
+          "indexedPngFailureBoundary": "constructor before materialization",
+          "fixtureHashesVerified": true,
+          "otherPlatforms": "NOT_RUN"
         }
-      ]
+      ],
+      "statusRationale": "Linux x86_64 conditional run passed eight of nine cases; the valid indexed PNG was rejected in the constructor. Unmodified frozen master aborts before the probe. Windows, macOS and Android cases remain NOT_RUN."
     },
     {
       "investigationId": "I03",

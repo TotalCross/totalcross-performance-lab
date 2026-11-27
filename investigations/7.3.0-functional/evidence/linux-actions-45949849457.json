@@ -1,0 +1,500 @@
+{
+  "I01-B": {
+    "revisions": {
+      "frozen-master": {
+        "buildIdentitySha256": "ac223fdfe7e590a78eaafe4660ae4e530a08aa352e091b1e80d8f10b51230fc1",
+        "dependencyIndexSha256": "b463a227f1b5284b15e1dcc308da2e83ea39adb78a0c086061521a5b5be38f05",
+        "linuxLauncherSha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166",
+        "linuxLibtcvmSha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4",
+        "nativeToolchainSha256": "f55d1849ea9b78a11b1c0ef0cdea808953198fe61eed370b2b63c9a68474dd4b",
+        "scenarios": {
+          "long-path": {
+            "exitCode": 134,
+            "failureSignature": "__stpcpy_chk called from main",
+            "failureStage": "launcher-before-VM",
+            "installPathLength": 1268,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "runtimeFailureMessage": "*** buffer overflow detected ***; Aborted",
+            "stack": [
+              {
+                "destinationCapacityBytes": 512,
+                "function": "__stpcpy_chk"
+              },
+              {
+                "function": "main"
+              }
+            ],
+            "startupMarker": false,
+            "timedOut": false
+          },
+          "normal-path": {
+            "exitCode": 134,
+            "failureSignature": "__realpath_chk -> startVM -> executeProgram -> main",
+            "failureStage": "VM-startup",
+            "installPathLength": 93,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "runtimeFailureMessage": "*** buffer overflow detected ***; Aborted",
+            "stack": [
+              "__realpath_chk",
+              "startVM",
+              "executeProgram",
+              "main"
+            ],
+            "startupMarker": false,
+            "timedOut": false
+          },
+          "short-path": {
+            "exitCode": 134,
+            "failureSignature": "__realpath_chk -> startVM -> executeProgram -> main",
+            "failureStage": "VM-startup",
+            "installPathLength": 68,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "runtimeFailureMessage": "*** buffer overflow detected ***; Aborted",
+            "stack": [
+              "__realpath_chk",
+              "startVM",
+              "executeProgram",
+              "main"
+            ],
+            "startupMarker": false,
+            "timedOut": false
+          },
+          "symlink": {
+            "exitCode": 134,
+            "failureSignature": "__realpath_chk -> startVM -> executeProgram -> main",
+            "failureStage": "VM-startup",
+            "installPathLength": 99,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "runtimeFailureMessage": "*** buffer overflow detected ***; Aborted",
+            "stack": [
+              "__realpath_chk",
+              "startVM",
+              "executeProgram",
+              "main"
+            ],
+            "startupMarker": false,
+            "timedOut": false
+          }
+        },
+        "sdkJarSha256": "ad28e5c5770c95849a3ca41caa3c9175d9c82edf48921e05ba0bd2df4d224ab0",
+        "sourceCommit": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+        "sourceTree": "44047160610b7efcb3d49768736af95bde19f85f"
+      },
+      "official-7.2.2": {
+        "linuxLauncherSha256": "3f8b78f4864681b91cde95443b10a488846b696e62fee1766d071eb7fec3c723",
+        "linuxLibtcvmSha256": "3d8a081d6510e5c2a1e05e38c26b0467180f871af1c5ed0501739bf158341dde",
+        "packageSha256": "ba72e64d08874321da9df52b2042e84bee10800723fa97749ce224988b0a0a06",
+        "release": "v7.2.2",
+        "scenarios": {
+          "long-path": {
+            "exitCode": 134,
+            "failureSignature": "__stpcpy_chk called from main",
+            "failureStage": "launcher-before-VM",
+            "installPathLength": 1260,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "runtimeFailureMessage": "*** buffer overflow detected ***; Aborted",
+            "stack": [
+              {
+                "destinationCapacityBytes": 512,
+                "function": "__stpcpy_chk"
+              },
+              {
+                "function": "main"
+              }
+            ],
+            "startupMarker": false,
+            "timedOut": false
+          },
+          "normal-path": {
+            "exitCode": 16,
+            "failureSignature": "./libtcvm.so: undefined symbol: glCompressedTexSubImage2D",
+            "failureStage": "dynamic-loader",
+            "installPathLength": 85,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "startupMarker": false,
+            "timedOut": false
+          },
+          "short-path": {
+            "exitCode": 16,
+            "failureSignature": "./libtcvm.so: undefined symbol: glCompressedTexSubImage2D",
+            "failureStage": "dynamic-loader",
+            "installPathLength": 60,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "startupMarker": false,
+            "timedOut": false
+          },
+          "symlink": {
+            "exitCode": 16,
+            "failureSignature": "./libtcvm.so: undefined symbol: glCompressedTexSubImage2D",
+            "failureStage": "dynamic-loader",
+            "installPathLength": 91,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "startupMarker": false,
+            "timedOut": false
+          }
+        },
+        "sdkJarSha256": "5f6d5c7f6f08f8635aa648497320bf547b310c6a3c9073659421f1167ff0efe4"
+      },
+      "official-7.3.0": {
+        "linuxLauncherSha256": "444d78555242d1bfd0401967a59430003f6eaa8e602eda53c733f59554794baa",
+        "linuxLibtcvmSha256": "94e823963427a67decdb2aaeb99722e297e375a7d772b438ef85cae1449160fb",
+        "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+        "packageArtifactId": 12899147776,
+        "packageArtifactName": "TotalCross-7.3.0",
+        "packageArtifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+        "scenarios": {
+          "long-path": {
+            "exitCode": 134,
+            "failureSignature": "__stpcpy_chk called from main",
+            "failureStage": "launcher-before-VM",
+            "installPathLength": 1260,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "runtimeFailureMessage": "*** buffer overflow detected ***; Aborted",
+            "stack": [
+              {
+                "destinationCapacityBytes": 512,
+                "function": "__stpcpy_chk"
+              },
+              {
+                "function": "main"
+              }
+            ],
+            "startupMarker": false,
+            "timedOut": false
+          },
+          "normal-path": {
+            "exitCode": 134,
+            "failureSignature": "__realpath_chk -> startVM -> executeProgram -> main",
+            "failureStage": "VM-startup",
+            "installPathLength": 85,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "runtimeFailureMessage": "*** buffer overflow detected ***; Aborted",
+            "stack": [
+              "__realpath_chk",
+              "startVM",
+              "executeProgram",
+              "main"
+            ],
+            "startupMarker": false,
+            "timedOut": false
+          },
+          "short-path": {
+            "exitCode": 134,
+            "failureSignature": "__realpath_chk -> startVM -> executeProgram -> main",
+            "failureStage": "VM-startup",
+            "installPathLength": 60,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "runtimeFailureMessage": "*** buffer overflow detected ***; Aborted",
+            "stack": [
+              "__realpath_chk",
+              "startVM",
+              "executeProgram",
+              "main"
+            ],
+            "startupMarker": false,
+            "timedOut": false
+          },
+          "symlink": {
+            "exitCode": 134,
+            "failureSignature": "__realpath_chk -> startVM -> executeProgram -> main",
+            "failureStage": "VM-startup",
+            "installPathLength": 91,
+            "observationStatus": "CAPTURED",
+            "pngCompletionMarker": false,
+            "runtimeFailureMessage": "*** buffer overflow detected ***; Aborted",
+            "stack": [
+              "__realpath_chk",
+              "startVM",
+              "executeProgram",
+              "main"
+            ],
+            "startupMarker": false,
+            "timedOut": false
+          }
+        },
+        "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+        "sourceCommit": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+        "workflowRunId": 40878222908
+      }
+    },
+    "sourceFinding": {
+      "capacityDefinedAt": "TotalCrossVM/src/util/xtypes.h:324",
+      "conclusion": "Path length alone does not explain the 7.3.0/frozen-master failure: normal and short paths fail with the same stack. The exact fortified size check and compiler _FORTIFY_SOURCE setting were not preserved; root cause remains open.",
+      "gdbArgumentValues": "optimized out",
+      "observedFortifiedEntryPoint": "__realpath_chk",
+      "realpathCallLine": 49,
+      "resolvedBufferCapacityBytes": 1024,
+      "resolvedBufferLine": 38,
+      "sourceFile": "TotalCrossVM/src/init/posix/startup_c.h"
+    },
+    "status": "FAIL_ON_7.3.0_AND_FROZEN_MASTER"
+  },
+  "I02": {
+    "build": {
+      "buildImage": "totalcross/linux-amd64:v1.0.7",
+      "depotToolsRevision": "0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a",
+      "libpngRelease": "libpng-1.6.48-r3",
+      "vmSha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4",
+      "zlibNgRelease": "zlib-ng-2.1.6-r3"
+    },
+    "conditionalShimAttempt": {
+      "cases": [
+        {
+          "case": "png-file",
+          "expectedBehavior": "decode",
+          "observed": "TC_PNG case=png-file,construct=true,decode=true,width=36,height=36,pixelCount=1296,pixel0=0,expectedBehavior=decode,exception=none",
+          "pass": true
+        },
+        {
+          "case": "png-bytes",
+          "expectedBehavior": "decode",
+          "observed": "TC_PNG case=png-bytes,construct=true,decode=true,width=36,height=36,pixelCount=1296,pixel0=0,expectedBehavior=decode,exception=none",
+          "pass": true
+        },
+        {
+          "case": "tcz-png",
+          "expectedBehavior": "decode",
+          "observed": "TC_PNG case=tcz-png,construct=true,decode=true,width=2,height=2,pixelCount=4,pixel0=80ff0000,expectedBehavior=decode,exception=none",
+          "pass": true
+        },
+        {
+          "case": "alpha-png",
+          "expectedBehavior": "decode",
+          "observed": "TC_PNG case=alpha-png,construct=true,decode=true,width=2,height=2,pixelCount=4,pixel0=80ff0000,expectedBehavior=decode,exception=none",
+          "pass": true
+        },
+        {
+          "case": "indexed-png",
+          "expectedBehavior": "decode",
+          "observed": "TC_PNG case=indexed-png,construct=false,decode=false,width=-1,height=-1,pixelCount=-1,pixel0=none,expectedBehavior=decode,exception=totalcross.ui.image.ImageException:Invalid or unsupported encoded image",
+          "pass": false
+        },
+        {
+          "case": "jpeg-file",
+          "expectedBehavior": "decode",
+          "observed": "TC_PNG case=jpeg-file,construct=true,decode=true,width=512,height=512,pixelCount=262144,pixel0=ff9e683a,expectedBehavior=decode,exception=none",
+          "pass": true
+        },
+        {
+          "case": "jpeg-bytes",
+          "expectedBehavior": "decode",
+          "observed": "TC_PNG case=jpeg-bytes,construct=true,decode=true,width=512,height=512,pixelCount=262144,pixel0=ff9e683a,expectedBehavior=decode,exception=none",
+          "pass": true
+        },
+        {
+          "case": "invalid-file",
+          "expectedBehavior": "reject",
+          "observed": "TC_PNG case=invalid-file,construct=false,decode=false,width=-1,height=-1,pixelCount=-1,pixel0=none,expectedBehavior=reject,exception=totalcross.ui.image.ImageException:Invalid or unsupported encoded image",
+          "pass": true
+        },
+        {
+          "case": "invalid-bytes",
+          "expectedBehavior": "reject",
+          "observed": "TC_PNG case=invalid-bytes,construct=false,decode=false,width=-1,height=-1,pixelCount=-1,pixel0=none,expectedBehavior=reject,exception=totalcross.ui.image.ImageException:Invalid or unsupported encoded image",
+          "pass": true
+        }
+      ],
+      "casesPassed": 8,
+      "casesTotal": 9,
+      "exitCode": 0,
+      "overallPass": false,
+      "pngCompletionMarker": true,
+      "shim": "test-only realpath compatibility shim; production VM unchanged",
+      "timedOut": false
+    },
+    "fixtures": {
+      "indexedPng": {
+        "format": "2x2 indexed PNG with palette transparency",
+        "path": "cases/png-decoding/fixtures/indexed.png",
+        "sha256": "0823539a40acde890b3a769c7c48490e5bf083da51c78898fdbea67c8119c10e"
+      },
+      "rgbaPng": {
+        "bytes": 136,
+        "path": "cases/png-decoding/fixtures/comparison-png.png",
+        "sha256": "958903b3f880fbf626fa8fbba8f69856a989f5930531984be9585aac08a5aba6"
+      }
+    },
+    "ldDebug": {
+      "bindings": [
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "inflate"
+        },
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "inflateReset2"
+        },
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "crc32"
+        },
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "deflateReset"
+        },
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "deflate"
+        },
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "deflateInit2_"
+        },
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "inflateEnd"
+        },
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "adler32"
+        },
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "deflateEnd"
+        },
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "inflateInit2_"
+        },
+        {
+          "provider": "./libtcvm.so",
+          "requester": "/lib/x86_64-linux-gnu/libpng16.so.16",
+          "symbol": "inflateReset"
+        }
+      ],
+      "causalConclusion": "These runtime bindings are observed; they do not establish the cause of the indexed-PNG rejection.",
+      "dynamicLibpngPath": "/lib/x86_64-linux-gnu/libpng16.so.16",
+      "libpngZlibSymbolsResolvedToLibtcvm": [
+        "adler32",
+        "crc32",
+        "deflate",
+        "deflateEnd",
+        "deflateInit2_",
+        "deflateReset",
+        "inflate",
+        "inflateEnd",
+        "inflateInit2_",
+        "inflateReset",
+        "inflateReset2"
+      ]
+    },
+    "nativeSourceReview": {
+      "constructorFile": "TotalCrossVM/src/nm/ui/image_Image.c",
+      "fixture": "2x2, 8-bit indexed color type 3; 3 PLTE entries; 3 tRNS values; IHDR/PLTE/tRNS/IDAT/IEND CRCs valid; 14-byte IDAT decompresses to six scanline bytes.",
+      "inspectionFailureAt": "lines 83-86: imageEncodedBagInspect failure throws ImageException \"Invalid or unsupported encoded image\"",
+      "parserBehavior": "pngInspect accepts indexed color type 3 at 1/2/4/8-bit depth, validates PLTE and tRNS bounds, then checks chunk CRCs.",
+      "parserFile": "TotalCrossVM/src/nm/ui/image/ImageEncodedBag.c",
+      "result": "The valid fixture is rejected during constructor-time inspection, before pixel materialization. The specific runtime rejection condition is unresolved; the captured result does not establish an ABI cause."
+    },
+    "source": {
+      "linuxLauncherSha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166",
+      "linuxLibtcvmSha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4",
+      "repository": "TotalCross/totalcross",
+      "revision": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+      "sdkJarSha256": "ad28e5c5770c95849a3ca41caa3c9175d9c82edf48921e05ba0bd2df4d224ab0"
+    },
+    "status": "FAIL_CONDITIONAL_SHIM_8_OF_9",
+    "unmodifiedAttempt": {
+      "exitCode": 134,
+      "failureSignature": "__realpath_chk -> startVM -> executeProgram -> main",
+      "pngCasesExecuted": 0,
+      "pngCompletionMarker": false,
+      "shimUsed": false,
+      "startupMarker": false,
+      "timedOut": false
+    }
+  },
+  "environment": {
+    "buildImage": "totalcross/linux-amd64:v1.0.7",
+    "cmakeBuildType": "Release",
+    "cmakeOptionsCaptured": "-DCMAKE_BUILD_TYPE=Release -G Ninja",
+    "dependencyReleaseTags": {
+      "libpng": "libpng-1.6.48-r3",
+      "zlib-ng": "zlib-ng-2.1.6-r3"
+    },
+    "depotToolsRevision": "0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a",
+    "fortifySourceValue": "NOT_RECORDED_IN_RESULT_ARTIFACT",
+    "glibc": "ldd (Ubuntu GLIBC 2.39-0ubuntu8.12) 2.39",
+    "kernel": "Linux ip-10-0-130-195 7.0.0-1018-aws #19~24.04.1-Ubuntu SMP PREEMPT Thu Nov 12 17:17:32 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+    "nativeToolchain": [
+      "cmake version 3.25.2",
+      "c++ (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0",
+      "1.8.2"
+    ],
+    "runner": "ubuntu-24.04"
+  },
+  "executionInterpretation": "The Actions workflow completed successfully and uploaded captured results; functional outcomes below include failures.",
+  "frozenMasterBuild": {
+    "buildIdentitySha256": "ac223fdfe7e590a78eaafe4660ae4e530a08aa352e091b1e80d8f10b51230fc1",
+    "buildImage": "totalcross/linux-amd64:v1.0.7",
+    "cmakeConfigure": "cmake /sources/TotalCrossVM -DCMAKE_BUILD_TYPE=Release -G Ninja",
+    "dependencyIndexSha256": "b463a227f1b5284b15e1dcc308da2e83ea39adb78a0c086061521a5b5be38f05",
+    "dependencyReleaseTags": {
+      "libpng": "libpng-1.6.48-r3",
+      "zlib-ng": "zlib-ng-2.1.6-r3"
+    },
+    "depotToolsRevision": "0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a",
+    "explicitCompilerFlagsRecorded": false,
+    "fortifySourceValue": "NOT_CAPTURED",
+    "linuxLauncherSha256": "8819cd991679f12998d22e6e17cd898afd3f75d79e7085b89ca8c7d2d9894166",
+    "linuxLibtcvmSha256": "99cd2a97e86c553460ddf982ece3951bb6e62056ac2b31494f6f6c82250453e4",
+    "nativeToolchainSha256": "f55d1849ea9b78a11b1c0ef0cdea808953198fe61eed370b2b63c9a68474dd4b",
+    "sdkJarSha256": "ad28e5c5770c95849a3ca41caa3c9175d9c82edf48921e05ba0bd2df4d224ab0",
+    "sourceSha": "6b915883dd202f6db891990f6c3af26fb645ecc7",
+    "sourceTree": "44047160610b7efcb3d49768736af95bde19f85f"
+  },
+  "bundlePayloadChecks": {
+    "LauncherSha256MatchesBuildIdentity": true,
+    "libtcvmSha256MatchesBuildIdentity": true,
+    "libtcvmElfClass": "ELF64 x86-64"
+  },
+  "run": {
+    "conclusion": "success",
+    "frozenMasterBundleArtifact": {
+      "digestVerified": true,
+      "downloadedZipSha256": "6506fa4d9b118cdd0552da3e80be6d6dbca8f4aacf367c5b3e8b8a5bc7efe57b",
+      "expiresAt": "2026-11-28T06:09:50Z",
+      "id": 15176556173,
+      "name": "tc730-linux-frozen-master-bundle",
+      "sha256": "6506fa4d9b118cdd0552da3e80be6d6dbca8f4aacf367c5b3e8b8a5bc7efe57b",
+      "sizeBytes": 74108951
+    },
+    "headSha": "bfd2eee51be51e56b6c78ca4e27b6c927a4b8c1b",
+    "id": 45949849457,
+    "repository": "TotalCross/totalcross-performance-lab",
+    "resultsArtifact": {
+      "digestVerified": true,
+      "downloadedZipSha256": "d46e614e164b96a0511a7eb4609825563cf1239301afba0b1337ce9395828488",
+      "expiresAt": "2026-12-27T06:11:23Z",
+      "id": 15176521522,
+      "name": "tc730-linux-functional-results",
+      "sha256": "d46e614e164b96a0511a7eb4609825563cf1239301afba0b1337ce9395828488",
+      "sizeBytes": 49881
+    },
+    "runnerJobId": 140343721563,
+    "runnerJobName": "Run Linux cases on glibc 2.39",
+    "url": "https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457"
+  },
+  "schemaVersion": 1
+}

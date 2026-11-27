@@ -3,7 +3,7 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
-- Last completed investigation checkpoint: `53c552a` (I05 findings); Windows
+- Last completed platform checkpoint: I07 Android API 36 ARM64 PASS; Windows
   Win32/I386 I06 result is independently verified from run `45907759163`.
 - Shared Android probe sources: `dd3a916`.
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
@@ -141,27 +141,33 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
 - Added the I07 `Image(String)` probe, cross-platform prepare/run harness, and
   branch-push workflow. It reuses the verified Windows I386 artifacts, the
   Linux frozen-master bundle, and the exact prepared dependency/bridge artifacts
-  for the canonical macOS ARM64 build. The workflow is statically validated but
-  has not yet been pushed or executed. Android remains a local ARM64 emulator
-  run after building the matching candidate AAB template.
+  for the canonical macOS ARM64 build. The workflow is committed locally but
+  has not yet been pushed or executed.
+- Built the candidate Android release AAB and ran I07 on the hardware-accelerated
+  API 36 ARM64 emulator. All 16 reported cases passed, with zero failures,
+  skips, or native crashes. The host GPU log identifies the Apple M1 Pro. The
+  AAB, deployed APK, SDK jar, runtime library, fixture, and marker-log identities
+  are recorded in `evidence/I07/android-api36-arm64.json` and its evidence files.
+- Android setup first required the pinned depot-tools bootstrap and generated
+  native bridge sources in the isolated exact-source archive. The first probe
+  run found a fixture mismatch at the 255-character TCZ boundary; the payload
+  was corrected before the recorded passing run.
 
 ## Pending investigations
 
-I06 Linux conditional ownership execution, I07 cross-platform execution,
-I08/I09/I10, I11; remaining provenance; proposed issue updates; and final
-consolidation. I03 repeated requests and
-corrected-candidate validation remain explicitly unrun because no candidate is
-available and the first denied transition already reproduces the crash.
+I06 Linux conditional ownership execution, I07 Windows I386/Linux/macOS ARM64
+execution, I08/I09/I10, I11; remaining provenance; proposed issue updates; and
+final consolidation. I03 repeated requests and corrected-candidate validation
+remain explicitly unrun because no candidate is available and the first denied
+transition already reproduces the crash.
 
 ## Next concrete action
 
-Commit and push the branch-only I07 workflow to run Windows Win32/I386 using the
-existing corrected runtime, Linux I06/I07 after preserving the unmodified
-startup abort, and the canonical macOS ARM64 build. In parallel, build the
-candidate Android AAB from exact source `94af2b8b653cad509994b5ccf3dbb60ac28ef920`
-in an isolated source archive and execute it on the existing hardware-
-accelerated ARM64 emulator. Do not run Windows AMD64. The unmodified Linux
-startup blocker and artifact hashes are indexed in
+Push the committed I07 workflow to the authorized campaign branch. It will run
+Windows Win32/I386 using the existing corrected runtime, Linux I06/I07 after
+preserving the unmodified startup abort, and the canonical macOS ARM64 build.
+Android API 36 ARM64 has passed locally. Do not run Windows AMD64. The
+unmodified Linux startup blocker and artifact hashes are indexed in
 `evidence/I06/linux-x86_64-45978158503.json`.
 
 ## Constraints and blockers
@@ -169,6 +175,7 @@ startup blocker and artifact hashes are indexed in
 - No Windows AMD64 execution or analysis; record it PREEXISTING / OUT_OF_SCOPE.
 - No local native Windows, Linux, or macOS execution. Use hosted Actions.
 - Android native tests only on local hardware-accelerated ARM64 emulators.
-- No production changes, benchmarks, iOS, Android Actions, release or
-  publication side effects, or PR creation.
+- No production changes, benchmarks, iOS, Android Actions, releases, or PR
+  creation. The priority correction authorizes only the narrow diagnostic
+  workflow and fixture push to the existing campaign branch.
 - Current root TotalCross checkout is unrelated and must remain untouched.

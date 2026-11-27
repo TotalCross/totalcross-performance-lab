@@ -67,9 +67,13 @@ in ten clean file-I/O cycles; the native stack and mutex owner remain unknown.
   [the Linux I06 record](evidence/I06/linux-x86_64-45978158503.json). A
   conditional shimmed continuation is planned, and any resulting pass will
   remain conditional on the Linux startup workaround.
-- **I07 `Image(String)` fallback:** NOT_RUN. The probe and branch-push workflow
-  are prepared; Windows I386 and Linux/macOS hosted runs plus a local Android
-  ARM64 emulator run are pending.
+- **I07 `Image(String)` fallback:** INCOMPLETE. Android API 36 ARM64 passed all
+  16 reported cases on the host-GPU emulator with zero failures, skips, or
+  native crashes. The candidate release AAB and deployed ARM64 APK identities,
+  complete case results, and runtime markers are recorded in
+  [the Android evidence record](evidence/I07/android-api36-arm64.json). Windows
+  I386, Linux x86_64, and macOS ARM64 remain pending the authorized branch
+  workflow.
 - **I01-B, Linux x86_64:** official 7.3.0 and frozen master failed before
   startup on all four tested path forms, including short paths. Official 7.2.2
   is inconclusive as a realpath control: three cases failed in dynamic loading;

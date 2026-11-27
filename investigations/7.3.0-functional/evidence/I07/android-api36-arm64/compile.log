@@ -1,0 +1,5 @@
+$ /usr/bin/javac --release 8 -cp /private/tmp/tc730-sdk-94af-compile/build/TotalCross/dist/totalcross-sdk.jar:/private/tmp/tc730-sdk-94af-compile/build/TotalCross/dist/libs/* -d /private/tmp/tc730-i07-android-results/classes /Users/flsobral/.codex/worktrees/totalcross-7.3.0-functional-validation/tests/functional-validation/totalcross/ui/image/ImageStringFallbackProbe.java /private/tmp/tc730-i07-android-results/ImageStringFallbackFixtures.java
+Note: /Users/flsobral/.codex/worktrees/totalcross-7.3.0-functional-validation/tests/functional-validation/totalcross/ui/image/ImageStringFallbackProbe.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+EXIT_CODE=0

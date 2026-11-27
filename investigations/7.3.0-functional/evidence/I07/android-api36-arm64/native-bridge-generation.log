@@ -1,0 +1,4 @@
+status=success
+duration_seconds=13
+full_log=agent-logs/20261127-074738-generateNativeBridgeSources-full.log
+agent_log=agent-logs/20261127-074738-generateNativeBridgeSources-agent.log

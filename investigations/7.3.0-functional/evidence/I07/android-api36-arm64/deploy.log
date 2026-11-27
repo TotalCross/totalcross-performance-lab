@@ -1,0 +1,14 @@
+$ /usr/bin/java -cp /private/tmp/tc730-sdk-94af-compile/build/TotalCross/dist/totalcross-sdk.jar:/private/tmp/tc730-sdk-94af-compile/build/TotalCross/dist/libs/* tc.Deploy /private/tmp/tc730-i07-android-results/ImageStringFallbackProbe.jar -android /p /n ImageStringFallbackProbe /o /private/tmp/tc730-i07-android-results/deployed/
+TotalCross SDK version 7.2.2.0 running on mac os x with JDK 17.0
+Creating single installation package
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+File /private/tmp/tc730-i07-android-results/deployed//ImageStringFallbackProbe.tcz written (31% - 8622 bytes)
+Application title not provided, using: ImageStringFallbackProbe
+Application id not provided. Created from "ImageStringFallbackProbe": KfCo
+Could not find 'google-services.json', thus Firebase will be ignored further on (Android deploy)
+Using Android tools from the SDK fallback; install the shared tooling-managed tool store.
+... Files written to folder /private/tmp/tc730-i07-android-results/deployed/install/android/
+
+EXIT_CODE=0

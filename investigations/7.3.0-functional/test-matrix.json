@@ -9,6 +9,7 @@
     "PREEXISTING",
     "BLOCKED",
     "NOT_REPRODUCED",
+    "INCOMPLETE",
     "INCONCLUSIVE",
     "OUT_OF_SCOPE",
     "NOT_RUN"
@@ -1019,10 +1020,37 @@
         "snapshot-after-modification",
         "native-ownership"
       ],
-      "status": "NOT_RUN",
+      "status": "INCOMPLETE",
       "scopeStatus": "IN_SCOPE",
-      "evidenceOrigin": "CAMPAIGN_PENDING",
-      "results": []
+      "evidenceOrigin": "CAMPAIGN",
+      "results": [
+        {
+          "platform": "android-arm64-api36",
+          "campaignExecution": "EXECUTED",
+          "sourceRevision": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+          "probeSourceRevision": "2f2be82",
+          "status": "PASS",
+          "deviceSerial": "emulator-5556",
+          "deviceAbi": "arm64-v8a",
+          "apiLevel": 36,
+          "hostArchitecture": "arm64",
+          "gpu": "host; Apple M1 Pro Vulkan device",
+          "caseCount": 16,
+          "failures": 0,
+          "skips": 0,
+          "nativeCrashObserved": false,
+          "completionMarkerObserved": true,
+          "processExitCode": null,
+          "releaseAabSha256": "0a9cd24904865aeba1c36f5484c2bec91614adebfefdcafe59c228a7e6915481",
+          "apkSha256": "643a1c35f020e777a8db2ed1558d9a0f958fa3e1254eb70d64c923319edf4c4d",
+          "arm64LibtcvmSha256": "57ec070728ce6362a4ed32c06e05122a4bbdc29d4468dc4630c94d33db029215",
+          "evidencePath": "investigations/7.3.0-functional/evidence/I07/android-api36-arm64.json",
+          "limitations": [
+            "Android activity process exit code is not exposed by the local runner; the complete PASS marker and no-crash state were observed."
+          ]
+        }
+      ],
+      "resultSummary": "Android API 36 ARM64 host-GPU run passed all 16 reported cases with zero failures, skips, or native crashes; other required I07 platforms remain pending."
     },
     {
       "investigationId": "I08",

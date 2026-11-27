@@ -1,0 +1,152 @@
+{
+  "investigationId": "I07",
+  "platform": "android-arm64-api36-emulator",
+  "status": "PASS",
+  "campaignExecution": "EXECUTED",
+  "recordedAtUtc": "2026-11-27T10:58:04Z",
+  "source": {
+    "commit": "94af2b8b653cad509994b5ccf3dbb60ac28ef920",
+    "tree": "539f5b424b6f4593c7d96074d69ff077a38ed361",
+    "probeCommit": "2f2be82"
+  },
+  "build": {
+    "preparedDepotToolsCommit": "0fd3c98727c87a441bc9c8d2c8dd2b731ef0861a",
+    "commands": [
+      {
+        "command": "bash TotalCrossVM/deps/fetch-depot-tools.sh",
+        "status": "PASS"
+      },
+      {
+        "command": "./gradlew-agent generateNativeBridgeSources --no-daemon --warning-mode=none --console=plain",
+        "status": "PASS"
+      },
+      {
+        "command": "./gradlew :tcvm:fetchNativeDependencies :app:assembleStandardRelease --no-daemon --warning-mode=none --console=plain",
+        "status": "PASS"
+      },
+      {
+        "command": "./gradlew :app:bundleStandardRelease --no-daemon --warning-mode=none --console=plain",
+        "status": "PASS"
+      }
+    ],
+    "releaseAabSha256": "0a9cd24904865aeba1c36f5484c2bec91614adebfefdcafe59c228a7e6915481",
+    "sdkJarSha256": "a18c80e2784543493370d1120afc3e2d10d7594b51e5032d1f779f1f51c2f12d",
+    "applicationJarSha256": "bf8c23c72df8c893c064f9c6929b3bfcdd9670942eaf37aec1ec1e33ca1543b9",
+    "deployedApkSha256": "643a1c35f020e777a8db2ed1558d9a0f958fa3e1254eb70d64c923319edf4c4d",
+    "apkArm64LibtcvmSha256": "57ec070728ce6362a4ed32c06e05122a4bbdc29d4468dc4630c94d33db029215",
+    "fixtures": {
+      "tczSmallJpeg": "fc356fdf20ef5c69b82c0be01b52d6f52a683a50d3d9361fbf3dee98d3836742",
+      "filesystemLargeJpeg": "3d45fecf16cced0729f7c75a7d920986426d66270dbf64b9a25278ec4bb758a6"
+    }
+  },
+  "emulator": {
+    "avd": "Codex_ImageOwnership_API36_ARM64",
+    "serial": "emulator-5556",
+    "apiLevel": 36,
+    "abi": "arm64-v8a",
+    "hostArchitecture": "arm64",
+    "gpuEnabledInAvdConfig": true,
+    "gpuMode": "host",
+    "vulkanDevice": "Apple M1 Pro",
+    "evidenceLog": "gpu-renderer-evidence.log"
+  },
+  "assertions": {
+    "status": "PASS",
+    "caseCount": 16,
+    "failures": 0,
+    "skips": 0,
+    "cases": [
+      {
+        "name": "prepare-filesystem-fixtures",
+        "status": "PASS",
+        "details": "wrote valid, malformed, and empty filesystem controls"
+      },
+      {
+        "name": "relative-path-filesystem-only",
+        "status": "PASS",
+        "details": "dimensions=36x36,pixels=1296"
+      },
+      {
+        "name": "tcz-only",
+        "status": "PASS",
+        "details": "dimensions=2x2,pixels=4"
+      },
+      {
+        "name": "both-tcz-precedence",
+        "status": "PASS",
+        "details": "dimensions=2x2,pixels=4"
+      },
+      {
+        "name": "malformed-tcz-does-not-fallback",
+        "status": "PASS",
+        "details": "totalcross.ui.image.ImageException:Invalid or unsupported encoded image"
+      },
+      {
+        "name": "empty-tcz-does-not-fallback",
+        "status": "PASS",
+        "details": "totalcross.ui.image.ImageException:Could not open encoded image"
+      },
+      {
+        "name": "missing-filesystem",
+        "status": "PASS",
+        "details": "totalcross.io.FileNotFoundException:File not found: /data/user/0/totalcross.appkfco/missing.jpg"
+      },
+      {
+        "name": "invalid-filesystem",
+        "status": "PASS",
+        "details": "totalcross.ui.image.ImageException:Invalid or unsupported encoded image"
+      },
+      {
+        "name": "empty-filesystem",
+        "status": "PASS",
+        "details": "totalcross.ui.image.ImageException:Invalid encoded image buffer"
+      },
+      {
+        "name": "absolute-path",
+        "status": "PASS",
+        "details": "dimensions=36x36,pixels=1296"
+      },
+      {
+        "name": "device-path-where-supported",
+        "status": "PASS",
+        "details": "dimensions=36x36,pixels=1296"
+      },
+      {
+        "name": "path-boundary-255",
+        "status": "PASS",
+        "details": "dimensions=2x2,pixels=4"
+      },
+      {
+        "name": "path-boundary-256-does-not-truncate-to-255-entry",
+        "status": "PASS",
+        "details": "totalcross.io.IllegalArgumentIOException:Invalid value for argument 'path': xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      {
+        "name": "image-file-parity",
+        "status": "PASS",
+        "details": "pixels=1296"
+      },
+      {
+        "name": "snapshot-after-modification",
+        "status": "PASS",
+        "details": "dimensions=2x2,pixels=4"
+      },
+      {
+        "name": "native-ownership",
+        "status": "PASS",
+        "details": "owners attached=1 detached=0"
+      }
+    ],
+    "nativeCrashObserved": false,
+    "completionMarkerObserved": true,
+    "processExitCode": null,
+    "durationMilliseconds": 2094,
+    "runtimeMarkerLog": "runtime-markers.log"
+  },
+  "setupNotes": [
+    "An initial Gradle configuration found the pinned depot-tools deps.yml absent; the documented fetch-depot-tools.sh bootstrap populated the pinned checkout before the successful build.",
+    "The first native configure lacked generated native bridge headers; generateNativeBridgeSources then completed successfully.",
+    "The first runtime attempt caught a fixture dimension mismatch at the 255-character TCZ boundary; the fixture was corrected to use the 2-by-2 TCZ JPEG before this passing run.",
+    "Android does not expose the activity process exit status through this runner; the PASS used the complete result marker and no observed fatal signal."
+  ]
+}

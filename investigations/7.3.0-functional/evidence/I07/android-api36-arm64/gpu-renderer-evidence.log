@@ -1,0 +1,4 @@
+INFO         | Guest GLES Driver: Auto (ext controls)
+library_mode host gpu mode host
+INFO         | Selecting Vulkan device: Apple M1 Pro, Version: 1.1.323
+INFO         |   androidboot.debug.hwui.renderer=skiagl

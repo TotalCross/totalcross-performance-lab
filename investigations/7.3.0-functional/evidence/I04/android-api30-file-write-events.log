@@ -1,0 +1,24 @@
+11-27 05:33:39.356  5421  5455 I TotalCross: TC_I04 case=normal-write state=PASS detail=write/flush/readback/close verified 16 bytes
+11-27 05:33:39.374  5421  5455 I TotalCross: TC_I04 case=write-after-close state=PASS detail=totalcross.io.IOException: Invalid file object.
+11-27 05:33:39.377  5421  5455 I TotalCross: TC_I04 case=write-dont-open state=PASS detail=totalcross.io.IOException: Operation cannot be used in DONT_OPEN mode
+11-27 05:33:39.384  5421  5455 I TotalCross: TC_I04 case=failed-open state=PASS detail=constructor rejected path before a File handle existed: totalcross.io.IOException: Error Code: 2 - No such file or directory
+11-27 05:37:26.487  6201  6226 I TotalCross: TC_I04 case=external-write state=BEGIN path=/sdcard/tc730-i04-permission.bin
+11-27 05:37:26.574  6201  6226 I TotalCross: TC_I04 case=external-write state=PASS detail=wrote and flushed 22 bytes
+11-27 05:37:26.578  6201  6226 I TotalCross: TC_I04 completion mode=external failures=0
+11-27 05:38:27.912  6342  6367 I TotalCross: TC_I04 startup mode=external appPath=/data/user/0/totalcross.appzmtw
+11-27 05:38:28.060  6342  6367 I TotalCross: TC_I04 case=external-write state=BEGIN path=/sdcard/tc730-i04-permission.bin
+11-27 05:39:17.420  6650  6676 I TotalCross: TC_I04 case=external-write state=BEGIN path=/sdcard/tc730-i04-permission.bin
+11-27 05:39:17.460  6650  6676 I TotalCross: TC_I04 case=external-write state=PASS detail=wrote and flushed 22 bytes
+11-27 05:39:17.474  6650  6676 I TotalCross: TC_I04 completion mode=external failures=0
+11-27 06:00:18.624  9933  9959 I TotalCross: TC_I04 case=write-close-race-0 state=PASS detail=write-entered; wrote=8388608; close-entered; closed
+11-27 06:00:18.876  9933  9959 I TotalCross: TC_I04 case=write-close-race-1 state=PASS detail=write-entered; wrote=8388608; close-entered; closed
+11-27 06:00:19.054  9933  9959 I TotalCross: TC_I04 case=write-close-race-2 state=PASS detail=write-entered; wrote=8388608; close-entered; closed
+11-27 06:00:19.136  9933  9959 I TotalCross: TC_I04 case=write-close-race-3 state=PASS detail=write-entered; wrote=8388608; close-entered; closed
+11-27 06:00:19.377  9933  9959 I TotalCross: TC_I04 case=write-close-race-4 state=PASS detail=write-entered; wrote=8388608; close-entered; closed
+11-27 06:00:19.531  9933  9959 I TotalCross: TC_I04 case=write-close-race-5 state=PASS detail=write-entered; wrote=8388608; close-entered; closed
+11-27 06:00:19.774  9933  9959 I TotalCross: TC_I04 case=write-close-race-6 state=PASS detail=write-entered; wrote=8388608; close-entered; closed
+11-27 06:00:20.000  9933  9959 I TotalCross: TC_I04 case=write-close-race-7 state=PASS detail=write-entered; wrote=8388608; close-entered; closed
+11-27 06:00:20.277  9933  9959 I TotalCross: TC_I04 case=write-close-race-8 state=PASS detail=write-entered; wrote=8388608; close-entered; closed
+11-27 06:00:20.456  9933  9959 I TotalCross: TC_I04 case=write-close-race-9 state=PASS detail=write-entered; wrote=8388608; close-entered; closed
+11-27 06:00:20.467  9933  9959 I TotalCross: TC_I04 case=write-close-race state=PASS detail=completed 10 barrier-released write/close races
+11-27 06:00:20.473  9933  9959 I TotalCross: TC_I04 completion mode=race failures=0

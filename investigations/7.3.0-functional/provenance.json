@@ -276,6 +276,30 @@
       ],
       "evidencePath": "investigations/7.3.0-functional/evidence/I03/",
       "result": "rotation-in-settings FAIL; pregranted HOME/foreground/rotation PASS; diagnostic worker foreground FAIL"
+    },
+    {
+      "repository": "TotalCross/totalcross",
+      "productSourceSha": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+      "officialArtifactWorkflowRunId": 40878222908,
+      "artifactId": 12899147776,
+      "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+      "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+      "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+      "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+      "platform": "Android 11 API 30 ARM64 emulator",
+      "runtimeArchitecture": "arm64-v8a",
+      "fingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+      "emulator": "Android Emulator 36.3.10; Apple M1 Pro GPU renderer",
+      "evidenceOrigin": "CAMPAIGN",
+      "name": "I04 File.writeBytes Android probe",
+      "investigationId": "I04",
+      "testedProbeApkSha256": [
+        "1c3031df305b4daea3b17c803a5352ff86420b4e5d8714c4ce7ece39e195e2af",
+        "e27fa5b27a498cba7aa95f968509f2499c06658d39d56d42ec5733aa839698e7",
+        "0669178cdb269f3225bbdaffa85d9d05655b2e408b1d3b5a2d99b71d9cecc67e"
+      ],
+      "evidencePath": "investigations/7.3.0-functional/evidence/I04/android-api30-file-write-results.json",
+      "result": "INCONCLUSIVE; no reported fwrite abort in completed cases"
     }
   ],
   "officialReleases": {

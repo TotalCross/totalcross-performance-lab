@@ -3,8 +3,8 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
-- Campaign branch tip before the Windows evidence update:
-  `fccadcb5897b0c8aa0a0d8c033002e51bcdefef2`
+- Last completed investigation checkpoint: `c069d61` (I03 lifecycle follow-up).
+- Current branch head before I04 findings checkpoint: `dd3a916` (Android probes).
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
 - Active milestone: 2 — Android native failures
 - Previous campaign checkpoint: `1a602fa` (native build retry findings)
@@ -114,23 +114,30 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   diagnostic worker-screen foreground transition crashed in the same surface
   path. Repeated permission requests remain NOT_RUN because no corrected
   candidate exists and the first denied transition already crashes.
+- I04 completed its API 30 ARM64 probe. Normal writes, after-close and
+  DONT_OPEN exceptions, failed-open handling, pregranted/recovered external
+  writes, and ten barrier-released 8 MiB write/close pairs produced no `fwrite`
+  abort. The denied Settings return had no completion marker; actual native
+  overlap inside `fwrite` was not proven. I04 is INCONCLUSIVE. The I05 probe
+  separately observed one destroyed-mutex abort during file-I/O shutdown, but
+  there is no stack to attribute it to I04.
 
 ## Pending investigations
 
-I04/I05 Android native-failure investigations; I06 Linux ownership, I07,
-I08/I09/I10, I11; remaining provenance; proposed issue updates; and final
-consolidation. I03 repeated requests and corrected-candidate validation remain
-explicitly unrun because no candidate is available and the first denied
-transition already reproduces the crash.
+I05 Android shutdown SIGABRT; I06 Linux ownership, I07, I08/I09/I10, I11;
+remaining provenance; proposed issue updates; and final consolidation. I03
+repeated requests and corrected-candidate validation remain explicitly unrun
+because no candidate is available and the first denied transition already
+reproduces the crash.
 
 ## Next concrete action
 
 Windows Win32/I386 priority validation is complete using verified run
 `45907759163`; do not repeat it while inputs remain unchanged. Linux I01-B/I02
 reports and matrix are consolidated from hosted run `45949849457`. I03 lifecycle
-follow-ups are recorded; continue with I04/I05 Android native-failure tests on
-the hardware-accelerated API 30 ARM64 AVD, then move to Linux I06. Linux
-evidence is at
+follow-ups and I04 findings are recorded; complete the bounded I05 shutdown
+cases on the hardware-accelerated API 30 ARM64 AVD, then move to Linux I06.
+Linux evidence is at
 `https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457`.
 
 ## Constraints and blockers

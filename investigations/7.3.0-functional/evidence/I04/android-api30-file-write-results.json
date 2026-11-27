@@ -1,0 +1,133 @@
+{
+  "investigationId": "I04",
+  "title": "Android File.writeBytes SIGABRT",
+  "status": "INCONCLUSIVE",
+  "scopeStatus": "IN_SCOPE",
+  "defectClassification": "NOT_REPRODUCED_IN_COMPLETED_CASES",
+  "testedSourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+  "officialArtifactWorkflowRunId": 40878222908,
+  "officialArtifactId": 12899147776,
+  "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+  "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+  "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+  "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+  "environment": {
+    "apiLevel": 30,
+    "androidVersion": "11",
+    "runtimeArchitecture": "arm64-v8a",
+    "deviceFingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+    "emulator": "Android Emulator 36.3.10, GPU renderer on Apple M1 Pro"
+  },
+  "cases": [
+    {
+      "id": "normal-write",
+      "status": "PASS",
+      "apkSha256": "1c3031df305b4daea3b17c803a5352ff86420b4e5d8714c4ce7ece39e195e2af",
+      "markers": [
+        "11-27 05:33:39.356  5421  5455 I TotalCross: TC_I04 case=normal-write state=PASS detail=write/flush/readback/close verified 16 bytes"
+      ]
+    },
+    {
+      "id": "write-after-close",
+      "status": "PASS",
+      "observed": "IOException: Invalid file object.",
+      "markers": [
+        "11-27 05:33:39.374  5421  5455 I TotalCross: TC_I04 case=write-after-close state=PASS detail=totalcross.io.IOException: Invalid file object."
+      ]
+    },
+    {
+      "id": "DONT_OPEN-write",
+      "status": "PASS",
+      "observed": "IOException: Operation cannot be used in DONT_OPEN mode",
+      "markers": [
+        "11-27 05:33:39.377  5421  5455 I TotalCross: TC_I04 case=write-dont-open state=PASS detail=totalcross.io.IOException: Operation cannot be used in DONT_OPEN mode"
+      ]
+    },
+    {
+      "id": "unavailable-path",
+      "status": "PASS",
+      "observed": "Constructor threw IOException ENOENT before a File object/native handle existed.",
+      "markers": [
+        "11-27 05:33:39.384  5421  5455 I TotalCross: TC_I04 case=failed-open state=PASS detail=constructor rejected path before a File handle existed: totalcross.io.IOException: Error Code: 2 - No such file or directory"
+      ]
+    },
+    {
+      "id": "external-pregranted",
+      "status": "PASS",
+      "apkSha256": "e27fa5b27a498cba7aa95f968509f2499c06658d39d56d42ec5733aa839698e7",
+      "markers": [
+        "11-27 05:37:26.487  6201  6226 I TotalCross: TC_I04 case=external-write state=BEGIN path=/sdcard/tc730-i04-permission.bin",
+        "11-27 05:37:26.574  6201  6226 I TotalCross: TC_I04 case=external-write state=PASS detail=wrote and flushed 22 bytes",
+        "11-27 05:37:26.578  6201  6226 I TotalCross: TC_I04 completion mode=external failures=0"
+      ]
+    },
+    {
+      "id": "external-denied-no-change",
+      "status": "INCONCLUSIVE",
+      "apkSha256": "e27fa5b27a498cba7aa95f968509f2499c06658d39d56d42ec5733aa839698e7",
+      "settingsSeen": true,
+      "settingsAction": "none+back",
+      "appOpAfter": "MANAGE_EXTERNAL_STORAGE: ignore; rejectTime=+34s91ms ago",
+      "processAfter": "6342",
+      "markers": [
+        "11-27 05:38:27.912  6342  6367 I TotalCross: TC_I04 startup mode=external appPath=/data/user/0/totalcross.appzmtw",
+        "11-27 05:38:28.060  6342  6367 I TotalCross: TC_I04 case=external-write state=BEGIN path=/sdcard/tc730-i04-permission.bin"
+      ],
+      "limitation": "Returned from All files access Settings with MANAGE_EXTERNAL_STORAGE still ignored; the app remained alive without a completion marker. No native abort was observed."
+    },
+    {
+      "id": "external-permission-recovery",
+      "status": "PASS",
+      "apkSha256": "e27fa5b27a498cba7aa95f968509f2499c06658d39d56d42ec5733aa839698e7",
+      "appOpAfter": "MANAGE_EXTERNAL_STORAGE: allow; time=+2s73ms ago",
+      "markers": [
+        "11-27 05:39:17.420  6650  6676 I TotalCross: TC_I04 case=external-write state=BEGIN path=/sdcard/tc730-i04-permission.bin",
+        "11-27 05:39:17.460  6650  6676 I TotalCross: TC_I04 case=external-write state=PASS detail=wrote and flushed 22 bytes",
+        "11-27 05:39:17.474  6650  6676 I TotalCross: TC_I04 completion mode=external failures=0"
+      ]
+    },
+    {
+      "id": "barrier-write-close-8MiB",
+      "status": "PASS",
+      "apkSha256": "0669178cdb269f3225bbdaffa85d9d05655b2e408b1d3b5a2d99b71d9cecc67e",
+      "completedPairs": 10,
+      "fatal": false,
+      "overlapEstablished": false,
+      "limitation": "Both threads waited at a shared start barrier and each used an 8 MiB operation; all ten write/close pairs returned without abort. The probe records call entry but does not instrument inside fwrite, so it does not prove simultaneous native execution.",
+      "markers": [
+        "11-27 06:00:18.624  9933  9959 I TotalCross: TC_I04 case=write-close-race-0 state=PASS detail=write-entered; wrote=8388608; close-entered; closed",
+        "11-27 06:00:18.876  9933  9959 I TotalCross: TC_I04 case=write-close-race-1 state=PASS detail=write-entered; wrote=8388608; close-entered; closed",
+        "11-27 06:00:19.054  9933  9959 I TotalCross: TC_I04 case=write-close-race-2 state=PASS detail=write-entered; wrote=8388608; close-entered; closed",
+        "11-27 06:00:19.136  9933  9959 I TotalCross: TC_I04 case=write-close-race-3 state=PASS detail=write-entered; wrote=8388608; close-entered; closed",
+        "11-27 06:00:19.377  9933  9959 I TotalCross: TC_I04 case=write-close-race-4 state=PASS detail=write-entered; wrote=8388608; close-entered; closed",
+        "11-27 06:00:19.531  9933  9959 I TotalCross: TC_I04 case=write-close-race-5 state=PASS detail=write-entered; wrote=8388608; close-entered; closed",
+        "11-27 06:00:19.774  9933  9959 I TotalCross: TC_I04 case=write-close-race-6 state=PASS detail=write-entered; wrote=8388608; close-entered; closed",
+        "11-27 06:00:20.000  9933  9959 I TotalCross: TC_I04 case=write-close-race-7 state=PASS detail=write-entered; wrote=8388608; close-entered; closed",
+        "11-27 06:00:20.277  9933  9959 I TotalCross: TC_I04 case=write-close-race-8 state=PASS detail=write-entered; wrote=8388608; close-entered; closed",
+        "11-27 06:00:20.456  9933  9959 I TotalCross: TC_I04 case=write-close-race-9 state=PASS detail=write-entered; wrote=8388608; close-entered; closed",
+        "11-27 06:00:20.467  9933  9959 I TotalCross: TC_I04 case=write-close-race state=PASS detail=completed 10 barrier-released write/close races",
+        "11-27 06:00:20.473  9933  9959 I TotalCross: TC_I04 completion mode=race failures=0"
+      ]
+    },
+    {
+      "id": "file-write-during-shutdown",
+      "status": "INCONCLUSIVE",
+      "crossInvestigation": "I05",
+      "evidence": "evidence/I05/android-api30-shutdown-results.json",
+      "limitation": "One destroyed-mutex abort occurred during active file I/O, but no native stack identifies File.writeBytes/fwrite as the call site."
+    }
+  ],
+  "rootCause": "OPEN. The official 7.3.0 native bridge rejects closed and DONT_OPEN modes before dispatch. POSIX fileWriteBytes passes fref.handle to fwrite; concurrent close/write synchronization was not established by these tests.",
+  "limitations": [
+    "The denied Settings return did not complete the app operation.",
+    "The barrier race did not instrument inside fwrite and therefore cannot prove simultaneous native execution.",
+    "No invalid live-mode object with a null or stale FILE pointer was constructed through the public API.",
+    "No I04 SIGABRT was observed in completed write cases."
+  ],
+  "relatedIssueSearch": "No existing issue matching File.writeBytes/fwrite was found in the checked issue search.",
+  "evidenceFiles": [
+    "reports/I04-android-file-write.md",
+    "evidence/I04/android-api30-file-write-results.json",
+    "evidence/I04/android-api30-file-write-events.log"
+  ]
+}

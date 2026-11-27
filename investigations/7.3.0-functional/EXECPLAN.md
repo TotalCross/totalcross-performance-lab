@@ -88,9 +88,11 @@ provenance, proposed issue updates, and a consolidated report.
   lifecycle control, and a diagnostic foreground surface crash. Repeated
   requests remain NOT_RUN because the first denied transition crashes and no
   corrected candidate is available.
-- [ ] I04/I05: remain in scope after the verified 4.6.0 source check; Android
-  probe execution and findings are in progress.
-- [ ] Milestone 2: I04/I05 findings and reports remain to be committed.
+- [x] I04: API 30 normal, invalid-mode, permission, and barrier write/close
+  probes completed. No `fwrite` abort in completed cases; denied return and
+  exact native overlap remain inconclusive.
+- [ ] I05: shutdown probes ran; findings and report remain to be committed.
+- [ ] Milestone 2: I05 shutdown findings remain to be checkpointed.
 - [ ] Milestone 3: run Linux ownership validation (I06) and remaining
   `Image(String)` checks (I07), importing equivalent historical evidence.
 - [ ] Milestone 4: validate Android filesystem and SQLite permission recovery
@@ -176,10 +178,16 @@ screen failed on foreground surface recreation. Repeated requests are recorded
 NOT_RUN because the first denied transition already crashes and no candidate is
 available.
 
-**I04/I05:** first complete the 4.x port exclusion check. If still in scope,
-test only valid and deliberately invalid API behavior that distinguishes the
-reported native abort; bound intermittent repetitions at ten. I05 uses barriers
-for shutdown ordering, not arbitrary sleep loops. Do not change product code.
+**I04:** the 4.6.0 review found no exact correction for a live-mode object with
+a null/stale native handle. API 30 normal, invalid-mode, permission, and
+barrier write/close cases are recorded; denied return and in-native overlap
+remain inconclusive. Do not claim the `fwrite` abort is fixed.
+
+**I05:** the 4.6.0 review found no applicable shutdown fix. API 30 probes cover
+normal exit, file I/O, SQLite, active workers, permission return, and repeated
+termination; the one file-I/O destroyed-mutex abort is documented with its
+missing native stack. Intermittent repeats are capped at ten. Do not change
+product code.
 
 ### Milestone 3 — Image behavior
 

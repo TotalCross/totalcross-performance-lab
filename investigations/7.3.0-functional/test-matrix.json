@@ -687,10 +687,98 @@
         "controlled-shutdown",
         "controlled-write-close-race"
       ],
-      "status": "NOT_RUN",
+      "status": "INCONCLUSIVE",
       "scopeStatus": "IN_SCOPE",
-      "evidenceOrigin": "SOURCE_HISTORY",
-      "results": []
+      "evidenceOrigin": "CAMPAIGN",
+      "results": [
+        {
+          "platform": "android-arm64-emulator",
+          "runtimeArchitecture": "arm64-v8a",
+          "apiLevel": 30,
+          "androidVersion": "11",
+          "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+          "sourceArtifactWorkflowRunId": 40878222908,
+          "artifactId": 12899147776,
+          "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+          "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+          "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+          "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+          "avd": "Codex_TC730_API30_ARM64",
+          "fingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+          "executionEnvironment": "local hardware-accelerated ARM64 Android emulator; Android Emulator 36.3.10; Apple M1 Pro GPU renderer",
+          "startupStatus": "PASS",
+          "testExecutionStatus": "PARTIAL: completed functional cases passed; denied return remained active without completion",
+          "assertionStatus": "PASS for completed valid/misuse cases; denied recovery INCONCLUSIVE",
+          "status": "INCONCLUSIVE",
+          "defectClassification": "NOT_REPRODUCED_IN_COMPLETED_CASES",
+          "campaignExecution": "EXECUTED",
+          "evidenceOrigin": "CAMPAIGN",
+          "conditionalValidation": false,
+          "caseResults": [
+            {
+              "case": "normal-write",
+              "status": "PASS",
+              "evidence": "evidence/I04/android-api30-file-write-results.json"
+            },
+            {
+              "case": "write-after-close",
+              "status": "PASS",
+              "observed": "IOException: Invalid file object."
+            },
+            {
+              "case": "DONT_OPEN-write",
+              "status": "PASS",
+              "observed": "IOException; no native abort."
+            },
+            {
+              "case": "failed-open-and-invalid-path",
+              "status": "PASS",
+              "observed": "Constructor threw IOException before a usable File handle existed."
+            },
+            {
+              "case": "external-pregranted",
+              "status": "PASS",
+              "observed": "22 bytes written and flushed."
+            },
+            {
+              "case": "external-denied-return-unchanged",
+              "status": "INCONCLUSIVE",
+              "observed": "Settings returned with app-op ignored; process remained alive without completion marker."
+            },
+            {
+              "case": "external-permission-recovery",
+              "status": "PASS",
+              "observed": "22 bytes written and flushed after Settings grant."
+            },
+            {
+              "case": "barrier-write-close-8MiB",
+              "status": "PASS",
+              "runs": 10,
+              "observed": "All pairs returned full byte count and close; no SIGABRT.",
+              "limitation": "Native overlap inside fwrite not observed."
+            },
+            {
+              "case": "controlled-shutdown-during-file-io",
+              "status": "INCONCLUSIVE",
+              "observed": "I05 file-I/O shutdown probe recorded one destroyed-mutex FORTIFY abort, but no stack proves the call site was File.writeBytes/fwrite.",
+              "evidence": "evidence/I05/android-api30-shutdown-results.json"
+            }
+          ],
+          "runnerHostArchitecture": "arm64 (Apple Silicon local host)",
+          "evidenceFiles": [
+            "reports/I04-android-file-write.md",
+            "evidence/I04/android-api30-file-write-results.json",
+            "evidence/I04/android-api30-file-write-events.log"
+          ],
+          "limitations": [
+            "No live-mode object with invalid/null native FILE* was constructed.",
+            "Denied permission return had no completion marker.",
+            "The concurrent barrier test cannot establish overlap inside fwrite.",
+            "No corrected candidate or physical-device testing."
+          ]
+        }
+      ],
+      "resultSummary": "No reported fwrite/invalid-FILE abort in completed normal, invalid-mode, recovery, and barrier write/close cases. Denied Settings return did not complete; race overlap inside fwrite was not instrumented."
     },
     {
       "investigationId": "I05",

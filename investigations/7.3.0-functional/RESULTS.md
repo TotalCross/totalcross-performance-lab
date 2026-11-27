@@ -3,8 +3,8 @@
 The campaign remains in progress. I01-B and I02 Linux runtime evidence from
 hosted Actions run 45949849457 is consolidated in the reports, result matrix,
 and provenance record. I03 priority API runs are recorded for Android API 29,
-30, 35, and 36; lifecycle diagnostics and corrected-candidate validation
-remain.
+30, 35, and 36; API 30 lifecycle follow-ups are also recorded. I04 is now
+inconclusive on API 30; I05 shutdown findings remain pending.
 
 ## Imported historical evidence
 
@@ -41,6 +41,13 @@ remain.
   variant crashed on foreground surface reinitialization. Repeated permission
   requests remain NOT_RUN because the first denied transition already crashes
   and no corrected candidate is available.
+- **I04, Android API 30 ARM64:** INCONCLUSIVE. Normal app-private writes,
+  invalid-mode exceptions, failed-open handling, granted external writes, and
+  ten barrier-released 8 MiB write/close pairs completed without the reported
+  `fwrite` abort. The denied Settings return did not complete, and the race
+  probe did not observe overlap inside `fwrite`. A separate I05 shutdown probe
+  aborted during file I/O, but its missing native stack does not identify
+  `File.writeBytes` as the call site.
 - **I06 Windows Win32/I386:** PASS for the Windows target; overall I06 remains
   pending its required Linux x86_64 validation.
 - **I01-B, Linux x86_64:** official 7.3.0 and frozen master failed before
@@ -51,6 +58,7 @@ remain.
   With the test-only startup shim, 8/9 cases passed; a valid indexed PNG was
   rejected during construction. Other platforms remain untested.
 
-No production source was changed. I03's corrected candidate and remaining
-permission lifecycle scenarios, I04/I05, I06/I07, I08/I09/I10, I11, provenance
-completion, and final report remain pending.
+No production source was changed. I03 repeated requests and corrected-candidate
+validation remain explicitly unrun; I05 is the next Android investigation.
+I06/I07, I08/I09/I10, I11, remaining provenance, and the final report remain
+pending.

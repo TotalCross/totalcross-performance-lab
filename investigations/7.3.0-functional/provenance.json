@@ -300,6 +300,32 @@
       ],
       "evidencePath": "investigations/7.3.0-functional/evidence/I04/android-api30-file-write-results.json",
       "result": "INCONCLUSIVE; no reported fwrite abort in completed cases"
+    },
+    {
+      "repository": "TotalCross/totalcross",
+      "productSourceSha": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+      "officialArtifactWorkflowRunId": 40878222908,
+      "artifactId": 12899147776,
+      "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+      "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+      "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+      "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+      "platform": "Android 11 API 30 ARM64 emulator",
+      "runtimeArchitecture": "arm64-v8a",
+      "fingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+      "emulator": "Android Emulator 36.3.10; Apple M1 Pro GPU renderer",
+      "evidenceOrigin": "CAMPAIGN",
+      "name": "I05 Android shutdown probe",
+      "investigationId": "I05",
+      "testedProbeApkSha256": [
+        "9351cd37bce351a29a7f6ef4ed39f100d42c6dfccd4e1750f743f2864730ec78",
+        "5c6528115b35a37d41e9f3717918763154dd6019adb9fc828bd86dc5431877f2",
+        "1e8dd8ad67e991883260eafe4ae7b671bc714afd528035bc0a73d55e13ae1a28",
+        "86c247eb0612f35af18b195858cd914c439227ecb34914f357525687cc38aa70",
+        "4708ca688c993c84d653d5212491aaaec4d2998e5ca154ad51e4a4ad9bbdf41c"
+      ],
+      "evidencePath": "investigations/7.3.0-functional/evidence/I05/android-api30-shutdown-results.json",
+      "result": "one destroyed-mutex FORTIFY abort in ten clean file-I/O shutdown cycles"
     }
   ],
   "officialReleases": {

@@ -91,8 +91,12 @@ provenance, proposed issue updates, and a consolidated report.
 - [x] I04: API 30 normal, invalid-mode, permission, and barrier write/close
   probes completed. No `fwrite` abort in completed cases; denied return and
   exact native overlap remain inconclusive.
-- [ ] I05: shutdown probes ran; findings and report remain to be committed.
-- [ ] Milestone 2: I05 shutdown findings remain to be checkpointed.
+- [x] I05: API 30 shutdown probes recorded one destroyed-mutex FORTIFY abort
+  in ten clean file-I/O cycles; normal, SQLite, foreground worker, and
+  permission-grant controls are recorded with root cause open.
+- [x] Milestone 2: I03/I04/I05 results and limitations are recorded; repeated
+  I03 permission requests remain explicitly NOT_RUN because the first denied
+  transition already crashes and no candidate is available.
 - [ ] Milestone 3: run Linux ownership validation (I06) and remaining
   `Image(String)` checks (I07), importing equivalent historical evidence.
 - [ ] Milestone 4: validate Android filesystem and SQLite permission recovery

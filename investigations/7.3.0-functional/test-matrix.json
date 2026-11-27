@@ -797,10 +797,87 @@
         "exit-with-worker-threads",
         "repeated-init-termination"
       ],
-      "status": "NOT_RUN",
+      "status": "FAIL",
       "scopeStatus": "IN_SCOPE",
-      "evidenceOrigin": "SOURCE_HISTORY",
-      "results": []
+      "evidenceOrigin": "CAMPAIGN",
+      "results": [
+        {
+          "platform": "android-arm64-emulator",
+          "runtimeArchitecture": "arm64-v8a",
+          "apiLevel": 30,
+          "androidVersion": "11",
+          "sourceRevision": "5464c21e3107e3f1ce9c287b724829e2bb870c1d",
+          "sourceArtifactWorkflowRunId": 40878222908,
+          "artifactId": 12899147776,
+          "artifactSha256": "a966f79d9193c7ee5757cfd66d17d73fbd73a478f7debe9394d898c413f044d5",
+          "nestedPackageSha256": "c9552cb95e1a09798637ad74266f91b62c6ea0ddc3d8dafa8402ac987f70288e",
+          "sdkJarSha256": "23a0e5f16146414419c43f418d554f494d6acad362aa0e03ca11e11bfd430475",
+          "androidLibtcvmSha256": "bf630c7bf8a7a33323631c3b59699157d621a4f4587aac77779931a2de2544ad",
+          "avd": "Codex_TC730_API30_ARM64",
+          "fingerprint": "google/sdk_gphone_arm64/emulator_arm64:11/RSR1.240422.006/12134477:userdebug/dev-keys",
+          "executionEnvironment": "local hardware-accelerated ARM64 Android emulator; Android Emulator 36.3.10; Apple M1 Pro GPU renderer",
+          "startupStatus": "PASS",
+          "testExecutionStatus": "FAIL: one file-I/O shutdown cycle aborted in bionic FORTIFY",
+          "assertionStatus": "FAIL for exit-during-file-io; controls passed as detailed",
+          "status": "FAIL",
+          "defectClassification": "DESTROYED_MUTEX_ABORT_REPRODUCED_DURING_FILE_IO_SHUTDOWN",
+          "rootCause": "OPEN",
+          "campaignExecution": "EXECUTED",
+          "evidenceOrigin": "CAMPAIGN",
+          "conditionalValidation": false,
+          "maxIntermittentRepetitions": 10,
+          "scenarioResults": {
+            "normal-exit-and-repeated-init-termination": {
+              "status": "PASS",
+              "runs": 10,
+              "fatalCount": 0
+            },
+            "exit-during-file-io": {
+              "status": "FAIL",
+              "runs": 10,
+              "fatalCount": 1,
+              "signature": "FORTIFY: pthread_mutex_lock called on a destroyed mutex; SIGABRT in Thread-2",
+              "apkSha256": "5c6528115b35a37d41e9f3717918763154dd6019adb9fc828bd86dc5431877f2",
+              "nativeStack": "NOT_CAPTURED"
+            },
+            "exit-during-sqlite": {
+              "status": "PASS",
+              "runs": 10,
+              "fatalCount": 0,
+              "limitation": "Query start precedes exit request; exact in-query timing was not instrumented."
+            },
+            "exit-with-active-worker": {
+              "status": "PASS",
+              "runs": 1,
+              "nativeAbort": false
+            },
+            "exit-after-permission-request": {
+              "status": "PASS",
+              "runs": 1,
+              "authorization": "MANAGE_EXTERNAL_STORAGE granted in Settings before operation returned; write and exit completed."
+            },
+            "exit-after-background-foreground-transition": {
+              "status": "BLOCKED",
+              "blockedBy": "I03 API 30 surface lifecycle SIGSEGV before I05 exit control could be invoked."
+            }
+          },
+          "runnerHostArchitecture": "arm64 (Apple Silicon local host)",
+          "relatedIssue": "https://github.com/TotalCross/totalcross/issues/432",
+          "relatedIssueAction": "proposed-update-only",
+          "evidenceFiles": [
+            "reports/I05-android-shutdown.md",
+            "evidence/I05/android-api30-shutdown-results.json",
+            "evidence/I05/android-api30-shutdown-events.log",
+            "evidence/I03/android-api30-background-foreground-diagnostic.json"
+          ],
+          "limitations": [
+            "No native crash backtrace or tombstone was retained for the clean file-I/O abort.",
+            "Exact mutex owner, worker instruction, and shutdown resource sequence remain unknown.",
+            "No corrected candidate or physical-device testing."
+          ]
+        }
+      ],
+      "resultSummary": "One destroyed-mutex FORTIFY SIGABRT occurred in ten clean API 30 file-I/O shutdown cycles; the exact owner and stack remain unknown."
     },
     {
       "investigationId": "I06",

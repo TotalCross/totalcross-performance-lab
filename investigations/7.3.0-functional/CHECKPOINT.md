@@ -3,10 +3,10 @@
 ## Current state
 
 - Branch: `investigation/totalcross-7.3.0-functional-validation`
-- Last completed investigation checkpoint: `c069d61` (I03 lifecycle follow-up).
-- Current branch head before I04 findings checkpoint: `dd3a916` (Android probes).
+- Last completed investigation checkpoint: `357d877` (I04 findings).
+- Shared Android probe sources: `dd3a916`.
 - Base and initial HEAD: `fe23e009fa2fcdbf8c36746cea58b9946a138858`
-- Active milestone: 2 — Android native failures
+- Active milestone: 3 — Image functional validation
 - Previous campaign checkpoint: `1a602fa` (native build retry findings)
 - Previous evidence checkpoint: `42008b9`
 - Production source edits: none
@@ -121,23 +121,28 @@ equivalent to source commit `94af2b8b653cad509994b5ccf3dbb60ac28ef920`.
   overlap inside `fwrite` was not proven. I04 is INCONCLUSIVE. The I05 probe
   separately observed one destroyed-mutex abort during file-I/O shutdown, but
   there is no stack to attribute it to I04.
+- I05 completed its API 30 ARM64 shutdown probes. One of ten clean file-I/O
+  shutdown runs emitted a destroyed-mutex FORTIFY SIGABRT; eight follow-up runs
+  did not reproduce. Ten normal exit and ten SQLite controls passed; foreground
+  active-worker exit and exit after permission grant passed once. Background/
+  foreground shutdown was blocked by the I03 EGL crash before the exit control.
+  Native stack and mutex owner remain unknown. Proposed update to issue #432 is
+  committed as a draft only.
 
 ## Pending investigations
 
-I05 Android shutdown SIGABRT; I06 Linux ownership, I07, I08/I09/I10, I11;
-remaining provenance; proposed issue updates; and final consolidation. I03
-repeated requests and corrected-candidate validation remain explicitly unrun
-because no candidate is available and the first denied transition already
-reproduces the crash.
+I06 Linux ownership, I07, I08/I09/I10, I11; remaining provenance; proposed
+issue updates; and final consolidation. I03 repeated requests and
+corrected-candidate validation remain explicitly unrun because no candidate is
+available and the first denied transition already reproduces the crash.
 
 ## Next concrete action
 
 Windows Win32/I386 priority validation is complete using verified run
 `45907759163`; do not repeat it while inputs remain unchanged. Linux I01-B/I02
-reports and matrix are consolidated from hosted run `45949849457`. I03 lifecycle
-follow-ups and I04 findings are recorded; complete the bounded I05 shutdown
-cases on the hardware-accelerated API 30 ARM64 AVD, then move to Linux I06.
-Linux evidence is at
+reports and matrix are consolidated from hosted run `45949849457`. I03/I04/I05
+results are recorded. Start I06 Linux ownership validation using GitHub Actions
+and the committed functional-validation workflow. Linux evidence is at
 `https://github.com/TotalCross/totalcross-performance-lab/actions/runs/45949849457`.
 
 ## Constraints and blockers

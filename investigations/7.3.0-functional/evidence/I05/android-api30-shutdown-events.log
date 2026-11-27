@@ -1,0 +1,89 @@
+11-27 05:41:49.459  6800  6829 I TotalCross: TC_I05 startup mode=normal appPath=/data/user/0/totalcross.appzmtw
+11-27 05:41:49.466  6800  6829 I TotalCross: TC_I05 case=normal-exit state=EXIT_REQUEST
+11-27 05:41:53.400  6874  6899 I TotalCross: TC_I05 startup mode=normal appPath=/data/user/0/totalcross.appzmtw
+11-27 05:41:53.409  6874  6899 I TotalCross: TC_I05 case=normal-exit state=EXIT_REQUEST
+11-27 05:41:57.623  6936  6961 I TotalCross: TC_I05 startup mode=normal appPath=/data/user/0/totalcross.appzmtw
+11-27 05:41:57.633  6936  6961 I TotalCross: TC_I05 case=normal-exit state=EXIT_REQUEST
+11-27 05:42:01.415  7001  7026 I TotalCross: TC_I05 startup mode=normal appPath=/data/user/0/totalcross.appzmtw
+11-27 05:42:01.430  7001  7026 I TotalCross: TC_I05 case=normal-exit state=EXIT_REQUEST
+11-27 05:42:06.082  7062  7087 I TotalCross: TC_I05 startup mode=normal appPath=/data/user/0/totalcross.appzmtw
+11-27 05:42:06.092  7062  7087 I TotalCross: TC_I05 case=normal-exit state=EXIT_REQUEST
+11-27 05:42:09.798  7124  7148 I TotalCross: TC_I05 startup mode=normal appPath=/data/user/0/totalcross.appzmtw
+11-27 05:42:09.808  7124  7148 I TotalCross: TC_I05 case=normal-exit state=EXIT_REQUEST
+11-27 05:42:13.874  7185  7211 I TotalCross: TC_I05 startup mode=normal appPath=/data/user/0/totalcross.appzmtw
+11-27 05:42:13.883  7185  7211 I TotalCross: TC_I05 case=normal-exit state=EXIT_REQUEST
+11-27 05:42:18.096  7250  7275 I TotalCross: TC_I05 startup mode=normal appPath=/data/user/0/totalcross.appzmtw
+11-27 05:42:18.108  7250  7275 I TotalCross: TC_I05 case=normal-exit state=EXIT_REQUEST
+11-27 05:42:21.711  7313  7338 I TotalCross: TC_I05 startup mode=normal appPath=/data/user/0/totalcross.appzmtw
+11-27 05:42:21.718  7313  7338 I TotalCross: TC_I05 case=normal-exit state=EXIT_REQUEST
+11-27 05:42:25.431  7377  7403 I TotalCross: TC_I05 startup mode=normal appPath=/data/user/0/totalcross.appzmtw
+11-27 05:42:25.443  7377  7403 I TotalCross: TC_I05 case=normal-exit state=EXIT_REQUEST
+11-27 05:47:08.809  7858  7886 I TotalCross: TC_I05 startup mode=file-io appPath=/data/user/0/totalcross.appzmtw
+11-27 05:47:08.859  7858  7896 I TotalCross: TC_I05 case=file-io state=WRITE_BEGIN bytes=1048576
+11-27 05:47:09.108  7858  7886 I TotalCross: TC_I05 case=file-io state=EXIT_REQUEST after=worker-ready
+11-27 05:47:14.111  7927  7953 I TotalCross: TC_I05 startup mode=file-io appPath=/data/user/0/totalcross.appzmtw
+11-27 05:47:14.130  7927  7965 I TotalCross: TC_I05 case=file-io state=WRITE_BEGIN bytes=1048576
+11-27 05:47:14.258  7927  7953 I TotalCross: TC_I05 case=file-io state=EXIT_REQUEST after=worker-ready
+11-27 05:47:14.374  7927  7965 F libc    : FORTIFY: pthread_mutex_lock called on a destroyed mutex (0xb400006f3768ccf8)
+11-27 05:47:14.374  7927  7965 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 7965 (Thread-2), pid 7927 (alcross.appzmtw)
+11-27 05:49:21.174  8721  8746 I TotalCross: TC_I05 startup mode=file-io appPath=/data/user/0/totalcross.appzmtw
+11-27 05:49:21.250  8721  8759 I TotalCross: TC_I05 case=file-io state=WRITE_BEGIN bytes=1048576
+11-27 05:49:21.485  8721  8746 I TotalCross: TC_I05 case=file-io state=EXIT_REQUEST after=worker-ready
+11-27 05:49:26.492  8797  8822 I TotalCross: TC_I05 startup mode=file-io appPath=/data/user/0/totalcross.appzmtw
+11-27 05:49:26.571  8797  8837 I TotalCross: TC_I05 case=file-io state=WRITE_BEGIN bytes=1048576
+11-27 05:49:26.744  8797  8822 I TotalCross: TC_I05 case=file-io state=EXIT_REQUEST after=worker-ready
+11-27 05:49:31.745  8870  8896 I TotalCross: TC_I05 startup mode=file-io appPath=/data/user/0/totalcross.appzmtw
+11-27 05:49:31.765  8870  8911 I TotalCross: TC_I05 case=file-io state=WRITE_BEGIN bytes=1048576
+11-27 05:49:31.939  8870  8896 I TotalCross: TC_I05 case=file-io state=EXIT_REQUEST after=worker-ready
+11-27 05:49:37.643  8945  8970 I TotalCross: TC_I05 startup mode=file-io appPath=/data/user/0/totalcross.appzmtw
+11-27 05:49:37.709  8945  8986 I TotalCross: TC_I05 case=file-io state=WRITE_BEGIN bytes=1048576
+11-27 05:49:37.960  8945  8970 I TotalCross: TC_I05 case=file-io state=EXIT_REQUEST after=worker-ready
+11-27 05:49:43.733  9019  9044 I TotalCross: TC_I05 startup mode=file-io appPath=/data/user/0/totalcross.appzmtw
+11-27 05:49:43.812  9019  9059 I TotalCross: TC_I05 case=file-io state=WRITE_BEGIN bytes=1048576
+11-27 05:49:43.930  9019  9044 I TotalCross: TC_I05 case=file-io state=EXIT_REQUEST after=worker-ready
+11-27 05:49:49.074  9092  9117 I TotalCross: TC_I05 startup mode=file-io appPath=/data/user/0/totalcross.appzmtw
+11-27 05:49:49.165  9092  9132 I TotalCross: TC_I05 case=file-io state=WRITE_BEGIN bytes=1048576
+11-27 05:49:49.444  9092  9117 I TotalCross: TC_I05 case=file-io state=EXIT_REQUEST after=worker-ready
+11-27 05:49:54.377  9167  9192 I TotalCross: TC_I05 startup mode=file-io appPath=/data/user/0/totalcross.appzmtw
+11-27 05:49:54.441  9167  9207 I TotalCross: TC_I05 case=file-io state=WRITE_BEGIN bytes=1048576
+11-27 05:49:54.729  9167  9192 I TotalCross: TC_I05 case=file-io state=EXIT_REQUEST after=worker-ready
+11-27 05:49:58.625  9242  9267 I TotalCross: TC_I05 startup mode=file-io appPath=/data/user/0/totalcross.appzmtw
+11-27 05:49:58.670  9242  9282 I TotalCross: TC_I05 case=file-io state=WRITE_BEGIN bytes=1048576
+11-27 05:49:58.904  9242  9267 I TotalCross: TC_I05 case=file-io state=EXIT_REQUEST after=worker-ready
+11-27 05:47:25.605  8030  8056 I TotalCross: TC_I05 startup mode=sqlite appPath=/data/user/0/totalcross.appzmtw
+11-27 05:47:25.790  8030  8069 I TotalCross: TC_I05 case=sqlite state=QUERY_BEGIN
+11-27 05:47:25.912  8030  8056 I TotalCross: TC_I05 case=sqlite state=EXIT_REQUEST after=worker-ready
+11-27 05:47:30.511  8100  8126 I TotalCross: TC_I05 startup mode=sqlite appPath=/data/user/0/totalcross.appzmtw
+11-27 05:47:30.639  8100  8138 I TotalCross: TC_I05 case=sqlite state=QUERY_BEGIN
+11-27 05:47:30.676  8100  8126 I TotalCross: TC_I05 case=sqlite state=EXIT_REQUEST after=worker-ready
+11-27 05:47:34.680  8164  8190 I TotalCross: TC_I05 startup mode=sqlite appPath=/data/user/0/totalcross.appzmtw
+11-27 05:47:34.938  8164  8202 I TotalCross: TC_I05 case=sqlite state=QUERY_BEGIN
+11-27 05:47:35.038  8164  8190 I TotalCross: TC_I05 case=sqlite state=EXIT_REQUEST after=worker-ready
+11-27 05:47:39.696  8226  8251 I TotalCross: TC_I05 startup mode=sqlite appPath=/data/user/0/totalcross.appzmtw
+11-27 05:47:39.923  8226  8264 I TotalCross: TC_I05 case=sqlite state=QUERY_BEGIN
+11-27 05:47:39.975  8226  8251 I TotalCross: TC_I05 case=sqlite state=EXIT_REQUEST after=worker-ready
+11-27 05:47:44.718  8292  8316 I TotalCross: TC_I05 startup mode=sqlite appPath=/data/user/0/totalcross.appzmtw
+11-27 05:47:44.958  8292  8329 I TotalCross: TC_I05 case=sqlite state=QUERY_BEGIN
+11-27 05:47:44.986  8292  8316 I TotalCross: TC_I05 case=sqlite state=EXIT_REQUEST after=worker-ready
+11-27 05:47:49.144  8353  8378 I TotalCross: TC_I05 startup mode=sqlite appPath=/data/user/0/totalcross.appzmtw
+11-27 05:47:49.394  8353  8390 I TotalCross: TC_I05 case=sqlite state=QUERY_BEGIN
+11-27 05:47:49.484  8353  8378 I TotalCross: TC_I05 case=sqlite state=EXIT_REQUEST after=worker-ready
+11-27 05:47:55.335  8416  8442 I TotalCross: TC_I05 startup mode=sqlite appPath=/data/user/0/totalcross.appzmtw
+11-27 05:47:55.586  8416  8454 I TotalCross: TC_I05 case=sqlite state=QUERY_BEGIN
+11-27 05:47:55.619  8416  8442 I TotalCross: TC_I05 case=sqlite state=EXIT_REQUEST after=worker-ready
+11-27 05:47:59.371  8478  8504 I TotalCross: TC_I05 startup mode=sqlite appPath=/data/user/0/totalcross.appzmtw
+11-27 05:47:59.551  8478  8516 I TotalCross: TC_I05 case=sqlite state=QUERY_BEGIN
+11-27 05:47:59.604  8478  8504 I TotalCross: TC_I05 case=sqlite state=EXIT_REQUEST after=worker-ready
+11-27 05:48:03.514  8542  8567 I TotalCross: TC_I05 startup mode=sqlite appPath=/data/user/0/totalcross.appzmtw
+11-27 05:48:03.710  8542  8579 I TotalCross: TC_I05 case=sqlite state=QUERY_BEGIN
+11-27 05:48:03.711  8542  8567 I TotalCross: TC_I05 case=sqlite state=EXIT_REQUEST after=worker-ready
+11-27 05:48:07.915  8604  8629 I TotalCross: TC_I05 startup mode=sqlite appPath=/data/user/0/totalcross.appzmtw
+11-27 05:48:08.156  8604  8641 I TotalCross: TC_I05 case=sqlite state=QUERY_BEGIN
+11-27 05:48:08.186  8604  8629 I TotalCross: TC_I05 case=sqlite state=EXIT_REQUEST after=worker-ready
+11-27 05:55:39.299  9530  9555 I TotalCross: TC_I05 startup mode=worker appPath=/data/user/0/totalcross.appzmtw
+11-27 05:55:39.354  9530  9562 I TotalCross: TC_I05 case=worker state=READY
+11-27 05:56:10.942  9530  9555 I TotalCross: TC_I05 case=worker state=EXIT_REQUEST
+11-27 05:57:11.704  9719  9745 I TotalCross: TC_I05 startup mode=external appPath=/data/user/0/totalcross.appzmtw
+11-27 05:57:11.714  9719  9745 I TotalCross: TC_I05 case=permission state=BEGIN path=/sdcard/tc730-i05-shutdown-permission.bin
+11-27 05:57:46.721  9719  9745 I TotalCross: TC_I05 case=permission state=WRITE_COMPLETE
+11-27 05:57:46.784  9719  9745 I TotalCross: TC_I05 case=permission state=EXIT_REQUEST after=permission-operation

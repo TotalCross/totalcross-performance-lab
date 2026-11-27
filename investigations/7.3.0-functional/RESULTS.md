@@ -3,8 +3,9 @@
 The campaign remains in progress. I01-B and I02 Linux runtime evidence from
 hosted Actions run 45949849457 is consolidated in the reports, result matrix,
 and provenance record. I03 priority API runs are recorded for Android API 29,
-30, 35, and 36; API 30 lifecycle follow-ups are also recorded. I04 is now
-inconclusive on API 30; I05 shutdown findings remain pending.
+30, 35, and 36; API 30 lifecycle follow-ups are also recorded. I04 is
+inconclusive on API 30. I05 recorded one destroyed-mutex abort during shutdown
+in ten clean file-I/O cycles; the native stack and mutex owner remain unknown.
 
 ## Imported historical evidence
 
@@ -48,6 +49,13 @@ inconclusive on API 30; I05 shutdown findings remain pending.
   probe did not observe overlap inside `fwrite`. A separate I05 shutdown probe
   aborted during file I/O, but its missing native stack does not identify
   `File.writeBytes` as the call site.
+- **I05, Android API 30 ARM64:** FAIL under one of ten clean file-I/O shutdown
+  cycles with `FORTIFY: pthread_mutex_lock called on a destroyed mutex`, then
+  SIGABRT on `Thread-2`. Ten normal-exit and ten SQLite-shutdown controls, one
+  foreground active-worker exit, and one exit after a successful storage
+  permission grant completed without the same abort. The exact mutex owner and
+  failure stack were not captured. The report proposes an update to existing
+  issue #432; no remote issue was edited.
 - **I06 Windows Win32/I386:** PASS for the Windows target; overall I06 remains
   pending its required Linux x86_64 validation.
 - **I01-B, Linux x86_64:** official 7.3.0 and frozen master failed before
@@ -59,6 +67,5 @@ inconclusive on API 30; I05 shutdown findings remain pending.
   rejected during construction. Other platforms remain untested.
 
 No production source was changed. I03 repeated requests and corrected-candidate
-validation remain explicitly unrun; I05 is the next Android investigation.
-I06/I07, I08/I09/I10, I11, remaining provenance, and the final report remain
-pending.
+validation remain explicitly unrun. I06/I07, I08/I09/I10, I11, remaining
+provenance, and the final report remain pending.
